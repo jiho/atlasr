@@ -63,7 +63,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
 	# plot the coastline
   coast = map("world", interior=FALSE, plot=FALSE)
   coast = data.frame(long=coast$x, lat=coast$y)
-  coast = coast[coast$lat < max(data$lat),]
+  coast = coast[coast$lat <= max(data$lat)+2,]
 	p = p + geom_path(data=coast)
 
   # use nice colours
