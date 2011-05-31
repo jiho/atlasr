@@ -2955,8 +2955,13 @@ require(gbm)
       temp <- train.fit.matrix[i,]
       temp <- temp[!is.na(temp)]
       train.fit.count[i] <- length(temp)
-      train.fit.upper[i] <- approx(ppoints(temp),sort(temp),0.975)$y
-      train.fit.lower[i] <- approx(ppoints(temp),sort(temp),0.025)$y
+      if (length(temp) >= 2) {
+        train.fit.upper[i] <- approx(ppoints(temp),sort(temp),0.975)$y
+        train.fit.lower[i] <- approx(ppoints(temp),sort(temp),0.025)$y
+      } else {
+        train.fit.upper[i] <- NA
+        train.fit.lower[i] <- NA
+      }
     }
 
     train.pred.mean <- apply(train.pred.matrix,1,mean,na.rm=T)
@@ -2971,8 +2976,13 @@ require(gbm)
       temp <- train.pred.matrix[i,]
       temp <- temp[!is.na(temp)]
       train.pred.count[i] <- length(temp)
-      train.pred.upper[i] <- approx(ppoints(temp),sort(temp),0.975)$y
-      train.pred.lower[i] <- approx(ppoints(temp),sort(temp),0.025)$y
+      if (length(temp) >= 2) {
+        train.pred.upper[i] <- approx(ppoints(temp),sort(temp),0.975)$y
+        train.pred.lower[i] <- approx(ppoints(temp),sort(temp),0.025)$y
+      } else {
+        train.pred.upper[i] <- NA
+        train.pred.lower[i] <- NA
+      }
     }
     if (family == "bernoulli") {
       train.fit.mean <- exp(train.fit.mean)/(1 + exp(train.fit.mean))
