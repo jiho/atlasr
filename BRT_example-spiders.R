@@ -98,7 +98,7 @@ env.data <- env.data[seq(1, nrow(env.data), by=5),]
 source("base scripts/gbm.functions.2010SM.r")
 source("base scripts/brt.function.r")
 
-result <- do.brt(dat=dataset, resp.vars=resp.vars, predvar=pred.vars, int=2, distrib="bernoulli", wghts=NULL, monotone=NULL, n.boot=1, plotname="spider.brt.effects", image.name="spider.brt.file", n.pred=1, pred.data=env.sm)
+result <- do.brt(dat=dataset, resp.vars=resp.vars, predvar=pred.vars, int=2, distrib="bernoulli", wghts=NULL, monotone=NULL, n.boot=NA, plotname="spider.brt.effects", image.name="spider.brt.file", n.pred=1, pred.data=env.data)
 # Where:
 # dat         dataset containing coords, species presence, environmental data
 # resp.vars   names or indexes of response variables (species to model)
