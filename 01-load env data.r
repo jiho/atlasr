@@ -7,7 +7,6 @@
 # setwd("C:\\Projects\\Specific projects\\2011\\Bioregionalisation\\R")
 source("base scripts/load env data.r")
 
-foo
 
 ############################################################################
 # load the dataset and make the
