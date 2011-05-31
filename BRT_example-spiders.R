@@ -20,7 +20,9 @@ if (file.exists(env.data.file)) {
 # or extract it from the files
 } else {
 	source("base scripts/load env data.r")
-	total.env <- load.env(dataset=NA, env.dat=T, path="../Antarctic/")
+  # total.env <- load.env(dataset=NA, env.dat=T, path="../Antarctic/")
+  # NB !!!!! For now we subsample with a low precision
+	total.env <- load.env(dataset=NA, env.dat=T, path="../Antarctic/", lat.step=1, long.step=2)
 	env.data <- total.env[["env.dat"]]
 
 	# remove points on land
@@ -90,9 +92,6 @@ pred.vars <- c("bathymetry", "bathymetry_slope", "floor_temperature")
 # pick in the following
 names(dataset)[! names(dataset) %in% names(env.data)]
 resp.vars <- c("Austropallene.cornigera")
-
-# Subsample one in 5 rows for now, for speed purposes
-env.data <- env.data[seq(1, nrow(env.data), by=5),]
 
 # Get suppport functions
 source("base scripts/gbm.functions.2010SM.r")
