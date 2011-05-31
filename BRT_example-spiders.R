@@ -125,3 +125,11 @@ result <- do.brt(dat=dataset, resp.vars=resp.vars, predvar=pred.vars, int=2, dis
 # pred.data   predictive dataframe, needs lat and long and environmental
 #             variables defined in predvar
 
+# Inspect the resulting object
+str(result, 2)
+# deviance explained and a few other informations
+result[[1]]$deviance
+# contribution of predictive variables
+result[[1]]$obj$contributions
+# predictions
+head(result[[1]]$pred)
