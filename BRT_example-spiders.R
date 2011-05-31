@@ -77,11 +77,11 @@ if (file.exists(dataset.file)) {
 
 # Environmental variables used for the prediction
 # all of them
-pred.vars <- names(env.data)[! names(env.data) %in% c("lat","long")]
+# pred.vars <- names(env.data)[! names(env.data) %in% c("lat","long")]
 # a few
 # pick in the following (except lat and long)
-# names(env.data)
-# pred.vars <- c("bathymetry", "bathymetry_slope", "floor_temperature")
+names(env.data)
+pred.vars <- c("bathymetry", "bathymetry_slope", "floor_temperature")
 
 # Response variables = taxa of interest
 # all of them
