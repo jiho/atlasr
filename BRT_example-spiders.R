@@ -97,7 +97,7 @@ resp.vars <- c("Austropallene.cornigera")
 source("base scripts/gbm.functions.2010SM.r")
 source("base scripts/brt.function.r")
 
-result <- do.brt(dat=dataset, resp.vars=resp.vars, predvar=pred.vars, int=2, distrib="bernoulli", wghts=NULL, monotone=NULL, n.boot=NA, plotname="spider.brt.effects", image.name="spider.brt.file", n.pred=1, pred.data=env.data)
+result <- do.brt(dat=dataset, resp.vars=resp.vars, predvar=pred.vars, int=2, distrib="bernoulli", wghts=NULL, monotone=NULL, n.boot=NA, plot.name="BRT", image.name="spider.brt.file", n.pred=1, pred.data=env.data)
 # Where:
 # dat         dataset containing coords, species presence, environmental data
 # resp.vars   names or indexes of response variables (species to model)
@@ -113,9 +113,10 @@ result <- do.brt(dat=dataset, resp.vars=resp.vars, predvar=pred.vars, int=2, dis
 # n.boot      number of bootstraps for the predictions, NA means single
 #             point estimate. Beware, bootstraps are slow to run and
 #             less than 50-100 bootstraps will fail.
-# plotname    name the plots are saved under
-#             ignore the extension, it will be PDF
+# plot.name   prefix for the name of plots
 #             can be a relative path or full path
+#             plots will be saved as PDF files, one for each response variable
+#             if NULL plots are only displayed to screen and not saved
 # image.name  name the R workspace is saved under
 #             ignore the extension, it will be RData
 #             can be a relative path or full path

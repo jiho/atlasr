@@ -7,7 +7,7 @@
 #
 ###########################################################################
 
-do.brt <- function (dat, resp.vars, predvar, int = 2, distrib = "bernoulli", wghts = NULL, monotone = NULL, n.boot = NA, plotname = "brt.effects", image.name = "brt.file", n.pred = NA, pred.data) {
+do.brt <- function (dat, resp.vars, predvar, int = 2, distrib = "bernoulli", wghts = NULL, monotone = NULL, n.boot = NA, plot.name = NULL, image.name = "brt.file", n.pred = NA, pred.data, ...) {
 
 # Arguments
 #
@@ -25,9 +25,10 @@ do.brt <- function (dat, resp.vars, predvar, int = 2, distrib = "bernoulli", wgh
 # n.boot      number of bootstraps for the predictions, NA means single
 #             point estimate. Beware, bootstraps are slow to run and
 #             less than 50-100 bootstraps will fail.
-# plotname    name the plots are saved under
-#             ignore the extension, it will be PDF
+# plot.name   prefix for the name of plots
 #             can be a relative path or full path
+#             plots will be saved as PDF files, one for each response variable
+#             if NULL plots are only displayed to screen and not saved
 # image.name  name the R workspace is saved under
 #             ignore the extension, it will be RData
 #             can be a relative path or full path
@@ -48,6 +49,11 @@ result <- list()
 # loop on response variables
 # BRT only deals with one species at a time
 for (resp in resp.vars) {
+
+  # create a new PDF file for the plots
+  if (!is.null(plot.name)) {
+    pdf(paste(plot.name, "-", resp, ".pdf" ,sep=""), width=10, height=8, useDingbats=FALSE, onefile=TRUE)
+  }
 
   # start the output object
   result[[resp]] <- list()
@@ -171,12 +177,6 @@ for (resp in resp.vars) {
     }
   }
 
-  # save all the plots
-  #for (i in 1:length(dev.list())) {
-  #  savePlot(paste(plotname,i,".wmf",sep=""))
-  #  dev.off(which = dev.cur())
-  #}
-
   ###########################################################################
   # run the predictions
   ###########################################################################
@@ -200,6 +200,10 @@ for (resp in resp.vars) {
     }
     # store it in the result object
     result[[resp]]$pred <- data.frame(pred.data[,c("long","lat")], pred, CVpred)
+
+  # close the PDF file
+  if (!is.null(plot.name)) {
+    dev.off()
   }
 
 }  # end of resp.vars loop
