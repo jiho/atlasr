@@ -1,0 +1,6 @@
+# R output stuff
+*.Rdata
+*.pdf
+# backup stuff
+*.bak
+*~
