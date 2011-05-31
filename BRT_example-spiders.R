@@ -95,7 +95,6 @@ resp.vars <- c("Austropallene.cornigera")
 env.data <- env.data[seq(1, nrow(env.data), by=5),]
 
 # Get suppport functions
-suppressMessages(require("gbm", quietly=TRUE))
 source("base scripts/gbm.functions.2010SM.r")
 source("base scripts/brt.function.r")
 

@@ -1,194 +1,222 @@
 ###########################################################################
+#
 # Wrap around BRT function
 # does model, effects, bootstraps, predictions in one function
+#
 # Sophie Mormede May 2011 s.mormede@niwa.co.nz
+#
 ###########################################################################
 
+do.brt <- function (dat, resp.vars, predvar, int = 2, distrib = "bernoulli", wghts = NULL, monotone = NULL, n.boot = NA, plotname = "brt.effects", image.name = "brt.file", n.pred = NA, pred.data) {
 
-#setwd("C:\\Projects\\Specific projects\\2011\\Bioregionalisation\\R\\base scripts")
-#load("..\\fish.data.RData")
+# Arguments
+#
+# dat         dataset containing coords, species presence, environmental data
+# resp.vars   names or indexes of response variables (species to model)
+# predvar     names of the predictive variable (environmental data)
+# int         number of interactions, or tree complexity
+# distrib     distribution family: bernoulli (= binomial), poisson,
+#             laplace or gaussian
+# wgths       name of the variable in `dat` which corresponds to weights
+# monotone    a vector of 0 and 1 of the lengths of predvar
+#             1 is monotone increasing
+#             -1 monotone decreasing
+#             0 is arbitrary
+# n.boot      number of bootstraps for the predictions, NA means single
+#             point estimate. Beware, bootstraps are slow to run and
+#             less than 50-100 bootstraps will fail.
+# plotname    name the plots are saved under
+#             ignore the extension, it will be PDF
+#             can be a relative path or full path
+# image.name  name the R workspace is saved under
+#             ignore the extension, it will be RData
+#             can be a relative path or full path
+# n.pred      number of bootstraps for predictions
+#             1 if no bootstraps wanted and NA if no predictions wanted
+# pred.data   predictive dataframe, needs lat and long and environmental
+#             variables defined in predvar
 
-# library(bgm)
-# source("gbm.functions.2010SM.r")
-# example of use
-# result <- do.brt(dat=fam,resp.vars=resp.vars[3],predvar=predvar,n.pred=1,pred.data=env.Ant)
+# Value
+#
+# It will output a list of objects containing, for each response variable: the brt object, the responses, the interactions, the predictions, etc.
 
-
-do.brt <- function (dat, resp.vars, predvar, int = 2, distrib ="bernoulli", wghts=NULL,monotone=NULL,n.boot = NA, plotname = "brt.effects",image.name="brt.file",n.pred=NA,pred.data ) {
-
-## Base case BRT running - it will output a list of objects with for each response variable: the brt object, the responses, the interactions, predictions etc.
-
-# dat has your dataset of responses
-# resp.vars are the names of different variables you want to predict
-# predvar are your predictive variable names
-# int is the number of interactions, or tree complexity
-# distrib is the distribution family: bernoulli (=binomial), poisson, laplace or gaussian
-# if adding weights, give the name of the variable in dat dataset which corresponds to weights
-# if adding monotone, a vector of 0 and 1 of the lengths of predvar, 1 is monotone increasing and -1 monotone decreasing, 0 is asbitrary
-# n.boot is the number of bootstraps for the predictions, NA means single point estimate. Beware, bootstraps are slow to run, and if less than 50-100 bootstraps, will fail.
-# plotname = what name will the plot be saved under, can include a relative path or full path, ignore extension, it will be .eps
-# image.name = what name the R workspace will be saved under, can include a relative path or full path, ignore extension, it will be .RData
-# n.pred is number of bootstraps for predictions, 1 if no bootstraps wanted, and NA if no predictions wanted
-# pred.data: predictive dataframe, needs lat and long, and environmental variables as in predvar
-
-
+# get useful functions
+suppressMessages(require("gbm", quietly=TRUE))
 
 result <- list()
 
-  for (resp in resp.vars) {
+# loop on response variables
+# BRT only deals with one species at a time
+for (resp in resp.vars) {
 
+  # start the output object
   result[[resp]] <- list()
 
+  ###########################################################################
+  # setup the dataset
+  ###########################################################################
+  # remove observations where the current species information is Non-Available
+  dat <- dat[!is.na(dat[,resp]),]
 
-  Median<-function(x) {median(x,na.rm=T)}
-  Mean<-function(x) {mean(x,na.rm=T)}
-  cv<-function(x) {return(sqrt(var(x,na.rm=T))/mean(x,na.rm=T))}
+  # make the data binomial if it needs to be
+  if (distrib=="bernoulli") { dat[,resp] <- dat[,resp]>0 }
 
+  # make uniform weights when they are not provided
+  if (is.null(wghts)) {
+    wghts <- rep(1,nrow(dat))
+  } else {
+    wgths <- dat$wghts
+  }
 
-###########################################################################
-# setup the dataset
-###########################################################################
+  # make indifferent monotone argument when it is not provided
+  if (is.null(monotone)) { monotone <- rep(0,length(predvar)) }
 
- dat<-dat[!is.na(dat[,resp]),]
- if (distrib=="bernoulli") {dat[,resp]<-dat[,resp]>0}
+  ###########################################################################
+  # run the BRT
+  ###########################################################################
+  cat(paste("  ", resp,":\n  -> optimising BRT model \n",sep=""))
 
- if (!is.null(wghts)) {wgths <- dat$wghts} else {wghts <- rep(1,nrow(dat))}
- if (is.null(monotone)) {monotone <- rep(0,length(predvar))}
+  # initial values before entering the while loop
+  lr <- 0.05
+  no.trees <- 0
 
+  while ( no.trees < 1000 & lr > 0.0005 ) {
 
+    try( obj <-  gbm.step(
+                           data = dat,
+                           gbm.x = match(predvar, names(dat)),
+                           gbm.y = match(resp, names(dat)),
+                           learning.rate = lr,
+                           tree.complexity = int,
+                           site.weights = wghts,
+                           family = distrib,
+                           max.trees = 10000,
+                           var.monotone = monotone,
+                           n.trees = 50,
+                           silent = T
+                         )
+    )
 
-###########################################################################
-# run the brt without weights
-###########################################################################
-
-  cat(paste(resp,": optimising BRT model \n",sep=""))
-
-
-    lr <- 0.05
-    no.trees <- 0
-
-    while ( no.trees < 1000 & lr > 0.0005 ) {
-
-      try( obj <-  gbm.step( data = dat,
-                          gbm.x = match(predvar, names(dat)),
-                          gbm.y = match(resp, names(dat)),
-                          learning.rate = lr,
-                          tree.complexity = int,
-                          site.weights=wghts,
-                          family = distrib,
-                          max.trees = 10000,
-                          var.monotone=monotone,
-                          n.trees = 50,
-                          silent=T
-                          )
-      )
-      if ( !is.null (obj) ) {
-         if ( object.size( obj ) > 0 ) {
-            no.trees <- obj$gbm.call$best.trees
-      } }
-      else {
-        no.trees <- 0
+    # if the gbm does not converge, the return object is null or of size 0
+    if ( ! is.null(obj) ) {
+      if ( object.size(obj) > 0 ) {
+        no.trees <- obj$gbm.call$best.trees
       }
-      lr <- lr / 2
+    } else {
+      no.trees <- 0
     }
 
+    # decrease the learning rate
+    lr <- lr / 2
+  }
+
+  # store the gbm object in the result object
   result[[resp]]$obj <- obj
 
 
-###########################################################################
-# write results
-###########################################################################
-cat("writing results\n")
+  ###########################################################################
+  # write additional results in the result object
+  ###########################################################################
+  cat("  -> writing results\n")
 
-  temp<-c(obj$gbm.call$family,  obj$gbm.call$tree.complexity,round(as.numeric(as.character(obj$cv.statistics$deviance.mean))/as.numeric(as.character(obj$self.statistics$mean.null)),2),round(min(obj$cv.roc.matrix),2))
-  names(temp)<-c("family","number of trees","perc deviance explained","AUC")
+  temp <- list()
+  # family
+  temp$family <- obj$gbm.call$family
+  # number of interaction = depth of tree
+  temp$tree.complexity <- obj$gbm.call$tree.complexity
+  # deviance explained
+  temp$perc.deviance.explained <- base::round( obj$cv.statistics$deviance.mean / obj$self.statistics$mean.null, 2)
+  # Area Under the receiver operative Curve
+  # = quality of the prediction of presence/absence
+  #   0.5 is indifferent
+  temp$AUC <- round(min(obj$cv.roc.matrix), 2)
   result[[resp]]$deviance <- temp
 
   # write contributions
-  temp<-t(obj$contributions)
+  temp <- obj$contributions$rel.inf
+  names(temp) <- obj$contributions$var
   result[[resp]]$contributions <- temp
+
+  # remove the temp object, to be clean
   rm(temp)
 
+  ###########################################################################
+  # plot effects, bootstrapped or not
+  ###########################################################################
+  cat("  -> plot effects\n")
 
+  if (is.na(n.boot)) {
+    # no bootstrap, just plot
+    gbm.plot(obj)
 
+  } else {
+    # perform bootstrap
+    cat("  -> running bootstrap on BRT model\n")
+    boot <- NULL
+    try( boot <- gbm.bootstrap(obj, n.reps=n.boot, verbose=F) )
+    if (!is.null(boot)) {
+      # when it runs correctly
+      # store the output in the result object
+      result[[resp]]$boot <- boot
+      # and use bootstrapped plots
+      gbm.plot.boot(obj, boot)
 
-###########################################################################
-# plot effects, bootstrapped or not
-###########################################################################
-cat("plot effects\n")
-graphics.off() # this just closes old windows
+    } else {
+      # when it does not (usually because of too few bootstraps), issue a warning and plot the simple object
+      warning("Need more bootstraps to provide a confidence interval\n")
+      gbm.plot(obj)
+    }
+  }
 
-  if (!is.na(n.boot)) {
-    if (n.boot > 1) {
-       boot <- NULL
-       cat(paste(resp,": running bootstrap on BRT model \n",sep=""))
-       try(boot <- gbm.bootstrap(obj,n.reps=n.boot,verbose=F))
-       if (!is.null(boot)) {
-        result[[resp]]$boot <- boot
-        gbm.plot.boot(obj,boot)
-      } else {
-       gbm.plot(obj)
-       cat("Need more bootstraps to provide a confidence interval\n")
-       }
-     } else {
-       gbm.plot(obj)
-     }
-   }
+  # save all the plots
+  #for (i in 1:length(dev.list())) {
+  #  savePlot(paste(plotname,i,".wmf",sep=""))
+  #  dev.off(which = dev.cur())
+  #}
 
-
-#save all the plots
-
-#for (i in 1:length(dev.list())) {
-#  savePlot(paste(plotname,i,".wmf",sep=""))
-#  dev.off(which = dev.cur())
-#}
-
-
-
-
-###########################################################################
-# run the predictions
-###########################################################################
-
-cat("make predictions\n")
-
-  # make predictions
+  ###########################################################################
+  # run the predictions
+  ###########################################################################
 
   if (!is.na(n.pred)) {
-    if (n.pred>1) {
-      temp<-gbm.bootstrap(obj, pred.data = pred.data, return.pred.matrix = T,n.reps=n.pred,verbose=F)
-      temp<- temp$pred.matrix
-      out <- data.frame(long = pred.data$long, lat = pred.data$lat, Mpred = apply(temp,1,mean), CVpred = apply(temp,1,cv))
-      } else {
-      out <- data.frame(cbind( pred.data[,c("long","lat")], pred = predict( obj, newdata = pred.data, n.trees = obj$n.trees, type="response")))
-      }
-   result[[resp]]$pred <- out
+    # when n.pred is not NA, do the predictions
+    cat("  -> make predictions\n")
+
+    if (n.pred > 1) {
+      # bootstrap predictions
+      temp <- gbm.bootstrap(obj, pred.data = pred.data, return.pred.matrix = T, n.reps=n.pred, verbose=F)
+      temp <- temp$pred.matrix
+      # prediction and confidence zone
+      pred = apply(temp,1,mean)
+      CVpred = apply(temp,1,cv)
+
+    } else {
+      # do a simple prediction
+      pred = predict(obj, newdata = pred.data, n.trees = obj$n.trees, type="response")
+      CVpred = NA # CV can't be computed without bootstrap
+    }
+    # store it in the result object
+    result[[resp]]$pred <- data.frame(pred.data[,c("long","lat")], pred, CVpred)
   }
-save.image(paste(image.name,".RData",sep=""))
 
 }  # end of resp.vars loop
 
 return(result)
 
-} #end of function
-
-
+} # end of function
 
 
 
 ############################################################################
-# some general functions
+# Some general functions
 ############################################################################
-
 
 Sum <- function(x) {sum(x,na.rm=T)}
 Max <-function(x) {max(x,na.rm=T)}
-Min<-function(x) {min(x,na.rm=T)}
-Median<-function(x) {median(x,na.rm=T)}
-Mean<-function(x) {mean(x,na.rm=T)}
-Length<-function(x)  length(x[!is.na(x)])
-
-
+Min <- function(x) {min(x,na.rm=T)}
+Median <- function(x) {median(x,na.rm=T)}
+Mean <- function(x) {mean(x,na.rm=T)}
+Length <- function(x) length(x[!is.na(x)])
 Table <- function(...) {
   a <-table(...,useNA="ifany")
   b <- length(dim(a))
@@ -198,5 +226,4 @@ Table <- function(...) {
     a<-c(a,Sum = margin.table(a))
   }
   return(a)
-  }
-
+}
