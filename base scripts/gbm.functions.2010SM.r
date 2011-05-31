@@ -579,6 +579,7 @@ function (data,                             # the input dataframe
 # and assemble results for return
 
   gbm.object$gbm.call <- gbm.detail
+  gbm.object$x <- data
   gbm.object$fitted <- fitted.values
   gbm.object$fitted.vars <- fitted.vars
   gbm.object$residuals <- residuals
@@ -1967,8 +1968,7 @@ gbm.call <- gbm.object$gbm.call
 gbm.x <- gbm.call$gbm.x
 pred.names <- gbm.call$predictor.names
 response.name <- gbm.call$response.name
-dataframe.name <- gbm.call$dataframe
-data <- eval(parse(text = dataframe.name))
+data <- gbm.object$x
 
 max.plots <- plot.layout[1] * plot.layout[2]
 plot.count <- 0
@@ -3628,8 +3628,7 @@ gbm.call <- boot.object$gbm.call
 gbm.x <- gbm.call$gbm.x
 pred.names <- gbm.call$predictor.names
 response.name <- gbm.call$response.name
-dataframe.name <- gbm.call$dataframe
-data <- eval(parse(text = dataframe.name))
+data <- boot.object$x
 boot<-boot.object$function.dataframe
 
 max.plots <- plot.layout[1] * plot.layout[2]
