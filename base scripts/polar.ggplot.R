@@ -1,6 +1,19 @@
 #
 #     Plot data viewed from the South Pole
 #
+# The plot uses ggplot2 rather than base graphics, because it eases
+# the projection and mapping of colours.
+#
+# data          data frame with columns lat, long, and variables to plot
+# mapping       a call to `aes()` which maps a variable to a plotting
+#               aesthetic characteristic (fill, colour, size, alpha, etc.)
+# geom          the type of plot ("geometry" in ggplot parlance) to produce
+#               = points (the default) or tiles
+# lat.precision
+# lon.precision the precision at which lat and lon are considered
+#               (in degrees). If they are larger than the original
+#               precision, the data is averaged within the new cells
+#
 # (c) Copyright 2011 Jean-Olivier Irisson
 #     GNU General Public License v3
 #
