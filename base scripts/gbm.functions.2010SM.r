@@ -1,10 +1,10 @@
 # Modified by Mormede from Leathwick and Elith as stated below
-  #to allow for transformation of outputs
+# to allow for transformation of outputs
 # currently only GBM plot has been modified. 10 Feb 2010
 
 
-`gbm.step` <-
-function (data,                             # the input dataframe
+gbm.step <- function (
+  data,                                     # the input dataframe
   gbm.x,                                    # the predictors
   gbm.y,                                    # and response
   offset = NULL,                            # allows an offset to be specified
@@ -31,7 +31,8 @@ function (data,                             # the input dataframe
   keep.fold.models = FALSE,                 # keep the fold models from cross valiation
   keep.fold.vector = FALSE,                 # allows the vector defining fold membership to be kept
   keep.fold.fit = FALSE,                    # allows the predicted values for observations from CV to be kept
-  ...)                                      # allows for any additional plotting parameters
+  ...                                       # allows for any additional plotting parameters
+)
 {
 #
 # j. leathwick/j. elith - 19th September 2005
@@ -84,11 +85,11 @@ function (data,                             # the input dataframe
 
   if (silent) verbose <- FALSE
 
-# initiate timing call
+  # initiate timing call
 
   z1 <- unclass(Sys.time())
 
-# setup input data and assign to position one
+  # setup input data and assign to position one
 
   dataframe.name <- deparse(substitute(data))   # get the dataframe name
 
@@ -115,7 +116,7 @@ function (data,                             # the input dataframe
     cat("Using",n.cases,"observations and",n.preds,"predictors \n\n")
   }
 
-# set up the selector variable either with or without prevalence stratification
+  # set up the selector variable either with or without prevalence stratification
 
   if (is.null(fold.vector)) {
 
@@ -125,30 +126,28 @@ function (data,                             # the input dataframe
       n.pres <- sum(presence.mask)
       n.abs <- sum(absence.mask)
 
-# create a vector of randomised numbers and feed into presences
+      # create a vector of randomised numbers and feed into presences
       selector <- rep(0,n.cases)
       temp <- rep(seq(1, n.folds, by = 1), length = n.pres)
       temp <- temp[order(runif(n.pres, 1, 100))]
       selector[presence.mask] <- temp
 
-# and then do the same for absences
+      # and then do the same for absences
       temp <- rep(seq(1, n.folds, by = 1), length = n.abs)
       temp <- temp[order(runif(n.abs, 1, 100))]
       selector[absence.mask] <- temp
-      }
-
-    else {  #otherwise make them random with respect to presence/absence
+    } else {
+      #otherwise make them random with respect to presence/absence
       selector <- rep(seq(1, n.folds, by = 1), length = n.cases)
       selector <- selector[order(runif(n.cases, 1, 100))]
-      }
     }
-  else {
+  } else {
     if (length(fold.vector) != n.cases) stop("supplied fold vector is of wrong length")
     cat("loading user-supplied fold vector \n\n")
     selector <- eval(fold.vector)
-    }
+  }
 
-# set up the storage space for results
+  # set up the storage space for results
 
   pred.values <- rep(0, n.cases)
 
@@ -158,7 +157,7 @@ function (data,                             # the input dataframe
 
   model.list <- list(paste("model",c(1:n.folds),sep=""))     # dummy list for the tree models
 
-# set up the initial call to gbm
+  # set up the initial call to gbm
 
   if (is.null(offset)) {
     gbm.call <- paste("gbm(y.subset ~ .,data=x.subset, n.trees = n.trees,
@@ -606,8 +605,8 @@ function (data,                             # the input dataframe
   return(gbm.object)
 }
 
-`gbm.fixed` <-
-function (data,                        # the input dataframe
+gbm.fixed <- function(
+  data,                                # the input dataframe
   gbm.x,                               # indices of the predictors in the input dataframe
   gbm.y,                               # index of the response in the input dataframe
   tree.complexity = 1,                 # the tree depth - sometimes referred to as interaction depth
@@ -620,7 +619,7 @@ function (data,                        # the input dataframe
   family = "bernoulli",                # can be any of bernoulli, poisson, gaussian, laplace - note quotes
   keep.data = FALSE,                   # keep original data
   var.monotone = rep(0, length(gbm.x)) # constrain to positive (1) or negative monontone (-1)
-  )
+)
 {
 #
 # j leathwick, j elith - 6th May 2007
@@ -643,11 +642,11 @@ function (data,                        # the input dataframe
 #
   require(gbm)
 
-# setup input data and assign to position one
+  # setup input data and assign to position one
 
   dataframe.name <- deparse(substitute(data))   # get the dataframe name
 
-  x.data <- eval(data[, gbm.x])                 #form the temporary datasets
+  x.data <- eval(data[, gbm.x])                 # form the temporary datasets
   names(x.data) <- names(data)[gbm.x]
   y.data <- eval(data[, gbm.y])
   sp.name <- names(data)[gbm.y]
@@ -656,22 +655,21 @@ function (data,                        # the input dataframe
   assign("x.data", x.data, pos = 1)             #and assign them for later use
   assign("y.data", y.data, pos = 1)
 
-# fit the gbm model
+  # fit the gbm model
 
   z1 <- unclass(Sys.time())
 
-  gbm.call <- paste("gbm(y.data ~ .,n.trees = n.trees, data=x.data, verbose = F, interaction.depth = tree.complexity,
-    weights = site.weights, shrinkage = learning.rate, distribution = as.character(family),
-    var.monotone = var.monotone, bag.fraction = bag.fraction, keep.data = keep.data)", sep="")
+  gbm.call <- paste("gbm(y.data ~ .,n.trees = n.trees, data=x.data, verbose = F, interaction.depth = tree.complexity, weights = site.weights, shrinkage = learning.rate, distribution = as.character(family), var.monotone = var.monotone, bag.fraction = bag.fraction, keep.data = keep.data)", sep="")
 
   if (verbose) {
-    print(paste("fitting gbm model with a fixed number of ",n.trees," trees for ",sp.name,sep=""),quote=FALSE) }
+    print(paste("fitting gbm model with a fixed number of ",n.trees," trees for ",sp.name,sep=""),quote=FALSE)
+  }
 
   gbm.object <- eval(parse(text = gbm.call))
 
   best.trees <- n.trees
 
-#extract fitted values and summary table
+  #extract fitted values and summary table
 
   fitted.values <- predict.gbm(gbm.object,x.data,n.trees = n.trees,type="response")
   gbm.summary <- summary(gbm.object,n.trees = n.trees, plotit = FALSE)
@@ -717,17 +715,15 @@ function (data,                        # the input dataframe
 
   if (verbose) {
     print(paste("total deviance = ",round(total.deviance,2),sep=""),quote=F)
-    print(paste("residual deviance = ",round(resid.deviance,2),sep=""),quote=F)}
+    print(paste("residual deviance = ",round(resid.deviance,2),sep=""),quote=F)
+  }
 
-# now assemble data to be returned
+  # now assemble data to be returned
 
   z2 <- unclass(Sys.time())
-  elapsed.time.minutes <- round((z2 - z1)/ 60,2)  #calculate the total elapsed time
+  elapsed.time.minutes <- round((z2 - z1)/ 60,2)  # calculate the total elapsed time
 
-  gbm.detail <- list(dataframe = dataframe.name, gbm.x = gbm.x, predictor.names = names(x.data),
-    gbm.y = gbm.y, reponse.name = names(y.data), family = family, tree.complexity = tree.complexity,
-    learning.rate = learning.rate, bag.fraction = bag.fraction, cv.folds = 0, n.trees = n.trees, best.trees = best.trees,
-    train.fraction = train.fraction, var.monotone = var.monotone, date = date(), elapsed.time.minutes = elapsed.time.minutes)
+  gbm.detail <- list(dataframe = dataframe.name, gbm.x = gbm.x, predictor.names = names(x.data), gbm.y = gbm.y, reponse.name = names(y.data), family = family, tree.complexity = tree.complexity, learning.rate = learning.rate, bag.fraction = bag.fraction, cv.folds = 0, n.trees = n.trees, best.trees = best.trees, train.fraction = train.fraction, var.monotone = var.monotone, date = date(), elapsed.time.minutes = elapsed.time.minutes)
 
   gbm.object$gbm.call <- gbm.detail
   gbm.object$fitted <- fitted.values
@@ -736,24 +732,25 @@ function (data,                        # the input dataframe
   gbm.object$self.statistics <- list(null.deviance = total.deviance, resid.deviance = resid.deviance)
   gbm.object$weights <- site.weights
 
-  rm(x.data,y.data, pos=1)           #finally, clean up the temporary dataframes
+  rm(x.data,y.data, pos=1)           # finally, clean up the temporary dataframes
 
   return(gbm.object)
 }
 
-`gbm.cv` <-
-function (data,                          # the input data frame
-    gbm.x,                               # the predictors as numeric indices
-    gbm.y,                               # the response
-    n.trees = 500,                       # number of trees to fit
-    tree.complexity = 1,                 # or interaction depth
-    learning.rate = 0.001,               # controls rate of convergence - see gbm
-    cv.folds = 5,                        # number of folds for cross validation
-    family = "bernoulli",                # options as specified for gdm
-    var.monotone = rep(0, length(gbm.x)),# see GDM documentation
-    site.weights = rep(1, nrow(data)),
-    verbose = TRUE,
-    keep.data = FALSE)
+gbm.cv <- function (
+  data,                                # the input data frame
+  gbm.x,                               # the predictors as numeric indices
+  gbm.y,                               # the response
+  n.trees = 500,                       # number of trees to fit
+  tree.complexity = 1,                 # or interaction depth
+  learning.rate = 0.001,               # controls rate of convergence - see gbm
+  cv.folds = 5,                        # number of folds for cross validation
+  family = "bernoulli",                # options as specified for gdm
+  var.monotone = rep(0, length(gbm.x)),# see GDM documentation
+  site.weights = rep(1, nrow(data)),
+  verbose = TRUE,
+  keep.data = FALSE
+)
 {
 #
 # j leathwick, j elith - October 2006
@@ -769,99 +766,94 @@ function (data,                          # the input data frame
 # requires gbm
 #
 #
-    require(gbm)
+  require(gbm)
 
-# setup input data and assign to position one
+  # setup input data and assign to position one
 
-    dataframe.name <- deparse(substitute(data))  # get the dataframe name
+  dataframe.name <- deparse(substitute(data))  # get the dataframe name
 
-    x.data <- eval(data[, gbm.x])                 #form the temporary datasets
-    names(x.data) <- names(data)[gbm.x]
-    y.data <- eval(data[, gbm.y])
-    sp.name <- names(data)[gbm.y]
-    train.fraction <- 1
+  x.data <- eval(data[, gbm.x])                 #form the temporary datasets
+  names(x.data) <- names(data)[gbm.x]
+  y.data <- eval(data[, gbm.y])
+  sp.name <- names(data)[gbm.y]
+  train.fraction <- 1
 
-    assign("x.data", x.data, pos = 1)               #and assign them for later use
-    assign("y.data", y.data, pos = 1)
+  assign("x.data", x.data, pos = 1)               #and assign them for later use
+  assign("y.data", y.data, pos = 1)
 
-# fit the gbm model
+  # fit the gbm model
 
-    gbm.call <- paste("gbm(y.data ~ .,n.trees = n.trees, data=x.data, verbose = F, interaction.depth = tree.complexity,
-           weights = site.weights, shrinkage = learning.rate, cv.folds = cv.folds, distribution = as.character(family),
-           var.monotone = var.monotone, keep.data = keep.data)", sep="")
+  gbm.call <- paste("gbm(y.data ~ .,n.trees = n.trees, data=x.data, verbose = F, interaction.depth = tree.complexity, weights = site.weights, shrinkage = learning.rate, cv.folds = cv.folds, distribution = as.character(family), var.monotone = var.monotone, keep.data = keep.data)", sep="")
 
-    if (verbose) {
-            print(paste("fitting cross validation gbm model of ",n.trees," trees for ",sp.name,
-               " with ",cv.folds," folds", sep=""),quote = FALSE)
-        }
+  if (verbose) {
+    print(paste("fitting cross validation gbm model of ",n.trees," trees for ",sp.name, " with ",cv.folds," folds", sep=""),quote = FALSE)
+  }
 
-    gbm.object <- eval(parse(text = gbm.call))
+  gbm.object <- eval(parse(text = gbm.call))
 
-# identify the best number of trees using method appropriate to model
+  # identify the best number of trees using method appropriate to model
 
-    best.trees <- gbm.perf(gbm.object, method = 'cv', plot.it = FALSE)
+  best.trees <- gbm.perf(gbm.object, method = 'cv', plot.it = FALSE)
 
-    if (best.trees == n.trees) { #we've failed to reach a satisfactory number...
-        print(" WARNING - cross validation model failed to identify optimal number of trees",quote = FALSE)
-        print(" re-fit with increased value for n.trees ", quote = FALSE) }
-    else {
-        print (paste("model successfully fitted, with ",best.trees," used out of a total of ",
-            n.trees,sep=""), quote = FALSE)
-    }
+  if (best.trees == n.trees) {
+    # we've failed to reach a satisfactory number...
+    print(" WARNING - cross validation model failed to identify optimal number of trees",quote = FALSE)
+    print(" re-fit with increased value for n.trees ", quote = FALSE)
+  } else {
+    print (paste("model successfully fitted, with ",best.trees," used out of a total of ", n.trees,sep=""), quote = FALSE)
+  }
 
 #extract fitted values and summary table
 
-    fitted.values <- predict.gbm(gbm.object,x.data,n.trees = best.trees,type="response")
-    gbm.summary <- summary(gbm.object,n.trees = best.trees, plotit = FALSE)
+  fitted.values <- predict.gbm(gbm.object,x.data,n.trees = best.trees,type="response")
+  gbm.summary <- summary(gbm.object,n.trees = best.trees, plotit = FALSE)
 
-    y_i <- y.data
-    u_i <- fitted.values
+  y_i <- y.data
+  u_i <- fitted.values
 
-    if (family == "poisson") {
-        deviance.contribs <- ifelse(y_i == 0, 0, (y_i * log(y_i/u_i))) - (y_i - u_i)
-        resid.deviance <- 2 * sum(deviance.contribs)
-        residuals <- sqrt(abs(deviance.contribs * 2))
-        residuals <- ifelse((y_i - u_i) < 0, 0 - residuals, residuals)
-        u_i <- mean(y.data)
-        total.deviance <- 2 * sum(ifelse(y_i == 0, 0, (y_i * log(y_i/u_i))) - (y_i - u_i))
-    }
+  if (family == "poisson") {
+    deviance.contribs <- ifelse(y_i == 0, 0, (y_i * log(y_i/u_i))) - (y_i - u_i)
+    resid.deviance <- 2 * sum(deviance.contribs)
+    residuals <- sqrt(abs(deviance.contribs * 2))
+    residuals <- ifelse((y_i - u_i) < 0, 0 - residuals, residuals)
+    u_i <- mean(y.data)
+    total.deviance <- 2 * sum(ifelse(y_i == 0, 0, (y_i * log(y_i/u_i))) - (y_i - u_i))
+  }
 
-    if (family == "bernoulli") {
-        deviance.contribs <- (y_i * log(u_i)) + ((1-y_i) * log(1 - u_i))
-        resid.deviance <- -2 * sum(deviance.contribs)
-        residuals <- sqrt(abs(deviance.contribs * 2))
-        residuals <- ifelse((y_i - u_i) < 0, 0 - residuals, residuals)
-        u_i <- mean(y.data)
-        total.deviance <- -2 * sum((y_i * log(u_i)) + ((1-y_i) * log(1 - u_i)))
-    }
+  if (family == "bernoulli") {
+    deviance.contribs <- (y_i * log(u_i)) + ((1-y_i) * log(1 - u_i))
+    resid.deviance <- -2 * sum(deviance.contribs)
+    residuals <- sqrt(abs(deviance.contribs * 2))
+    residuals <- ifelse((y_i - u_i) < 0, 0 - residuals, residuals)
+    u_i <- mean(y.data)
+    total.deviance <- -2 * sum((y_i * log(u_i)) + ((1-y_i) * log(1 - u_i)))
+  }
 
-    if (verbose) {
-        print(paste("total deviance = ",round(total.deviance,2),sep=""),quote=F)
-        print(paste("residual deviance = ",round(resid.deviance,2),sep=""),quote=F)}
+  if (verbose) {
+    print(paste("total deviance = ",round(total.deviance,2),sep=""),quote=F)
+    print(paste("residual deviance = ",round(resid.deviance,2),sep=""),quote=F)
+  }
 
-# now assemble data to be returned
+  # now assemble data to be returned
 
-    gbm.detail <- list(dataframe = dataframe.name, gbm.x = gbm.x, predictor.names = names(x.data),
-      gbm.y = gbm.y, response.names = sp.name, degree= tree.complexity, n.trees = n.trees,
-      learning.rate = learning.rate, best.trees = best.trees, cv.folds = cv.folds,
-      family = family, train.fraction = train.fraction, var.monotone = var.monotone)
+  gbm.detail <- list(dataframe = dataframe.name, gbm.x = gbm.x, predictor.names = names(x.data),
+    gbm.y = gbm.y, response.names = sp.name, degree= tree.complexity, n.trees = n.trees,
+    learning.rate = learning.rate, best.trees = best.trees, cv.folds = cv.folds,
+    family = family, train.fraction = train.fraction, var.monotone = var.monotone)
 
-    gbm.object$gbm.call <- gbm.detail
-    gbm.object$fitted <- fitted.values
-    gbm.object$residuals <- residuals
-    gbm.object$contributions <- gbm.summary
-    gbm.object$deviances <- list(null.deviance = total.deviance, resid.deviance = resid.deviance)
-    gbm.object$weights <- weights
+  gbm.object$gbm.call <- gbm.detail
+  gbm.object$fitted <- fitted.values
+  gbm.object$residuals <- residuals
+  gbm.object$contributions <- gbm.summary
+  gbm.object$deviances <- list(null.deviance = total.deviance, resid.deviance = resid.deviance)
+  gbm.object$weights <- weights
 
-    rm(x.data,y.data, pos=1)           #finally, clean up the temporary dataframes
+  rm(x.data,y.data, pos=1)           #finally, clean up the temporary dataframes
 
-    return(gbm.object)
+  return(gbm.object)
 }
 
-`gbm.oob` <-
-function (data, gbm.x, gbm.y,interaction.depth = 1, site.weights = rep(1, nrow(data)), max.trees = 20000, verbose = TRUE,
-    learning.rate = 0.001, n.trees = 200, add.trees = n.trees, cv.folds = 0, distribution = "bernoulli", train.fraction = 1,
-    var.monotone = rep(0, length(gbm.x)), keep.data = TRUE)
+gbm.oob <- function (data, gbm.x, gbm.y,interaction.depth = 1, site.weights = rep(1, nrow(data)), max.trees = 20000, verbose = TRUE, learning.rate = 0.001, n.trees = 200, add.trees = n.trees, cv.folds = 0, distribution = "bernoulli", train.fraction = 1, var.monotone = rep(0, length(gbm.x)), keep.data = TRUE)
 {
 #
 # j leathwick, j elith - 23rd March 2005
@@ -882,98 +874,102 @@ function (data, gbm.x, gbm.y,interaction.depth = 1, site.weights = rep(1, nrow(d
 # requires gbm
 #
 #
-    require(gbm)
+  require(gbm)
 
 # setup input data and assign to position one
 
-    dataframe.name <- deparse(substitute(data))  # get the dataframe name
+  dataframe.name <- deparse(substitute(data))  # get the dataframe name
 
-    x.data <- eval(data[, gbm.x])                 #form the temporary datasets
-    names(x.data) <- names(data)[gbm.x]
-    y.data <- eval(data[, gbm.y])
-    sp.name <- names(data)[gbm.y]
+  x.data <- eval(data[, gbm.x])                 #form the temporary datasets
+  names(x.data) <- names(data)[gbm.x]
+  y.data <- eval(data[, gbm.y])
+  sp.name <- names(data)[gbm.y]
 
 
-    assign("x.data", x.data, pos = 1)               #and assign them for later use
-    assign("y.data", y.data, pos = 1)
+  assign("x.data", x.data, pos = 1)               #and assign them for later use
+  assign("y.data", y.data, pos = 1)
 
 # fit the gbm model
 
-    if (verbose) {
-        print(paste("fitting initial gbm model of ",n.trees," trees for ",sp.name,
-             " and expanding using OOB method",sep=""),quote=FALSE) }
+  if (verbose) {
+    print(paste("fitting initial gbm model of ",n.trees," trees for ",sp.name, " and expanding using OOB method",sep=""),quote=FALSE)
+  }
 
-    gbm.call <- paste("gbm(y.data ~ .,n.trees = n.trees, data=x.data, verbose = F, interaction.depth = interaction.depth,
-           weights = site.weights, shrinkage = learning.rate, distribution = as.character(distribution),
-           var.monotone = var.monotone, keep.data = keep.data)", sep="")
+  gbm.call <- paste("gbm(y.data ~ .,n.trees = n.trees, data=x.data, verbose = F, interaction.depth = interaction.depth, weights = site.weights, shrinkage = learning.rate, distribution = as.character(distribution), var.monotone = var.monotone, keep.data = keep.data)", sep="")
 
-    gbm.object <- eval(parse(text = gbm.call))
+  gbm.object <- eval(parse(text = gbm.call))
 
 # identify the best number of trees using method appropriate to model
 
-    best.trees <- gbm.perf(gbm.object, method == 'OOB', plot.it = FALSE)
+  best.trees <- gbm.perf(gbm.object, method == 'OOB', plot.it = FALSE)
 
-    n.fitted <- n.trees
+  n.fitted <- n.trees
 
-    if (verbose) print("expanding model to find optimal no of trees...",quote=FALSE)
+  if (verbose) {
+    print("expanding model to find optimal no of trees...",quote=FALSE)
+  }
 
-    while(gbm.object$n.trees - best.trees < n.trees & n.fitted < max.trees)
-        {
-        gbm.object <- gbm.more(gbm.object, add.trees)
-        n.fitted <- n.fitted + add.trees
-        best.trees <- gbm.perf(gbm.object, plot.it = FALSE)
-        if (n.fitted %% 100 == 0) #report times along the way
-                if (verbose) print(paste("fitted trees = ", n.fitted, sep = ""), quote = FALSE)
-        }
-
-        if (verbose) print(paste("fitting stopped at ",best.trees," trees",sep=""),quote=FALSE)
-
-#extract fitted values and summary table
-
-    fitted.values <- predict.gbm(gbm.object,x.data,n.trees = n.trees,type="response")
-    y_i <- y.data
-    u_i <- fitted.values
-
-    if (distribution == "poisson") {
-        deviance.contribs <- ifelse(y_i == 0, 0, (y_i * log(y_i/u_i))) - (y_i - u_i)
-        resid.deviance <- 2 * sum(deviance.contribs)
-        residuals <- sqrt(abs(deviance.contribs * 2))
-        residuals <- ifelse((y_i - u_i) < 0, 0 - residuals, residuals)
-        u_i <- mean(y.data)
-        total.deviance <- 2 * sum(ifelse(y_i == 0, 0, (y_i * log(y_i/u_i))) - (y_i - u_i))
+  while(gbm.object$n.trees - best.trees < n.trees & n.fitted < max.trees) {
+    gbm.object <- gbm.more(gbm.object, add.trees)
+    n.fitted <- n.fitted + add.trees
+    best.trees <- gbm.perf(gbm.object, plot.it = FALSE)
+    if (n.fitted %% 100 == 0) {
+      #report times along the way
+      if (verbose) {
+        print(paste("fitted trees = ", n.fitted, sep = ""), quote = FALSE)
+      }
     }
+  }
 
-    if (distribution == "bernoulli") {
-        deviance.contribs <- (y_i * log(u_i)) + ((1-y_i) * log(1 - u_i))
-        resid.deviance <- -2 * sum(deviance.contribs)
-        residuals <- sqrt(abs(deviance.contribs * 2))
-        residuals <- ifelse((y_i - u_i) < 0, 0 - residuals, residuals)
-        u_i <- mean(y.data)
-        total.deviance <- -2 * sum((y_i * log(u_i)) + ((1-y_i) * log(1 - u_i)))
-    }
+  if (verbose) {
+    print(paste("fitting stopped at ",best.trees," trees",sep=""),quote=FALSE)
+  }
 
-    if (verbose) {
-        print(paste("total deviance = ",round(total.deviance,2),sep=""),quote=F)
-        print(paste("residual deviance = ",round(resid.deviance,2),sep=""),quote=F)}
+  # extract fitted values and summary table
 
-    gbm.summary <- summary(gbm.object,n.trees = best.trees, plotit = FALSE)
+  fitted.values <- predict.gbm(gbm.object,x.data,n.trees = n.trees,type="response")
+  y_i <- y.data
+  u_i <- fitted.values
 
-# now assemble data to be returned
+  if (distribution == "poisson") {
+    deviance.contribs <- ifelse(y_i == 0, 0, (y_i * log(y_i/u_i))) - (y_i - u_i)
+    resid.deviance <- 2 * sum(deviance.contribs)
+    residuals <- sqrt(abs(deviance.contribs * 2))
+    residuals <- ifelse((y_i - u_i) < 0, 0 - residuals, residuals)
+    u_i <- mean(y.data)
+    total.deviance <- 2 * sum(ifelse(y_i == 0, 0, (y_i * log(y_i/u_i))) - (y_i - u_i))
+  }
 
-    gbm.detail <- list(dataframe = dataframe.name, gbm.x = gbm.x, x.names = names(x.data),
-        gbm.y = gbm.y, y.names = names(y.data), degree= interaction.depth, n.trees = n.fitted,
-        learning.rate = learning.rate, best.trees = best.trees, cv.folds = 0,
-        distribution = distribution, train.fraction = train.fraction, var.monotone = var.monotone)
+  if (distribution == "bernoulli") {
+    deviance.contribs <- (y_i * log(u_i)) + ((1-y_i) * log(1 - u_i))
+    resid.deviance <- -2 * sum(deviance.contribs)
+    residuals <- sqrt(abs(deviance.contribs * 2))
+    residuals <- ifelse((y_i - u_i) < 0, 0 - residuals, residuals)
+    u_i <- mean(y.data)
+    total.deviance <- -2 * sum((y_i * log(u_i)) + ((1-y_i) * log(1 - u_i)))
+  }
 
-    rm(x.data,y.data, pos=1)           #finally, clean up the temporary dataframes
+  if (verbose) {
+    print(paste("total deviance = ",round(total.deviance,2),sep=""),quote=F)
+    print(paste("residual deviance = ",round(resid.deviance,2),sep=""),quote=F)
+  }
 
-    return(list(gbm.object = gbm.object, fitted.values = fitted.values, residuals = residuals, summary = gbm.summary, deviance = deviance,
-       deviances = list(null.deviance = total.deviance, resid.deviance = resid.deviance),
-       weights = weights, gbm.call = gbm.detail))
+  gbm.summary <- summary(gbm.object,n.trees = best.trees, plotit = FALSE)
+
+  # now assemble data to be returned
+
+  gbm.detail <- list(dataframe = dataframe.name, gbm.x = gbm.x, x.names = names(x.data),
+      gbm.y = gbm.y, y.names = names(y.data), degree= interaction.depth, n.trees = n.fitted,
+      learning.rate = learning.rate, best.trees = best.trees, cv.folds = 0,
+      distribution = distribution, train.fraction = train.fraction, var.monotone = var.monotone)
+
+  rm(x.data,y.data, pos=1)           #finally, clean up the temporary dataframes
+
+  return(list(gbm.object = gbm.object, fitted.values = fitted.values, residuals = residuals, summary = gbm.summary, deviance = deviance, deviances = list(null.deviance = total.deviance, resid.deviance = resid.deviance), weights = weights, gbm.call = gbm.detail))
 }
 
-`gbm.holdout` <-
-function (data,                        # the input data frame
+gbm.holdout <- function (
+   data,                               # the input data frame
    gbm.x,                              # indices of predictor variables
    gbm.y,                              # index of response variable
    learning.rate = 0.001,              # typically varied between 0.1 and 0.001
@@ -989,7 +985,8 @@ function (data,                        # the input data frame
    var.monotone = rep(0, length(gbm.x)),# allows constraining of response to monotone
    site.weights = rep(1, nrow(data)),  # set equal to 1 by default
    refit = TRUE,                       # refit the model with the full data but id'd no of trees
-   keep.data = TRUE)                   # keep copy of the data
+   keep.data = TRUE                    # keep copy of the data
+)
 {
 #
 # j leathwick, j elith - October 2006
@@ -1039,9 +1036,7 @@ function (data,                        # the input data frame
       selector[temp] <- 0
 
       sort.vector <- sort(selector,index.return = TRUE)[[2]]
-    }
-
-    else {
+    } else {
       sort.vector <- sample(seq(1,n.rows),n.rows,replace=FALSE)
     }
 
@@ -1049,8 +1044,7 @@ function (data,                        # the input data frame
 
     x.data <- eval(sort.data[, gbm.x])                 #form the temporary datasets
     y.data <- eval(sort.data[, gbm.y])
-  }
-  else {
+  } else {
     x.data <- eval(data[, gbm.x])                 #form the temporary datasets
     y.data <- eval(data[, gbm.y])
   }
@@ -1066,9 +1060,7 @@ function (data,                        # the input data frame
   print(paste("fitting initial gbm model of ",n.trees," trees for ",sp.name,sep=""),quote=FALSE)
   print(" and expanding using withheld data for evaluation",quote=FALSE)
 
-  gbm.call <- paste("gbm(y.data ~ .,n.trees = n.trees, data=x.data, verbose = F, interaction.depth = tree.complexity,
-    weights = site.weights, shrinkage = learning.rate, cv.folds = 0, distribution = as.character(family),
-    train.fraction = train.fraction, var.monotone = var.monotone, keep.data = keep.data)", sep="")
+  gbm.call <- paste("gbm(y.data ~ .,n.trees = n.trees, data=x.data, verbose = F, interaction.depth = tree.complexity, weights = site.weights, shrinkage = learning.rate, cv.folds = 0, distribution = as.character(family), train.fraction = train.fraction, var.monotone = var.monotone, keep.data = keep.data)", sep="")
 
   gbm.object <- eval(parse(text = gbm.call))
 
@@ -1086,22 +1078,22 @@ function (data,                        # the input data frame
     best.trees <- gbm.perf(gbm.object, method = 'test', plot.it = FALSE)
     n.fitted <- n.fitted + add.trees
 
-    if (n.fitted %% 100 == 0){ #report times along the way
+    if (n.fitted %% 100 == 0){ 
+      #report times along the way
       if (verbose) print(paste("fitted trees = ", n.fitted, sep = ""), quote = FALSE)
     }
   }
 
   if (verbose) print(paste("fitting stopped at ",best.trees," trees",sep=""),quote=FALSE)
 
-  if (refit) {  # we are refitting the model with fixed tree size
+  if (refit) {
+    # we are refitting the model with fixed tree size
     print(paste("refitting the model to the full dataset using ",best.trees," trees",sep=""),quote=FALSE)
 
     x.data <- eval(data[, gbm.x])                 #form the temporary datasets
     y.data <- eval(data[, gbm.y])
 
-    gbm.call <- eval(paste("gbm(y.data ~ .,n.trees = best.trees, data=x.data, verbose = F, interaction.depth = tree.complexity,
-      weights = site.weights, shrinkage = learning.rate, cv.folds = 0, distribution = as.character(family),
-      var.monotone = var.monotone, keep.data = keep.data)", sep=""))
+    gbm.call <- eval(paste("gbm(y.data ~ .,n.trees = best.trees, data=x.data, verbose = F, interaction.depth = tree.complexity, weights = site.weights, shrinkage = learning.rate, cv.folds = 0, distribution = as.character(family), var.monotone = var.monotone, keep.data = keep.data)", sep=""))
 
     gbm.object <- eval(parse(text = gbm.call))
 
@@ -1157,14 +1149,15 @@ function (data,                        # the input data frame
   return(gbm.object)
 }
 
-`gbm.kfold` <-
-function (gbm.object,
+gbm.kfold <- function (
+   gbm.object,
    n.folds = 10,
    prev.stratify = F,
    fold.vector = NULL,
    strict = T,
    verbose = TRUE,
-   seed = NULL)
+   seed = NULL
+)
 {
 #
 # j. leathwick/j. elith - 24th March 2004
@@ -1239,10 +1232,12 @@ function (gbm.object,
 
     if (family=="bernoulli") {
         self.discrimination <- roc(y_i, u_i)
-        self.calibration <- calibration(y_i, u_i)}
+        self.calibration <- calibration(y_i, u_i)
+	}
 
     if (family=="poisson") {
-        self.calibration <- calibration(y_i, u_i, family = "poisson")}
+        self.calibration <- calibration(y_i, u_i, family = "poisson")
+	}
 
 # set up for results storage
 
@@ -1277,9 +1272,8 @@ function (gbm.object,
         temp <- temp[order(runif(n.abs, 1, 100))]
         selector[absence.mask] <- temp
 
-        }
-      else {  #otherwise make them random with respect to presence/absence
-
+      } else {
+		#otherwise make them random with respect to presence/absence
         selector <- rep(seq(1, n.folds, by = 1), length = n.cases)
         selector <- selector[order(runif(n.cases, 1, 100))]
       }
@@ -1299,15 +1293,14 @@ function (gbm.object,
 
         if (!is.null(seed)) set.seed(seed)
 
-        if (!strict) {  # we have a fixed model
-            gbmmod.new <- gbm.fixed(data = data[model.mask, ], gbm.x = gbm.x, gbm.y = gbm.y,
-            tree.complexity = tree.complexity, n.trees = best.trees, learning.rate = learning.rate,
-            var.monotone = var.monotone, family = family, verbose = FALSE)
+        if (!strict) {
+			# we have a fixed model
+            gbmmod.new <- gbm.fixed(data = data[model.mask, ], gbm.x = gbm.x, gbm.y = gbm.y, tree.complexity = tree.complexity, n.trees = best.trees, learning.rate = learning.rate, var.monotone = var.monotone, family = family, verbose = FALSE)
         }
 
         best.trees <- gbmmod.new$gbm.call$best.trees  #only update this for strict cross validation with full model refit
 
-#        print(paste("step ",i," model fitted with ",best.trees," trees",sep=""),quote = FALSE)
+        # print(paste("step ",i," model fitted with ",best.trees," trees",sep=""),quote = FALSE)
 
         predictions[pred.mask] <- predict.gbm(gbmmod.new, data[pred.mask, gbm.x], type = "response", n.trees = best.trees)
 
@@ -1323,10 +1316,11 @@ function (gbm.object,
         if (family=="bernoulli") {
            fold.discrimination[i] <- roc(y_i, u_i)
         }
-#           fold.calibration[i,] <- calibration(y_i, u_i)}
-
-#        if (family=="poisson"){
-#            fold.calibration[i,] <- calibration(y_i, u_i, family = "poisson")}
+       # fold.calibration[i,] <- calibration(y_i, u_i)}
+       # 
+       # if (family=="poisson"){
+       #     fold.calibration[i,] <- calibration(y_i, u_i, family = "poisson")
+       # }
     }
 
 
@@ -1334,8 +1328,7 @@ function (gbm.object,
 
     if (verbose) cat("","\n")   #send a return to the screen first
 
-    self.stats <- list(self.resid.deviance = self.resid.deviance, self.correlation = self.correlation,
-      self.discrimination = self.discrimination, self.calibration = self.calibration)
+    self.stats <- list(self.resid.deviance = self.resid.deviance, self.correlation = self.correlation, self.discrimination = self.discrimination, self.calibration = self.calibration)
 
     y_i <- data[, gbm.y]
     u_i <- predictions
@@ -1345,12 +1338,12 @@ function (gbm.object,
     pooled.calibration <- calibration(y_i, u_i, family = family)
 
     if (family=="bernoulli") {
-        pooled.discrimination <- roc(y_i, u_i)
-     }
-    else pooled.discrimination <- NA
-
-    pooled.stats <- list(pooled.deviance = pooled.resid.deviance, pooled.correlation = pooled.correlation,
-      pooled.discrimination = pooled.discrimination, pooled.calibration = pooled.calibration)
+      pooled.discrimination <- roc(y_i, u_i)
+    } else {
+      pooled.discrimination <- NA
+    }
+	
+    pooled.stats <- list(pooled.deviance = pooled.resid.deviance, pooled.correlation = pooled.correlation, pooled.discrimination = pooled.discrimination, pooled.calibration = pooled.calibration)
 
     fold.deviance.mean <- mean(fold.resid.deviance)
     fold.deviance.se <- sqrt(var(fold.resid.deviance))/sqrt(n.folds)
@@ -1361,8 +1354,7 @@ function (gbm.object,
     if (family == "bernoulli") {
       fold.discrimination.mean <- mean(fold.discrimination)
       fold.discrimination.se <- sqrt(var(fold.discrimination))/sqrt(n.folds)
-    }
-    else {
+    } else {
       fold.discrimination.mean <- NA
       fold.discrimination.se <- NA
     }
@@ -1373,21 +1365,14 @@ function (gbm.object,
     fold.calibration.se <- apply(fold.calibration,2,var)
     fold.calibration.se <- sqrt(fold.calibration.se) / sqrt(n.folds)
 
-    cv.stats <- list(deviance.mean = fold.deviance.mean, deviance.se = fold.deviance.se,
-      correlation.mean = fold.correlation.mean, correlation.se = fold.correlation.se,
-      discrimination.mean = fold.discrimination.mean, discrimination.se = fold.discrimination.se,
-      calibration.mean = fold.calibration.mean, calibration.se = fold.calibration.se)
+    cv.stats <- list(deviance.mean = fold.deviance.mean, deviance.se = fold.deviance.se, correlation.mean = fold.correlation.mean, correlation.se = fold.correlation.se, discrimination.mean = fold.discrimination.mean, discrimination.se = fold.discrimination.se, calibration.mean = fold.calibration.mean, calibration.se = fold.calibration.se )
 
-    fold.values = list(fold.deviance = fold.resid.deviance, fold.correlation = fold.correlation,
-      fold.discrimination = fold.discrimination, fold.calibration = fold.calibration)
+    fold.values = list(fold.deviance = fold.resid.deviance, fold.correlation = fold.correlation, fold.discrimination = fold.discrimination, fold.calibration = fold.calibration)
 
-    return(list(gbm.call = gbm.call, self.statistics = self.stats, pooled.statistics = pooled.stats,
-       cv.statistics = cv.stats, fold.values = fold.values))
+    return(list(gbm.call = gbm.call, self.statistics = self.stats, pooled.statistics = pooled.stats, cv.statistics = cv.stats, fold.values = fold.values))
 }
 
-`fit.gbm` <-
-function (data, gbm.x, gbm.y,interaction.depth = 1, site.weights = rep(1, nrow(data)), max.trees = 20000, verbose = TRUE,
-    learning.rate = 0.001, init.trees = 200, cv.folds = 1, prev.stratify = FALSE, distribution = "bernoulli",keep.data = TRUE)
+fit.gbm <- function(data, gbm.x, gbm.y,interaction.depth = 1, site.weights = rep(1, nrow(data)), max.trees = 20000, verbose = TRUE, learning.rate = 0.001, init.trees = 200, cv.folds = 1, prev.stratify = FALSE, distribution = "bernoulli",keep.data = TRUE)
 {
 #
 # j leathwick, j elith - 7th January 2005
@@ -1428,52 +1413,53 @@ function (data, gbm.x, gbm.y,interaction.depth = 1, site.weights = rep(1, nrow(d
 
 # fit the gbm model
 
-    gbm.call <- paste("gbm(y.data ~ .,n.trees = init.trees, data=x.data, verbose = F, interaction.depth = interaction.depth,
-           weights = site.weights, shrinkage = learning.rate, cv.folds = cv.folds, distribution = as.character(distribution),
-           keep.data = keep.data)", sep="")
+    gbm.call <- paste("gbm(y.data ~ .,n.trees = init.trees, data=x.data, verbose = F, interaction.depth = interaction.depth, weights = site.weights, shrinkage = learning.rate, cv.folds = cv.folds, distribution = as.character(distribution), keep.data = keep.data)", sep="")
 
     if (verbose) {
-        if (cv.folds == 1) {
-            print(paste("fitting initial gbm model of ",init.trees," trees for ",sp.name,
-               " and expanding using OOB method",sep=""),quote=FALSE) }
-        else {
-            print(paste("fitting cross validation gbm model of ",init.trees," trees for ",sp.name,
-               " with ",cv.folds," folds",sep=""),quote = FALSE) }
-        }
+      if (cv.folds == 1) {
+        print(paste("fitting initial gbm model of ",init.trees," trees for ",sp.name, " and expanding using OOB method",sep=""),quote=FALSE)
+      } else {
+        print(paste("fitting cross validation gbm model of ",init.trees," trees for ",sp.name, " with ",cv.folds," folds",sep=""),quote = FALSE)
+      }
+    }
 
     gbm.object <- eval(parse(text = gbm.call))
 
 # identify the best number of trees using method appropriate to model
 
     if (cv.folds == 1) {
-       best.trees <- gbm.perf(gbm.object, method == 'OOB', plot.it = FALSE) }
-    else {
-       best.trees <- gbm.perf(gbm.object, method = 'cv', plot.it = FALSE) }
+       best.trees <- gbm.perf(gbm.object, method == 'OOB', plot.it = FALSE)
+    } else {
+       best.trees <- gbm.perf(gbm.object, method = 'cv', plot.it = FALSE)
+    }
 
-    if (cv.folds == 1) {   # a non cross-validation model
+    if (cv.folds == 1) {
+      # a non cross-validation model
 
         n.fitted <- init.trees
 
         if (verbose) print("expanding model to find optimal no of trees...",quote=FALSE)
 
-        while(gbm.object$n.trees - best.trees < init.trees & n.fitted < max.trees)
-        {
+        while(gbm.object$n.trees - best.trees < init.trees & n.fitted < max.trees) {
             gbm.object <- gbm.more(gbm.object, init.trees)
             best.trees <- gbm.perf(gbm.object, plot.it = FALSE)
             n.fitted <- n.fitted + init.trees
-            if (n.fitted %% 100 == 0) #report times along the way
-                if (verbose) print(paste("fitted trees = ", n.fitted, sep = ""), quote = FALSE)
+            if (n.fitted %% 100 == 0) {
+              # report times along the way
+              if (verbose) print(paste("fitted trees = ", n.fitted, sep = ""), quote = FALSE)
+            }
         }
         if (verbose) print(paste("fitting stopped at ",n.fitted," trees",sep=""),quote=FALSE)
-    }
-    else {  # we're doing a cross validation model
+    } else {
+      # we're doing a cross validation model
 
-        if (best.trees == init.trees) { #we've failed to reach a satisfactory number...
+        if (best.trees == init.trees) {
+            # we've failed to reach a satisfactory number...
             print(" WARNING - cross validation model failed to identify optimal number of trees",quote = FALSE)
-            print(" re-fit with increased value for init.trees ", quote = FALSE) }
-        else {
-            if (verbose) print (paste("model successfully fitted, with ",best.trees," used out of a total of ",
-                init.trees,sep=""), quote = FALSE)}
+            print(" re-fit with increased value for init.trees ", quote = FALSE)
+        } else {
+            if (verbose) print (paste("model successfully fitted, with ",best.trees," used out of a total of ", init.trees,sep=""), quote = FALSE)
+        }
     }
 
 #extract fitted values and summary table
@@ -1489,16 +1475,10 @@ function (data, gbm.x, gbm.y,interaction.depth = 1, site.weights = rep(1, nrow(d
 
     rm(x.data,y.data, pos=1)           #finally, clean up the temporary dataframes
 
-    return(list(gbm.object = gbm.object, fitted.values = fitted.values, summary = gbm.summary,
-       weights = weights, gbm.call = gbm.detail))
+    return(list(gbm.object = gbm.object, fitted.values = fitted.values, summary = gbm.summary, weights = weights, gbm.call = gbm.detail))
 }
 
-`gbm.anz` <-
-function (formula = formula(data), distribution = "bernoulli",
-    data = list(), weights, offset = NULL, var.monotone = NULL,
-    n.trees = 100, interaction.depth = 1, n.minobsinnode = 10,
-    shrinkage = 0.001, bag.fraction = 0.5, train.fraction = 1,
-    cv.folds = 0, keep.data = TRUE, verbose = TRUE)
+gbm.anz <- function(formula = formula(data), distribution = "bernoulli", data = list(), weights, offset = NULL, var.monotone = NULL, n.trees = 100, interaction.depth = 1, n.minobsinnode = 10, shrinkage = 0.001, bag.fraction = 0.5, train.fraction = 1, cv.folds = 0, keep.data = TRUE, verbose = TRUE)
 {
     call <- match.call()
     m <- match.call(expand = FALSE)
@@ -1547,11 +1527,11 @@ function (formula = formula(data), distribution = "bernoulli",
                 w = ifelse(w == NULL, NULL, w[i.train][i]), var.monotone = var.monotone,
                 n.trees = n.trees, interaction.depth = interaction.depth,
                 n.minobsinnode = n.minobsinnode, shrinkage = shrinkage,
-                bag.fraction = bag.fraction, train.fraction = mean(cv.group !=
-                  i.cv), keep.data = FALSE, verbose = verbose,
-                var.names = var.names, response.name = response.name)
-            cv.error <- cv.error + gbm.obj$valid.error * sum(cv.group ==
-                i.cv)
+                bag.fraction = bag.fraction, train.fraction = mean(cv.group != i.cv),
+                keep.data = FALSE, verbose = verbose,
+                var.names = var.names, response.name = response.name
+            )
+            cv.error <- cv.error + gbm.obj$valid.error * sum(cv.group == i.cv)
         }
         cv.error <- cv.error/length(i.train)
     }
@@ -1560,7 +1540,8 @@ function (formula = formula(data), distribution = "bernoulli",
         interaction.depth = interaction.depth, n.minobsinnode = n.minobsinnode,
         shrinkage = shrinkage, bag.fraction = bag.fraction, train.fraction = train.fraction,
         keep.data = keep.data, verbose = verbose, var.names = var.names,
-        response.name = response.name)
+        response.name = response.name
+    )
     gbm.obj$Terms <- Terms
     gbm.obj$cv.error <- cv.error
     if (!keep.data) {
@@ -1569,17 +1550,18 @@ function (formula = formula(data), distribution = "bernoulli",
     return(gbm.obj)
 }
 
-`gbm.bootstrap` <-
-function(gbm.object,            # a gbm object describing sample intensity
-  bootstrap.model = TRUE,   # bootstrap the model fitted and predicted values using 632+
+gbm.bootstrap <- function(
+  gbm.object,                   # a gbm object describing sample intensity
+  bootstrap.model = TRUE,       # bootstrap the model fitted and predicted values using 632+
   bootstrap.functions = TRUE,   # estimate confidence intervals for the fitted functions
   pred.data = NULL,             # an independent evaluation data set - leave here for now
   return.train.matrix = FALSE,  # return the full matrix of predictions
   return.pred.matrix = FALSE,   # return the full matrix of predictions
   return.tails = FALSE,         # return the tails of the predictions
   CI = 95,                      # the required confidence interval - should be 90, 95, 99
-  n.reps = 200,       # number of bootstrap samples
-  verbose = T)                  # control reporting
+  n.reps = 200,                 # number of bootstrap samples
+  verbose = T                   # control reporting
+)
 {
 # function to calculate bootstrap estimates of 95% confidence intervals for
 # a brt model created using gbm.step
@@ -1655,9 +1637,8 @@ require(gbm)
 
     bootstrap.predictions <- FALSE
 
-  }
-
-  else {  # we have a prediction dataset
+  } else {
+    # we have a prediction dataset
 
     bootstrap.predictions <- TRUE
 
@@ -1705,10 +1686,8 @@ require(gbm)
       z2 <- unclass(Sys.time())
       est.time <- (z2 - z1)/60  # time for five reps
       est.time <- est.time * (n.reps/5) * 2  # multiply by two as sorting takes time
-      cat("five bootstrap samples processed \n"," estimated time for completion is ",
-        round(est.time,1)," minutes \n",sep="")
-      }
-    else {
+      cat("five bootstrap samples processed \n"," estimated time for completion is ", round(est.time,1)," minutes \n",sep="")
+    } else {
       if (verbose) cat(i,"\n")
     }
 
@@ -1934,8 +1913,8 @@ require(gbm)
   return(final.object)
 }
 
-`gbm.plot` <-
-function(gbm.object,                # a gbm object - could be one from gbm.step
+gbm.plot <- function(
+     gbm.object,                    # a gbm object - could be one from gbm.step
      variable.no = 0,               # the var to plot - if zero then plots all
      smooth = FALSE,                # should we add a smoothed version of the fitted function
      rug = T,                       # plot a rug of deciles
@@ -1949,7 +1928,7 @@ function(gbm.object,                # a gbm object - could be one from gbm.step
      trans = NA,                    # if the results need to be transformed prior to plotting
      ...                            # other arguments to pass to the plotting
                                     # useful options include cex.axis, cex.lab, etc.
-     )
+)
 {
 # function to plot gbm response variables, with the option
 # of adding a smooth representation of the response if requested
@@ -1976,28 +1955,34 @@ n.pages <- 1
 
 if (length(variable.no) > 1) {stop("only one response variable can be plotted at a time")}
 
-if (variable.no > 0) {   #we are plotting all vars in rank order of contribution
+if (variable.no > 0) {
+  # we are plotting all vars in rank order of contribution
   n.plots <- 1
-  }
+}
 
 max.vars <- length(gbm.object$contributions$var)
 if (n.plots > max.vars) {
   n.plots <- max.vars
   cat("warning - reducing no of plotted predictors to maximum available (",max.vars,")\n",sep="")
-  }
+}
 
 predictors <- list(rep(NA,n.plots)) # matrix(0,ncol=n.plots,nrow=100)
 responses <- list(rep(NA,n.plots)) # matrix(0,ncol=n.plots,nrow=100)
 
-for (j in c(1:n.plots)) {  #cycle through the first time and get the range of the functions
+#cycle through the first time and get the range of the functions
+for (j in c(1:n.plots)) {  
   if (n.plots == 1) {
     k <- variable.no
+  } else {
+    k <- match(gbm.object$contributions$var[j],pred.names)
   }
-  else k <- match(gbm.object$contributions$var[j],pred.names)
 
-  if (is.null(x.label)) var.name <- gbm.call$predictor.names[k]
-    else var.name <- x.label
-
+  if (is.null(x.label)) {
+    var.name <- gbm.call$predictor.names[k]
+  } else {
+    var.name <- x.label
+  }
+  
   pred.data <- data[,gbm.call$gbm.x[k]]
 
   response.matrix <- plot.gbm(gbm.object, k, return.grid = TRUE)
@@ -2005,7 +1990,7 @@ for (j in c(1:n.plots)) {  #cycle through the first time and get the range of th
   predictors[[j]] <- response.matrix[,1]
   if (is.factor(data[,gbm.call$gbm.x[k]])) {
     predictors[[j]] <- factor(predictors[[j]],levels = levels(data[,gbm.call$gbm.x[k]]))
-    }
+  }
 
   ###############
   # here is the SM change
@@ -2023,12 +2008,11 @@ for (j in c(1:n.plots)) {  #cycle through the first time and get the range of th
   if(j == 1) {
     ymin = min(responses[[j]])
     ymax = max(responses[[j]])
-    }
-  else {
+  } else {
     ymin = min(ymin,min(responses[[j]]))
     ymax = max(ymax,max(responses[[j]]))
-    }
   }
+}
 
 # now do the actual plots
 
@@ -2051,23 +2035,20 @@ for (j in c(1:n.plots)) {  #cycle through the first time and get the range of th
       if (show.contrib) {
          x.label <- paste(var.name,"  (",round(gbm.object$contributions[k,2],1),"%)",sep="")
       }
-    }
-    else {
+    } else {
       k <- match(gbm.object$contributions$var[j],pred.names)
       var.name <- gbm.call$predictor.names[k]
       if (show.contrib) {
          x.label <- paste(var.name,"  (",round(gbm.object$contributions[j,2],1),"%)",sep="")
+      } else {
+        x.label <- var.name
       }
-      else x.label <- var.name
     }
 
     if (common.scale) {
-      plot(predictors[[j]],responses[[j]],ylim=c(ymin,ymax), type='l',
-        xlab = x.label, ylab = y.label, ...)
-    }
-    else {
-      plot(predictors[[j]],responses[[j]], type='l',
-        xlab = x.label, ylab = y.label, ...)
+      plot(predictors[[j]],responses[[j]],ylim=c(ymin,ymax), type='l', xlab = x.label, ylab = y.label, ...)
+    } else {
+      plot(predictors[[j]],responses[[j]], type='l', xlab = x.label, ylab = y.label, ...)
     }
     if (smooth & is.vector(predictors[[j]])) {
       temp.lo <- loess(responses[[j]] ~ predictors[[j]], span = 0.3)
@@ -2077,8 +2058,7 @@ for (j in c(1:n.plots)) {  #cycle through the first time and get the range of th
       if (write.title) {
         title(paste(response.name," - page ",n.pages,sep=""))
       }
-    }
-    else {
+    } else {
       if (write.title & j == 1) {
         title(response.name)
       }
@@ -2089,8 +2069,8 @@ for (j in c(1:n.plots)) {  #cycle through the first time and get the range of th
   }
 }
 
-`gbm.unipred` <-
-function(gbm.object,
+gbm.unipred <- function(
+  gbm.object,
   x = NULL,           # the predictor variable to plot - NULL to force a value
   x.label = NULL,     # allows manual specification of the x label
   x.range = NULL,     # manual range specification for the x variable
@@ -2102,7 +2082,8 @@ function(gbm.object,
   mask.object = NULL,
   add = FALSE,        # controls whether a new plot will be drawn
   return.data = FALSE,# should the predicted values be returned
-  ...)                # additional plot parameters
+  ...                 # additional plot parameters
+)
 {
 #
 # gbm.unipred version 2.9 August 2006
@@ -2130,11 +2111,11 @@ function(gbm.object,
 
   if (is.null(x.label)) {
     x.label <- gbm.call$predictor.names[x]
-    }
+  }
 
   if (is.null(y.label)) {
     y.label <- "fitted response"
-    }
+  }
 
 #first check variables specified in pred.means
 
@@ -2161,8 +2142,9 @@ function(gbm.object,
 
   if (is.null(x.range)) {
     x.var <- seq(min(data[,x],na.rm=T),max(data[,x],na.rm=T),length = 100)
+  } else {
+    x.var <- seq(x.range[1],x.range[2],length = 100)
   }
-  else {x.var <- seq(x.range[1],x.range[2],length = 100)}
 
   pred.list[[1]] <- x.var
   names(pred.list)[1] <- names(data)[x]
@@ -2176,28 +2158,26 @@ function(gbm.object,
         m <- match(pred.names[i],names(pred.means))
         if (is.na(m)) {
           pred.list[[j]] <- mean(data[,i],na.rm=T)
-        }
-        else pred.list[[j]] <- pred.means[[m]]
+        } else pred.list[[j]] <- pred.means[[m]]
       }
       if (is.factor(data[,i])) {
         temp.table <- sort(table(data[,i]),decreasing = TRUE)
         m <- match(pred.names[i],names(pred.means))
         if (is.na(m)) {
           pred.list[[j]] <- names(temp.table)[1]
+        } else {
+          n <- match(pred.means[[m]],names(temp.table))
+          if (is.na(n)){
+            stop(paste("invalid level",pred.means[[m]],"provided for ",pred.names[i]))
+          }
+          pred.list[[j]] <- pred.means[m]
         }
-        else {
-         n <- match(pred.means[[m]],names(temp.table))
-         if (is.na(n)){
-           stop(paste("invalid level",pred.means[[m]],"provided for ",pred.names[i]))
-           }
-         pred.list[[j]] <- pred.means[m]
-         }
         paste(i,pred.names[i],"\n")
         pred.list[[j]] <- factor(pred.list[[j]],levels=levels(data[,i]))
       }
       names(pred.list)[[j]] <- pred.names[i]
       j <- j + 1
-     }
+    }
   }
 
 pred.frame <- expand.grid(pred.list)
@@ -2232,15 +2212,12 @@ pred.frame <- expand.grid(pred.list)
   if (is.null(y.range)) {
     if (family == "bernoulli") ylim = c(0,1)
     else ylim <- c(min(prediction),max(prediction))
-    }
-  else ylim <- y.range
+  } else ylim <- y.range
 
   if (add) {
     lines(x.var, prediction, ...)
-  }
-  else {
-    plot(x.var, prediction, xlab = x.label, ylab = y.label,
-      type = "l", ylim = ylim,...)
+  } else {
+    plot(x.var, prediction, xlab = x.label, ylab = y.label, type = "l", ylim = ylim,...)
   }
 
   if (return.data){
@@ -2250,8 +2227,8 @@ pred.frame <- expand.grid(pred.list)
   }
 }
 
-`gbm.perspec` <-
-function(gbm.object,
+gbm.perspec <- function(
+     gbm.object,
      x = 1,                # the first variable to be plotted
      y = 2,                # the second variable to be plotted
      pred.means = NULL,    # allows specification of values for other variables
@@ -2267,9 +2244,10 @@ function(gbm.object,
      smooth = "none",      # controls smoothing of the predicted surface
      mask = FALSE,         # controls masking using a sample intensity model
      perspective = TRUE,   # controls whether a contour or perspective plot is drawn
-     ...)                  # allows the passing of additional arguments to plotting routine
+     ...                   # allows the passing of additional arguments to plotting routine
                            # useful options include shade, ltheta, lphi for controlling illumination
                            # and cex for controlling text size - cex.axis and cex.lab have no effect
+)
 {
 #
 # gbm.perspec version 2.9 April 2007
@@ -2297,28 +2275,29 @@ function(gbm.object,
   x.name <- gbm.call$predictor.names[x]
 
   if (is.null(x.label)) {
-    x.label <- gbm.call$predictor.names[x]}
+    x.label <- gbm.call$predictor.names[x]
+  }
 
   y.name <- gbm.call$predictor.names[y]
 
   if (is.null(y.label)) {
-    y.label <- gbm.call$predictor.names[y]}
+    y.label <- gbm.call$predictor.names[y]
+  }
 
   if (is.null(z.label)) {
-    z.label <- "fitted value"}
+    z.label <- "fitted value"
+  }
 
   data <- eval(parse(text=gbm.call$dataframe))[,gbm.x]
   n.trees <- gbm.call$best.trees
 
   if (is.null(x.range)) {
     x.var <- seq(min(data[,x],na.rm=T),max(data[,x],na.rm=T),length = 50)
-  }
-  else {x.var <- seq(x.range[1],x.range[2],length = 50)}
+  } else {x.var <- seq(x.range[1],x.range[2],length = 50)}
 
   if (is.null(y.range)) {
     y.var <- seq(min(data[,y],na.rm=T),max(data[,y],na.rm=T),length = 50)
-  }
-  else {y.var <- seq(y.range[1],y.range[2],length = 50)}
+  } else {y.var <- seq(y.range[1],y.range[2],length = 50)}
 
   pred.frame <- expand.grid(list(x.var,y.var))
   names(pred.frame) <- c(x.name,y.name)
@@ -2330,21 +2309,19 @@ function(gbm.object,
         m <- match(pred.names[i],names(pred.means))
         if (is.na(m)) {
           pred.frame[,j] <- mean(data[,i],na.rm=T)
-        }
-        else pred.frame[,j] <- pred.means[m]
+        } else pred.frame[,j] <- pred.means[m]
       }
       if (is.factor(data[,i])) {
         m <- match(pred.names[i],names(pred.means))
         temp.table <- table(data[,i])
         if (is.na(m)) {
           pred.frame[,j] <- rep(names(temp.table)[2],2500)
-        }
-        else pred.frame[,j] <- pred.means[m]
+        } else pred.frame[,j] <- pred.means[m]
         pred.frame[,j] <- factor(pred.frame[,j],levels=names(temp.table))
       }
       names(pred.frame)[j] <- pred.names[i]
       j <- j + 1
-     }
+    }
   }
 #
 # form the prediction
@@ -2366,11 +2343,9 @@ function(gbm.object,
   if (is.null(z.range)) {
     if (family == "bernoulli") {
       z.range <- c(0,1)
-    }
-    else if (family == "poisson") {
+    } else if (family == "poisson") {
       z.range <- c(0,max.pred * 1.1)
-    }
-    else {
+    } else {
       z.min <- min(data[,y],na.rm=T)
       z.max <- max(data[,y],na.rm=T)
       z.delta <- z.max - z.min
@@ -2383,13 +2358,14 @@ function(gbm.object,
 
 # kernel smooth if required
 
-  if (smooth == "average") {  #apply a 3 x 3 smoothing average
-     pred.matrix.smooth <- pred.matrix
-     for (i in 2:49) {
-       for (j in 2:49) {
-         pred.matrix.smooth[i,j] <- mean(pred.matrix[c((i-1):(i+1)),c((j-1):(j+1))])
-       }
-     }
+  if (smooth == "average") {  
+    # apply a 3 x 3 smoothing average
+    pred.matrix.smooth <- pred.matrix
+    for (i in 2:49) {
+      for (j in 2:49) {
+        pred.matrix.smooth[i,j] <- mean(pred.matrix[c((i-1):(i+1)),c((j-1):(j+1))])
+      }
+    }
   pred.matrix <- pred.matrix.smooth
   }
 
@@ -2406,17 +2382,16 @@ function(gbm.object,
 #
   if (!perspective) {
     image(x = x.var, y = y.var, z = pred.matrix, zlim = z.range)
-  }
-  else {
+  } else {
     persp(x=x.var, y=y.var, z=pred.matrix, zlim= z.range,      # input vars
       xlab = x.label, ylab = y.label, zlab = z.label,          # labels
       theta=theta, phi=phi, r = sqrt(10), d = 3,               # viewing pars
-      ticktype = ticktype, mgp = c(4,1,0), ...) #
+      ticktype = ticktype, mgp = c(4,1,0), ...                 #
+    )
   }
 }
 
-`calibration` <-
-function(obs, preds, family = "binomial")
+calibration <- function(obs, preds, family = "binomial")
 {
 #
 # j elith/j leathwick 17th March 2005
@@ -2429,37 +2404,36 @@ function(obs, preds, family = "binomial")
 if (family == "bernoulli") family <- "binomial"
 pred.range <- max(preds) - min(preds)
 if(pred.range > 1.2 & family == "binomial") {
-print(paste("range of response variable is ", round(pred.range, 2)), sep = "", quote = F)
-print("check family specification", quote = F)
-return()
+  print(paste("range of response variable is ", round(pred.range, 2)), sep = "", quote = F)
+  print("check family specification", quote = F)
+  return()
 }
 if(family == "binomial") {
-pred <- preds + 1e-005
-pred[pred >= 1] <- 0.99999
-mod <- glm(obs ~ log((pred)/(1 - (pred))), family = binomial)
-lp <- log((pred)/(1 - (pred)))
-a0b1 <- glm(obs ~ offset(lp) - 1, family = binomial)
-miller1 <- 1 - pchisq(a0b1$deviance - mod$deviance, 2)
-ab1 <- glm(obs ~ offset(lp), family = binomial)
-miller2 <- 1 - pchisq(a0b1$deviance - ab1$deviance, 1)
-miller3 <- 1 - pchisq(ab1$deviance - mod$deviance, 1)
+  pred <- preds + 1e-005
+  pred[pred >= 1] <- 0.99999
+  mod <- glm(obs ~ log((pred)/(1 - (pred))), family = binomial)
+  lp <- log((pred)/(1 - (pred)))
+  a0b1 <- glm(obs ~ offset(lp) - 1, family = binomial)
+  miller1 <- 1 - pchisq(a0b1$deviance - mod$deviance, 2)
+  ab1 <- glm(obs ~ offset(lp), family = binomial)
+  miller2 <- 1 - pchisq(a0b1$deviance - ab1$deviance, 1)
+  miller3 <- 1 - pchisq(ab1$deviance - mod$deviance, 1)
 }
 if(family == "poisson") {
-mod <- glm(obs ~ log(preds), family = poisson)
-lp <- log(preds)
-a0b1 <- glm(obs ~ offset(lp) - 1, family = poisson)
-miller1 <- 1 - pchisq(a0b1$deviance - mod$deviance, 2)
-ab1 <- glm(obs ~ offset(lp), family = poisson)
-miller2 <- 1 - pchisq(a0b1$deviance - ab1$deviance, 1)
-miller3 <- 1 - pchisq(ab1$deviance - mod$deviance, 1)
+  mod <- glm(obs ~ log(preds), family = poisson)
+  lp <- log(preds)
+  a0b1 <- glm(obs ~ offset(lp) - 1, family = poisson)
+  miller1 <- 1 - pchisq(a0b1$deviance - mod$deviance, 2)
+  ab1 <- glm(obs ~ offset(lp), family = poisson)
+  miller2 <- 1 - pchisq(a0b1$deviance - ab1$deviance, 1)
+  miller3 <- 1 - pchisq(ab1$deviance - mod$deviance, 1)
 }
 calibration.result <- c(mod$coef, miller1, miller2, miller3)
 names(calibration.result) <- c("intercept", "slope", "testa0b1", "testa0|b1", "testb1|a")
 return(calibration.result)
 }
 
-`roc` <-
-function (obsdat, preddat)
+roc <- function(obsdat, preddat)
 {
 # code adapted from Ferrier, Pearce and Watson's code, by J.Elith
 #
@@ -2475,19 +2449,18 @@ function (obsdat, preddat)
 # using the fact that a MannWhitney U statistic is closely related to
 # the area
 #
-    if (length(obsdat) != length(preddat))
-        stop("obs and preds must be equal lengths")
-    n.x <- length(obsdat[obsdat == 0])
-    n.y <- length(obsdat[obsdat == 1])
-    xy <- c(preddat[obsdat == 0], preddat[obsdat == 1])
-    rnk <- rank(xy)
-    wilc <- ((n.x * n.y) + ((n.x * (n.x + 1))/2) - sum(rnk[1:n.x]))/(n.x *
-        n.y)
-    return(round(wilc, 4))
+  if (length(obsdat) != length(preddat)) {
+    stop("obs and preds must be equal lengths")  
+  }
+  n.x <- length(obsdat[obsdat == 0])
+  n.y <- length(obsdat[obsdat == 1])
+  xy <- c(preddat[obsdat == 0], preddat[obsdat == 1])
+  rnk <- rank(xy)
+  wilc <- ((n.x * n.y) + ((n.x * (n.x + 1))/2) - sum(rnk[1:n.x]))/(n.x * n.y)
+  return(round(wilc, 4))
 }
 
-`calc.deviance` <-
-function(obs.values, fitted.values, weights = rep(1,length(obs.values)), family="binomial", calc.mean = TRUE)
+calc.deviance <- function(obs.values, fitted.values, weights = rep(1,length(obs.values)), family="binomial", calc.mean = TRUE)
 {
 # j. leathwick/j. elith
 #
@@ -2521,11 +2494,11 @@ if (family == "poisson" | family == "Poisson") {
 
 if (family == "laplace") {
     deviance <- sum(abs(y_i - u_i))
-    }
+}
 
 if (family == "gaussian") {
     deviance <- sum((y_i - u_i) * (y_i - u_i))
-    }
+}
 
 
 
@@ -2535,10 +2508,11 @@ return(deviance)
 
 }
 
-`gbm.interactions` <-
-function(gbm.object,
+gbm.interactions <- function(
+   gbm.object,
    use.weights = FALSE,     # use weights for samples
-   mask.object)           # a gbm object describing sample intensity
+   mask.object              # a gbm object describing sample intensity
+)
 {
 #
 # gbm.interactions version 2.9
@@ -2575,24 +2549,26 @@ function(gbm.object,
 
   data <- eval(parse(text=gbm.call$dataframe))[,gbm.x]
 
-  for (i in 1:(n.preds - 1)) {  # step through the predictor set
+  for (i in 1:(n.preds - 1)) {
+    # step through the predictor set
 
-    if (is.vector(data[,i])) {  # create a sequence through the range
-       x.var <- seq(min(data[,i],na.rm=T),max(data[,i],na.rm=T),length = 20)
-       }
-    else {                      # otherwise set up simple factor variable
-       x.var <- factor(names(table(data[,i])),levels = levels(data[,i]))
-       }
+    if (is.vector(data[,i])) {  
+      # create a sequence through the range
+      x.var <- seq(min(data[,i],na.rm=T),max(data[,i],na.rm=T),length = 20)
+    } else {
+      # otherwise set up simple factor variable
+      x.var <- factor(names(table(data[,i])),levels = levels(data[,i]))
+    }
     x.length <- length(x.var)
 
     cat(i,"\n")
 
-    for (j in (i+1):n.preds) { #create vector or factor data for second variable
+    for (j in (i+1):n.preds) {
+      #create vector or factor data for second variable
 
       if (is.vector(data[,j])) {
         y.var <- seq(min(data[,j],na.rm=T),max(data[,j],na.rm=T),length = 20)
-      }
-      else {
+      } else {
         y.var <- factor(names(table(data[,j])),levels = levels(data[,j]))
       }
       y.length <- length(y.var)
@@ -2606,10 +2582,11 @@ function(gbm.object,
 
       for (k in 1:n.preds) {
         if (k != i & k != j) {
-          if (is.vector(data[,k])) {  # either with the mean
+          if (is.vector(data[,k])) {
+            # either with the mean
             pred.frame[,n] <- mean(data[,k],na.rm=T)
-          }
-          else {   # or the most common factor level
+          } else {
+            # or the most common factor level
             temp.table <- sort(table(data[,k]),decreasing = TRUE)
             pred.frame[,n] <- rep(names(temp.table)[1],x.length * y.length)
             pred.frame[,n] <- as.factor(pred.frame[,n])
@@ -2625,12 +2602,9 @@ function(gbm.object,
 
       if (use.weights) {
         point.prob <- predict.gbm(mask.object[[1]],pred.frame, n.trees = mask.trees, type="response")
-        interaction.test.model <- lm(prediction ~ as.factor(pred.frame[,1]) + as.factor(pred.frame[,2]),
-          weights = point.prob)
-      }
-
-      else {
-
+        interaction.test.model <- lm(prediction ~ as.factor(pred.frame[,1]) + as.factor(pred.frame[,2]), weights = point.prob)
+        
+      } else {
         interaction.test.model <- lm(prediction ~ as.factor(pred.frame[,1]) + as.factor(pred.frame[,2]))
       }
 
@@ -2661,7 +2635,8 @@ function(gbm.object,
     var1.names[i] <- pred.names[j]
 
     k <- index.match%%n.preds
-    if (k > 0) {   #only do this if k > 0 - otherwise we have all zeros from here on
+    if (k > 0) {
+      #only do this if k > 0 - otherwise we have all zeros from here on
       var2.index[i] <- k
       var2.names[i] <- pred.names[k]
 
@@ -2675,18 +2650,12 @@ function(gbm.object,
   return(list(rank.list = rank.list, interactions = cross.tab, gbm.call = gbm.object$gbm.call))
 }
 
-`bu.gbm` <-
-function(in.list=c("gbm.step","gbm.fixed","gbm.cv","gbm.oob","gbm.holdout","gbm.kfold","fit.gbm","gbm.anz","gbm.bootstrap","gbm.plot","gbm.unipred",
-  "gbm.perspec","calibration","roc","calc.deviance","gbm.interactions","bu.gbm","map.predictions","gbm.plot.fits",
-  "gbm.simplify","gbm.bootstrap","gbm.predict.grids"),
-  out.file="gbm.functions.2.9.R",
-  drive = "h:/gbm/") {
-print(paste("backing up functions to", paste(drive,out.file,sep="")),quote=FALSE)
-dump(in.list,paste(drive,out.file,sep=""))}
+bu.gbm <- function(in.list=c("gbm.step","gbm.fixed","gbm.cv","gbm.oob","gbm.holdout","gbm.kfold","fit.gbm","gbm.anz","gbm.bootstrap","gbm.plot","gbm.unipred", "gbm.perspec","calibration","roc","calc.deviance","gbm.interactions","bu.gbm","map.predictions","gbm.plot.fits", "gbm.simplify","gbm.bootstrap","gbm.predict.grids"), out.file="gbm.functions.2.9.R", drive = "h:/gbm/") {
+  print(paste("backing up functions to", paste(drive,out.file,sep="")),quote=FALSE)
+  dump(in.list,paste(drive,out.file,sep=""))
+}
 
-`map.predictions` <-
-function(gbm.preds, x = pred.data$col, y = pred.data$row, plot = TRUE,
-   export = FALSE, filename = NULL)
+map.predictions <- function(gbm.preds, x = pred.data$col, y = pred.data$row, plot = TRUE, export = FALSE, filename = NULL)
 {
   nrows <- 695     #is x axis
   ncols <- 688     #is y axis
@@ -2721,8 +2690,8 @@ function(gbm.preds, x = pred.data$col, y = pred.data$row, plot = TRUE,
   }
 }
 
-`gbm.plot.fits` <-
-function(gbm.object,
+gbm.plot.fits <- function(
+  gbm.object,
   mask.presence = FALSE,
   use.factor = FALSE,
   plot.layout = c(3,4)          # define the default layout for graphs on the page
@@ -2743,82 +2712,87 @@ function(gbm.object,
 #
 # SM change 2010: changed dat to dats to avoid conflict with external name.
 
-    max.plots <- plot.layout[1] * plot.layout[2]
-    plot.count <- 0
+  max.plots <- plot.layout[1] * plot.layout[2]
+  plot.count <- 0
 
-    dats <- gbm.object$gbm.call$dataframe    #get the dataframe name
-    dats <- as.data.frame(eval(parse(text=dats)))   #and now the data
+  dats <- gbm.object$gbm.call$dataframe    #get the dataframe name
+  dats <- as.data.frame(eval(parse(text=dats)))   #and now the data
 
-    n.cases <- nrow(dats)
+  n.cases <- nrow(dats)
 
-    gbm.call <- gbm.object$gbm.call #and the mars call details
-    gbm.x <- gbm.call$gbm.x
-    gbm.y <- gbm.call$gbm.y
-    family <- gbm.call$family
+  gbm.call <- gbm.object$gbm.call #and the mars call details
+  gbm.x <- gbm.call$gbm.x
+  gbm.y <- gbm.call$gbm.y
+  family <- gbm.call$family
 
-    xdat <- as.data.frame(dats[,gbm.x])
-    ydat <- as.data.frame(dats[,gbm.y])
+  xdat <- as.data.frame(dats[,gbm.x])
+  ydat <- as.data.frame(dats[,gbm.y])
 
-    n.preds <- ncol(xdat)
+  n.preds <- ncol(xdat)
 
-    fitted.values <- gbm.object$fitted
+  fitted.values <- gbm.object$fitted
 
-    pred.names <- names(dats)[gbm.x]
-    sp.name <- names(dats)[gbm.y]
+  pred.names <- names(dats)[gbm.x]
+  sp.name <- names(dats)[gbm.y]
 
-    if (mask.presence) {
-    mask <- ydat == 1 }     else {
-    mask <- rep(TRUE, length = n.cases) }
+  if (mask.presence) {
+  mask <- ydat == 1 
+  } else {
+    mask <- rep(TRUE, length = n.cases)
+  }
 
-    robust.max.fit <- approx(ppoints(fitted.values[mask]), sort(fitted.values[mask],na.last=T), 0.99) #find 99%ile value
+  robust.max.fit <- approx(ppoints(fitted.values[mask]), sort(fitted.values[mask],na.last=T), 0.99) #find 99%ile value
 
-    for (j in 1:n.preds) {
+  for (j in 1:n.preds) {
 
-     if (plot.count == max.plots) {
-       plot.count = 0
-     }
+    if (plot.count == max.plots) {
+     plot.count = 0
+    }
 
-     if (plot.count == 0) {
-       dev.new(width = 11, height = 8)
-       par(mfrow = plot.layout)
-     }
+    if (plot.count == 0) {
+     dev.new(width = 11, height = 8)
+     par(mfrow = plot.layout)
+    }
 
-     plot.count <- plot.count + 1
+    plot.count <- plot.count + 1
 
     if (is.numeric(xdat[mask,j])) {
-            wt.mean <- zapsmall(mean((xdat[mask, j] * fitted.values[mask]^5)/mean(fitted.values[mask]^5),na.rm=TRUE),2)
-            }
-        else {wt.mean <- "na"}
-    if (use.factor) {
-        temp <- factor(cut(xdat[mask, j], breaks = 12))
-    if (family == "binomial") {
-        plot(temp, fitted.values[mask], xlab = pred.names[j], ylab = "fitted values", ylim = c(0, 1))}
-    else {
-        plot(temp, fitted.values[mask], xlab = pred.names[j], ylab = "fitted values")}
+      wt.mean <- zapsmall(mean((xdat[mask, j] * fitted.values[mask]^5)/mean(fitted.values[mask]^5),na.rm=TRUE),2)
+    } else {
+      wt.mean <- "na"
     }
-    else {
-    if (family == "binomial") {
-        plot(xdat[mask, j], fitted.values[mask], xlab = pred.names[j], ylab = "fitted values",
-          ylim = c(0, 1))}
-        else {
-      plot(xdat[mask, j], fitted.values[mask], xlab = pred.names[j], ylab = "fitted values")}
-        }
+    if (use.factor) {
+      temp <- factor(cut(xdat[mask, j], breaks = 12))
+      if (family == "binomial") {
+        plot(temp, fitted.values[mask], xlab = pred.names[j], ylab = "fitted values", ylim = c(0, 1))
+      } else {
+        plot(temp, fitted.values[mask], xlab = pred.names[j], ylab = "fitted values")
+      }
+    } else {
+      if (family == "binomial") {
+        plot(xdat[mask, j], fitted.values[mask], xlab = pred.names[j], ylab = "fitted values", ylim = c(0, 1))
+      } else {
+        plot(xdat[mask, j], fitted.values[mask], xlab = pred.names[j], ylab = "fitted values")
+      }
+    }
     abline(h = (0.333 * robust.max.fit$y), lty = 2.)
     if (j == 1) {
-      title(paste(sp.name, ", wtm = ", wt.mean))}
-    else {
-      title(paste("wtm = ", wt.mean))}
+      title(paste(sp.name, ", wtm = ", wt.mean))
+    } else {
+      title(paste("wtm = ", wt.mean))
     }
+  }
 }
 
-`gbm.simplify` <-
-function(gbm.object,          # a gbm object describing sample intensity
+gbm.simplify <- function(
+  gbm.object,                 # a gbm object describing sample intensity
   n.folds = 10,               # number of times to repeat the analysis
   n.drops = "auto",           # can be automatic or an integer specifying the number of drops to check
   alpha = 1,                  # controls stopping when n.drops = "auto"
   prev.stratify = TRUE,       # use prevalence stratification in selecting evaluation data
   eval.data = NULL,           # an independent evaluation data set - leave here for now
-  plot = TRUE)                # plot results
+  plot = TRUE                 # plot results
+)
 {
 # function to simplify a brt model fitted using gbm.step
 #
@@ -2839,7 +2813,7 @@ function(gbm.object,          # a gbm object describing sample intensity
 # a table containing the order in which variables are to be removed
 # and a list of vectors, each of which specifies the predictor col numbers
 # in the original dataframe  - the latter can be used as an argument to gbm.step
-# e.g., gbm.step(data = data, gbm.x = simplify.object$pred.list[[4]]...
+# e.g., gbm.step(data = data, gbm.x = simplify.object$pred.list[[4]]...)
 # would implement a new analysis with the original predictor set, minus its
 # four lowest contributing predictors
 #
@@ -2864,9 +2838,11 @@ require(gbm)
   pred.list <- list(initial = gbm.x)
   weights <- gbm.object$weights
 
-  if (n.drops == "auto") auto.stop <- TRUE
-
-  else auto.stop <- FALSE
+  if (n.drops == "auto") {
+    auto.stop <- TRUE
+  } else {
+    auto.stop <- FALSE
+  }
 
 # take a copy of the original data and starting predictors
 
@@ -2890,14 +2866,13 @@ require(gbm)
 
   if (auto.stop) {
     cat("variable removal will proceed until average change exceeds the original se\n\n")
-    n.drops <- 1 }
-  else{
+    n.drops <- 1 
+  } else{
     if (n.drops > start.preds - 2) {
       cat("value of n.drops (",n.drops,") is greater than permitted","\n",
         "resetting value to ",start.preds - 2,"\n\n",sep="")
       n.drops <- start.preds - 2
-    }
-    else {
+    } else {
       cat("a fixed number of",n.drops,"drops will be tested\n\n")
     }
   }
@@ -2929,22 +2904,22 @@ require(gbm)
     n.pres <- sum(presence.mask)
     n.abs <- sum(absence.mask)
 
-# create a vector of randomised numbers and feed into presences
+    # create a vector of randomised numbers and feed into presences
     selector <- rep(0,n.cases)
     temp <- rep(seq(1, n.folds, by = 1), length = n.pres)
     temp <- temp[order(runif(n.pres, 1, 100))]
     selector[presence.mask] <- temp
 
-# and then do the same for absences
+    # and then do the same for absences
     temp <- rep(seq(1, n.folds, by = 1), length = n.abs)
     temp <- temp[order(runif(n.abs, 1, 100))]
     selector[absence.mask] <- temp
-    }
-
-  else {  #otherwise make them random with respect to presence/absence
+  } else {  
+    
+    #otherwise make them random with respect to presence/absence
     selector <- rep(seq(1, n.folds, by = 1), length = n.cases)
     selector <- selector[order(runif(n.cases, 1, 100))]
-    }
+  }
 
 # now start by creating the intial models for each fold
 
@@ -3015,15 +2990,16 @@ require(gbm)
 
     }
 
-  if (auto.stop){ # check to see if delta mean is less than original deviance error estimate
+  if (auto.stop) {
+    # check to see if delta mean is less than original deviance error estimate
 
     delta.mean <- mean(dev.results[n.steps,])
 
     if (delta.mean < (alpha * original.deviance.se)) {
       n.drops <- n.drops + 1
       dev.results <- rbind(dev.results, rep(0,n.folds))
-      }
     }
+  }
   n.steps <- n.steps + 1
   }
 
@@ -3118,16 +3094,13 @@ require(gbm)
   final.drops <- data.frame("preds" = dimnames(final.drops)[[1]][order(final.drops)],
      "order" = final.drops[order(final.drops)])
 
-  return(list(deviance.summary = deviance.summary,
-    deviance.matrix = dev.results, drop.count = drop.count,
-    final.drops = final.drops, pred.list = pred.list,
-    gbm.call = gbm.call))
+  return(list(deviance.summary = deviance.summary, deviance.matrix = dev.results, drop.count = drop.count, final.drops = final.drops, pred.list = pred.list, gbm.call = gbm.call))
 
 }
 
-`gbm.bootstrap` <-
-function(gbm.object,            # a gbm object describing sample intensity
-  bootstrap.model = TRUE,   # bootstrap the model fitted and predicted values using 632+
+gbm.bootstrap <- function(
+  gbm.object,                   # a gbm object describing sample intensity
+  bootstrap.model = TRUE,       # bootstrap the model fitted and predicted values using 632+
   bootstrap.functions = TRUE,   # estimate confidence intervals for the fitted functions
   pred.data = NULL,             # an independent evaluation data set - leave here for now
   return.train.matrix = FALSE,  # return the full matrix of predictions
@@ -3135,7 +3108,8 @@ function(gbm.object,            # a gbm object describing sample intensity
   return.tails = FALSE,         # return the tails of the predictions
   CI = 95,                      # the required confidence interval - should be 90, 95, 99
   n.reps = 200,       # number of bootstrap samples
-  verbose = T)                  # control reporting
+  verbose = T                   # control reporting
+)
 {
 # function to calculate bootstrap estimates of 95% confidence intervals for
 # a brt model created using gbm.step
@@ -3181,13 +3155,15 @@ require(gbm)
 
   }
 
-  if (bootstrap.functions) {  # then set up a dataframe of means for predicting them
+  if (bootstrap.functions) {
+    # then set up a dataframe of means for predicting them
 
     function.matrix <- array(0,dim=c(n.reps,n.preds,200))
 
     function.pred.frame <- as.data.frame(as.vector(rep(mean(train.data[,gbm.x[1]],na.rm=T),200)))
 
-    for (i in 2:n.preds) {  # step through the predictor set
+    for (i in 2:n.preds) {
+      # step through the predictor set
 
       j <- gbm.x[i]
 
@@ -3211,9 +3187,8 @@ require(gbm)
 
     bootstrap.predictions <- FALSE
 
-  }
-
-  else {  # we have a prediction dataset
+  } else {
+    # we have a prediction dataset
 
     bootstrap.predictions <- TRUE
 
@@ -3240,7 +3215,7 @@ require(gbm)
   cat("bootstrap resampling gbm.step model for ",response.name,"\n",sep="")
   cat("with ",n.trees," trees and ",n.obs," observations\n\n",sep="")
   if (bootstrap.predictions) cat("prediction dataset has ",n.pred.obs," rows\n\n",sep="")
-    else cat("no prediction dataset provided...\n\n")
+  else cat("no prediction dataset provided...\n\n")
 
 # initiate timing call
 
@@ -3261,10 +3236,8 @@ require(gbm)
       z2 <- unclass(Sys.time())
       est.time <- (z2 - z1)/60  # time for five reps
       est.time <- est.time * (n.reps/5) * 2  # multiply by two as sorting takes time
-      cat("five bootstrap samples processed \n"," estimated time for completion is ",
-        round(est.time,1)," minutes \n",sep="")
-      }
-    else {
+      cat("five bootstrap samples processed \n"," estimated time for completion is ", round(est.time,1)," minutes \n",sep="")
+    } else {
       if (verbose) cat(i,"\n")
     }
 
@@ -3286,7 +3259,8 @@ require(gbm)
 
     if (bootstrap.functions) {
 
-      for (j in 1:n.preds) {  #cycle through the first time and get the range of the functions
+      for (j in 1:n.preds) {
+        #cycle through the first time and get the range of the functions
 
         k <- gbm.x[j]
         temp.frame <- function.pred.frame
@@ -3315,8 +3289,7 @@ require(gbm)
       if (i <= tail.cols) {
         preds.lower.tail[,i] <- preds
         preds.upper.tail[,i] <- preds
-      }
-      else {
+      } else {
         preds.lower.tail <- t(apply(preds.lower.tail,1,sort))
         preds.upper.tail <- t(apply(preds.upper.tail,1,sort))
         preds.lower.tail[,tail.cols] <- preds
@@ -3389,15 +3362,13 @@ require(gbm)
     function.dataframe <- as.data.frame(matrix(0,nrow=200,ncol=n.preds*4))
     for (i in 1:n.preds) {
       j <- (i * 4) - 3
-      names(function.dataframe)[j:(j+3)] <-
-        paste(predictor.names[i],c(".vals",".lower",".mean",".upper"),sep="")
+      names(function.dataframe)[j:(j+3)] <- paste(predictor.names[i],c(".vals",".lower",".mean",".upper"), sep="")
     }
 
     for (i in 1:n.preds) {
       k <- (i * 4) - 3
       if (is.vector(train.data[,gbm.x[i]])) {
-        function.dataframe[,k] <- seq(min(train.data[,gbm.x[i]], na.rm = T),
-          max(train.data[,gbm.x[i]], na.rm = T),length = 200)
+        function.dataframe[,k] <- seq(min(train.data[,gbm.x[i]], na.rm = T), max(train.data[,gbm.x[i]], na.rm = T),length = 200)
         function.dataframe[,k+2] <- apply(function.matrix[,i,],2,mean)
         for (j in 1:200) {
           temp <- function.matrix[,i,j]
@@ -3469,17 +3440,14 @@ require(gbm)
 
   final.object <- list(gbm.call = gbm.call)
   if (bootstrap.model) {
-    final.object$train.fit.stats <- data.frame(fit.mean = train.fit.mean, fit.lower = train.fit.lower,
-     fit.upper = train.fit.upper, fit.count = train.fit.count)
-    final.object$train.pred.stats <- data.frame(pred.mean = train.pred.mean, pred.lower = train.pred.lower,
-     pred.upper = train.pred.upper, pred.count = train.pred.count)
-    }
+    final.object$train.fit.stats <- data.frame(fit.mean = train.fit.mean, fit.lower = train.fit.lower, fit.upper = train.fit.upper, fit.count = train.fit.count)
+    final.object$train.pred.stats <- data.frame(pred.mean = train.pred.mean, pred.lower = train.pred.lower, pred.upper = train.pred.upper, pred.count = train.pred.count)
+  }
 
   if (bootstrap.functions) final.object$function.dataframe <- function.dataframe
 
   if (bootstrap.predictions) {
-    final.object$prediction.stats = data.frame(pred.mean = preds.mean, upper.limit = preds.upper.limit,
-     lower.limit = preds.lower.limit)
+    final.object$prediction.stats = data.frame(pred.mean = preds.mean, upper.limit = preds.upper.limit, lower.limit = preds.lower.limit)
     if (return.tails) {
       final.object$preds.lower.tail <- preds.lower.tail
       final.object$preds.upper.tail <- preds.upper.tail
@@ -3491,8 +3459,8 @@ require(gbm)
 }
 
 
-`gbm.predict.grids` <-
-function(model,
+gbm.predict.grids <- function(
+       model,
        new.dat,
        export.grids = F,
        preds2R = T,
@@ -3510,7 +3478,8 @@ function(model,
        full.grid=T,
        header = T,
        north.limit = NULL,
-       south.limit = NULL)
+       south.limit = NULL
+)
 {
 # J.Elith / J.Leathwick, March 07
 # to make predictions to sites or grids. If to sites, the
@@ -3545,17 +3514,13 @@ function(model,
 
   if (is.null(row.index)) {
     pred.vec <- temp
-  }
-  else {
+  } else {
     cell.pointer <- ((row.index - 1) * num.col) + (col.index)
     pred.vec[cell.pointer] <- temp
   }
 
-  if(export.grids)
-
   cat("\n and exporting the results...\n")
-
-  {
+  if(export.grids) {
     newname <- paste(filepath, sp.name,".asc", sep="")
 
     #full.pred <- pred.vec
@@ -3584,7 +3549,7 @@ function(model,
   if(preds2R){
     assign(sp.name,temp, pos=1)
   }
- }
+}
 
 
 
@@ -3592,8 +3557,8 @@ function(model,
 # SM function to plot bootstrapped info
 
 
-`gbm.plot.boot` <-
-function(gbm.object,                # a gbm object - could be one from gbm.step
+gbm.plot.boot <- function(
+     gbm.object,                    # a gbm object - could be one from gbm.step
      boot.object,                   # a gbm bootstrapped object - could be one from bootstrap
      variable.no = 0,               # the var to plot - if zero then plots all
      smooth = FALSE,                # should we add a smoothed version of the fitted function
@@ -3607,7 +3572,7 @@ function(gbm.object,                # a gbm object - could be one from gbm.step
      plot.layout = c(3,4),          # define the default layout for graphs on the page
      ...                            # other arguments to pass to the plotting
                                     # useful options include cex.axis, cex.lab, etc.
-     )
+)
 {
 # function to plot gbm bootstrapped response variables, with the option
 # of adding a smooth representation of the response if requested
@@ -3619,36 +3584,37 @@ function(gbm.object,                # a gbm object - could be one from gbm.step
 # S Mormede Feb 2010
 #
 
-require(gbm)
-require(splines)
+  require(gbm)
+  require(splines)
 
-#cleaning us start stuff
+  #cleaning us start stuff
 
-gbm.call <- boot.object$gbm.call
-gbm.x <- gbm.call$gbm.x
-pred.names <- gbm.call$predictor.names
-response.name <- gbm.call$response.name
-data <- boot.object$x
-boot<-boot.object$function.dataframe
+  gbm.call <- boot.object$gbm.call
+  gbm.x <- gbm.call$gbm.x
+  pred.names <- gbm.call$predictor.names
+  response.name <- gbm.call$response.name
+  data <- boot.object$x
+  boot<-boot.object$function.dataframe
 
-max.plots <- plot.layout[1] * plot.layout[2]
-plot.count <- 0
-n.pages <- 1
+  max.plots <- plot.layout[1] * plot.layout[2]
+  plot.count <- 0
+  n.pages <- 1
 
-if (length(variable.no) > 1) {stop("only one response variable can be plotted at a time")}
+  if (length(variable.no) > 1) {stop("only one response variable can be plotted at a time")}
 
-if (variable.no > 0) {   #we are plotting all vars in rank order of contribution
-  n.plots <- 1
+  if (variable.no > 0) {   
+    # we are plotting all vars in rank order of contribution
+    n.plots <- 1
   }
 
-max.vars <- length(gbm.object$contributions$var)
-if (n.plots > max.vars) {
-  n.plots <- max.vars
-  cat("warning - reducing no of plotted predictors to maximum available (",max.vars,")\n",sep="")
+  max.vars <- length(gbm.object$contributions$var)
+  if (n.plots > max.vars) {
+    n.plots <- max.vars
+    cat("warning - reducing no of plotted predictors to maximum available (",max.vars,")\n",sep="")
   }
 
 
-# get the variable names here and min and max
+  # get the variable names here and min and max
   if (n.plots == 1) {
     varname <- as.character(pred.names[variable.no])
   } else varname <- as.character(gbm.object$contributions$var)
@@ -3661,42 +3627,44 @@ if (n.plots > max.vars) {
   ymin <- min (boot[,names(boot) %in% name.lower])
   ymax <- max (boot[names(boot) %in% name.upper])
 
- # now do the actual plots
+  # now do the actual plots
 
   for (j in c(1:length(varname))) {
 
-  if (plot.count == max.plots) {
-    plot.count = 0
-    n.pages <- n.pages + 1
-  }
+    if (plot.count == max.plots) {
+      plot.count = 0
+      n.pages <- n.pages + 1
+    }
 
-  if (plot.count == 0) {
-    dev.new(width = 11, height = 8)
-    par(mfrow = plot.layout)
-  }
+    if (plot.count == 0) {
+      dev.new(width = 11, height = 8)
+      par(mfrow = plot.layout)
+    }
 
-  plot.count <- plot.count + 1
+    plot.count <- plot.count + 1
 
-  if (show.contrib) {
-    x.label <- paste (varname[j],"  (",round(gbm.object$contributions[gbm.object$contributions$var == varname[j],2],1),"%)",sep="")
-  } else x.label <- varname[j]
+    if (show.contrib) {
+      x.label <- paste (varname[j],"  (",round(gbm.object$contributions[gbm.object$contributions$var == varname[j],2],1),"%)",sep="")
+    } else {
+      x.label <- varname[j]
+    }
 
-  if (!common.scale) {
-    ymin <-min(boot[,name.lower[j]])
-    ymax <-max(boot[,name.upper[j]])
-  }
+    if (!common.scale) {
+      ymin <-min(boot[,name.lower[j]])
+      ymax <-max(boot[,name.upper[j]])
+    }
 
-  if (is.factor(data[,varname[j]])) {
-    num<-length(unique(data[,varname[j]]))
-    plot(boot[1:num,name.vals[j]],boot[1:num,name.mean[j]],ylim=c(ymin,ymax), type="n", xlab = x.label, ylab = y.label)
-    lines(boot[1:num,name.vals[j]],boot[c(1:num),name.lower[j]],col=8)
-    lines(boot[1:num,name.vals[j]],boot[c(1:num),name.upper[j]],col=8)
+    if (is.factor(data[,varname[j]])) {
+      num<-length(unique(data[,varname[j]]))
+      plot(boot[1:num,name.vals[j]],boot[1:num,name.mean[j]],ylim=c(ymin,ymax), type="n", xlab = x.label, ylab = y.label)
+      lines(boot[1:num,name.vals[j]],boot[c(1:num),name.lower[j]],col=8)
+      lines(boot[1:num,name.vals[j]],boot[c(1:num),name.upper[j]],col=8)
 
-  } else {
-     plot(boot[,name.vals[j]],boot[,name.mean[j]],ylim=c(ymin,ymax), type='l', xlab = x.label, ylab = y.label)
-     lines(boot[,name.vals[j]],boot[,name.lower[j]],col=8)
-     lines(boot[,name.vals[j]],boot[,name.upper[j]],col=8)
-  }
+    } else {
+       plot(boot[,name.vals[j]],boot[,name.mean[j]],ylim=c(ymin,ymax), type='l', xlab = x.label, ylab = y.label)
+       lines(boot[,name.vals[j]],boot[,name.lower[j]],col=8)
+       lines(boot[,name.vals[j]],boot[,name.upper[j]],col=8)
+    }
 
 
    if (smooth & is.vector(boot[,name.vals[j]]) ) {
@@ -3710,12 +3678,12 @@ if (n.plots > max.vars) {
    } else {
       if (write.title & j == 1) {
         title(response.name)
-     }
+      }
    }
 
-   k <- match(varname[j],names(data))
-   if (rug & is.vector(data[,k])) {
+    k <- match(varname[j],names(data))
+    if (rug & is.vector(data[,k])) {
       rug(quantile(data[,k], probs = seq(0, 1, 0.1), na.rm = TRUE),lwd=2)
-   }
- }
+    }
+  }
 }
