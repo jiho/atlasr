@@ -214,7 +214,7 @@ for (resp in resp.vars) {
       p = polar.ggplot(result[[resp]]$pred, aes(fill=pred, alpha=-CVpred), geom="tile")
     }
     # add a title
-    p = p + opts(title=paste(pred, "- BRT"))
+    p = p + opts(title=paste(resp, "- BRT"))
     # store the plot object in the result
     result$pred.plot = p
     # display the plot
