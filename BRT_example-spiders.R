@@ -134,3 +134,7 @@ result[[1]]$deviance
 result[[1]]$obj$contributions
 # predictions
 head(result[[1]]$pred)
+
+# Redo the plot manually
+# plot tiles and subsample the predicted data
+polar.plot(result[[1]]$pred, mapping=aes(fill=pred), geom="tile", lat.precision=1, lon.precision=2)
