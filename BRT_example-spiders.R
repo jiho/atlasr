@@ -87,7 +87,7 @@ pred.vars <- names(env.data)[! names(env.data) %in% c("lat","long")]
 # all of them
 # resp.vars <-names(dataset)[! names(dataset) %in% c(names(env.data),"lat","long")]
 # a few
-# pick in the following#
+# pick in the following
 names(dataset)[! names(dataset) %in% names(env.data)]
 resp.vars <- c("Austropallene.cornigera")
 
