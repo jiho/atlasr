@@ -99,7 +99,8 @@ for (resp in resp.vars) {
                            max.trees = 10000,
                            var.monotone = monotone,
                            n.trees = 50,
-                           silent = T
+                           silent = T,
+                           plot.main = F
                          )
     )
 
