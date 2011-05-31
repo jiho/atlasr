@@ -1198,7 +1198,7 @@ gbm.kfold <- function (
 
     gbm.call <- gbm.object$gbm.call
     n.preds <- length(gbm.call$pred.names)
-    data <- eval(parse(text = gbm.call$dataframe))
+    data <- gbm.object$x
     gbm.x <- gbm.call$gbm.x
     gbm.y <- gbm.call$gbm.y
     sp.name <- names(data)[gbm.y]
@@ -1743,7 +1743,7 @@ gbm.unipred <- function(
   gbm.x <- gbm.call$gbm.x
   n.preds <- length(gbm.x)
   n.trees <- gbm.object$gbm.call$best.trees
-  data <- eval(parse(text=gbm.call$dataframe))[,gbm.x]
+  data <- gbm.object$x[,gbm.x]
   pred.names <- gbm.call$predictor.names
 
   if (is.null(x.label)) {
@@ -1925,7 +1925,7 @@ gbm.perspec <- function(
     z.label <- "fitted value"
   }
 
-  data <- eval(parse(text=gbm.call$dataframe))[,gbm.x]
+  data <- gbm.object$x[,gbm.x]
   n.trees <- gbm.call$best.trees
 
   if (is.null(x.range)) {
@@ -2184,7 +2184,7 @@ gbm.interactions <- function(
   cat("gbm.interactions - version 2.9 \n")
   cat("Cross tabulating interactions for gbm model with ",n.preds," predictors","\n",sep="")
 
-  data <- eval(parse(text=gbm.call$dataframe))[,gbm.x]
+  data <- gbm.object$x[,gbm.x]
 
   for (i in 1:(n.preds - 1)) {
     # step through the predictor set
@@ -2352,8 +2352,7 @@ gbm.plot.fits <- function(
   max.plots <- plot.layout[1] * plot.layout[2]
   plot.count <- 0
 
-  dats <- gbm.object$gbm.call$dataframe    #get the dataframe name
-  dats <- as.data.frame(eval(parse(text=dats)))   #and now the data
+  dats <- gbm.object$x    # get dataframe
 
   n.cases <- nrow(dats)
 
@@ -2460,7 +2459,7 @@ require(gbm)
 # first get the original analysis details..
 
   gbm.call <- gbm.object$gbm.call
-  data <- eval(parse(text=gbm.call$dataframe))
+  data <- gbm.object$x
   n.cases <- nrow(data)
   gbm.x <- gbm.call$gbm.x
   gbm.y <- gbm.call$gbm.y
@@ -2770,7 +2769,7 @@ require(gbm)
 # first get the original analysis details..
 
   gbm.call <- gbm.object$gbm.call
-  train.data <- eval(parse(text=gbm.call$dataframe))
+  train.data <- gbm.object$x
   n.obs <- nrow(train.data)
   gbm.x <- gbm.call$gbm.x
   gbm.y <- gbm.call$gbm.y
