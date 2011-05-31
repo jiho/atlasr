@@ -1561,7 +1561,7 @@ gbm.plot <- function(
      y.label = "fitted function",   # the default y-axis label
      x.label = NULL,                # the default x-axis label
      show.contrib = T,              # show the contribution on the x axis
-     plot.layout = c(3,4),          # define the default layout for graphs on the page
+     plot.layout = c(3,3),          # define the default layout for graphs on the page
      trans = NA,                    # if the results need to be transformed prior to plotting
      ...                            # other arguments to pass to the plotting
                                     # useful options include cex.axis, cex.lab, etc.
