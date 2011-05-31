@@ -2850,8 +2850,11 @@ require(gbm)
   cat("gbm.pred.bootstrap - version 2.9","\n\n")
   cat("bootstrap resampling gbm.step model for ",response.name,"\n",sep="")
   cat("with ",n.trees," trees and ",n.obs," observations\n\n",sep="")
-  if (bootstrap.predictions) cat("prediction dataset has ",n.pred.obs," rows\n\n",sep="")
-  else cat("no prediction dataset provided...\n\n")
+  if (bootstrap.predictions) {
+    cat("prediction dataset has ",n.pred.obs," rows\n\n",sep="")
+  } else {    
+    cat("no prediction dataset provided...\n\n")
+  }
 
 # initiate timing call
 
