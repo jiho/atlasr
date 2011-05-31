@@ -136,5 +136,6 @@ result[[1]]$obj$contributions
 head(result[[1]]$pred)
 
 # Redo the plot manually
+polar.ggplot(result[[1]]$pred, mapping=aes(colour=pred), geom="points")
 # plot tiles and subsample the predicted data
-polar.plot(result[[1]]$pred, mapping=aes(fill=pred), geom="tile", lat.precision=1, lon.precision=2)
+polar.ggplot(result[[1]]$pred, mapping=aes(fill=pred), geom="tile", lat.precision=1, lon.precision=2)
