@@ -20,7 +20,7 @@ require(cluster)
 # example of use
 # result <- do.gdm(dat=fam,resp.vars=resp.vars,predvar=predvar,samp=15000,pred.data=env.Ant)
 
-do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effects",image.name="gdm.file",pred.data, plot.type="wmf", do.indicator.species=F) {
+do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effects",image.name="gdm.file",pred.data, plot.type="wmf", do.indicator.species=F,n.clust=NA) {
 
     ## Base case GDM running
     ## dat has your dataset of responses
@@ -32,6 +32,7 @@ do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effec
     ## image.name = what name the R workspace will be saved under, can include a relative path or full path, ignore extension, it will be .RData
     ## pred.data: predictive dataframe, needs lat and long, and environmental variables as in predvar
     ## plot.type: can be "wmf", "png" or any of the other types supported by savePlot (default="wmf")
+    ## n.clust = NA if automatically chose cluster number, or give a number
     ## do.indicator.species: calculate indicator species for clusters?
 
 
@@ -122,20 +123,25 @@ do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effec
 
 
     ## optimise the cluster
-    res<-array(NA,c(10,8,4))
+   if (is.na(n.clust)) {
+     res<-array(NA,c(10,8,4))
 
-    for (cl in 4:10) {
-        for (samples in 3:8) {
-            for (sampsz in 2:4) {
-                temp <- clara(pred,cl,metric="manhattan",keep.data=FALSE,samples=samples,sampsize=min(nrow(pred), 40 +sampsz*cl))
-                res[cl,samples,sampsz]<-temp$silinfo$avg.width
-            }
-        }
+      for (cl in 4:10) {
+          for (samples in 3:8) {
+              for (sampsz in 2:4) {
+                  temp <- clara(pred,cl,metric="manhattan",keep.data=FALSE,samples=samples,sampsize=min(nrow(pred), 40 +sampsz*cl))
+                  res[cl,samples,sampsz]<-temp$silinfo$avg.width
+              }
+          }
+      }
+
+      temp<-which(res==max(res,na.rm=T),arr.ind=T)
+      if (nrow(temp)>1) temp<-temp[1,]
+      kclust <- clara(pred,temp[1],metric="manhattan",keep.data=FALSE,samples=temp[2],sampsize=min(nrow(pred), 40 +temp[3]*temp[1]))
+    } else {
+      kclust <- clara(pred,n.clust,metric="manhattan",keep.data=FALSE)
     }
 
-    temp<-which(res==max(res,na.rm=T),arr.ind=T)
-    if (nrow(temp)>1) temp<-temp[1,]
-    kclust <- clara(pred,temp[1],metric="manhattan",keep.data=FALSE,samples=temp[2],sampsize=min(nrow(pred), 40 +temp[3]*temp[1]))
     pred.data[,"cluster"]<-kclust$clustering
 
     ## calculate indicator species using dufrene-legendre method
@@ -165,8 +171,13 @@ do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effec
         frodo.baggins=indval(dat[nnanidx,resp.var.col],clustering=dat$cluster[nnanidx])
     }
 
-    save.image(paste(image.name,".RData",sep=""))
-    return(list('predicted'=pred.data,'model'=no.gdm,'dat.cluster'=dat$cluster,'indval'=frodo.baggins))
+    # save.image(paste(image.name,".RData",sep=""))
+
+    if (do.indicator.species) {
+      return(list('predicted'=pred.data,'model'=no.gdm,'dat.cluster'=dat$cluster,'indval'=frodo.baggins))
+    } else {
+      return(list('predicted'=pred.data,'model'=no.gdm))
+      }
 
 }
 
