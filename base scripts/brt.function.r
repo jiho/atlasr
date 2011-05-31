@@ -154,7 +154,9 @@ for (resp in resp.vars) {
     # perform bootstrap
     cat("  -> running bootstrap on BRT model\n")
     boot <- NULL
-    try( boot <- gbm.bootstrap(obj, n.reps=n.boot, verbose=F) )
+    try(
+      boot <- gbm.bootstrap(obj, n.reps=n.boot, verbose=F)
+    )
     if (!is.null(boot)) {
       # when it runs correctly
       # store the output in the result object
