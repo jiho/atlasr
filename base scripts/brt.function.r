@@ -202,6 +202,26 @@ for (resp in resp.vars) {
     # store it in the result object
     result[[resp]]$pred <- data.frame(pred.data[,c("long","lat")], pred, CVpred)
 
+    cat("  -> plot predictions\n")
+    # plot the predictions
+    if (all(is.na(CVpred))) {
+      # if all uncertainty on prediction are NAs we probably did not do bootstrap and we are interested in plotting things quickly
+      # => we use points
+      p = polar.ggplot(result[[resp]]$pred, aes(colour=pred), geom="point")
+    } else {
+      # if we have uncertainty data we want to represent it (as transparency)
+      # => we use tiles
+      p = polar.ggplot(result[[resp]]$pred, aes(fill=pred, alpha=-CVpred), geom="tile")
+    }
+    # add a title
+    p = p + opts(title=paste(pred, "- BRT"))
+    # store the plot object in the result
+    result$pred.plot = p
+    # display the plot
+    suppressWarnings(print(p))
+    # NB: suppress warnings about missing values: they are necessary to split the coastline in several bits
+  }
+
   # close the PDF file
   if (!is.null(plot.name)) {
     dev.off()

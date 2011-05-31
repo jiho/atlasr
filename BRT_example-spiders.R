@@ -96,6 +96,7 @@ resp.vars <- c("Austropallene.cornigera")
 # Get suppport functions
 source("base scripts/gbm.functions.2010SM.r")
 source("base scripts/brt.function.r")
+source("base scripts/polar.ggplot.R")
 
 result <- do.brt(dat=dataset, resp.vars=resp.vars, predvar=pred.vars, int=2, distrib="bernoulli", wghts=NULL, monotone=NULL, n.boot=NA, plot.name="BRT", image.name="spider.brt.file", n.pred=1, pred.data=env.data)
 # Where:
