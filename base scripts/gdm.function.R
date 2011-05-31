@@ -29,7 +29,6 @@ do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effec
     ## samp is your sample size, if too big the function will fall over. The function will randomly pick that number of samples from the dataset
     ## lookup names variables is where I put general names to your variables names, for plotting.
     ## plotname = what name will the plot be saved under, can include a relative path or full path, ignore extension, it will be .eps
-    ## image.name = what name the R workspace will be saved under, can include a relative path or full path, ignore extension, it will be .RData
     ## pred.data: predictive dataframe, needs lat and long, and environmental variables as in predvar
     ## plot.type: can be "wmf", "png" or any of the other types supported by savePlot (default="wmf")
     ## n.clust = NA if automatically chose cluster number, or give a number
@@ -97,21 +96,6 @@ do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effec
     ## now cluster the data and write the results
 
     pred<-dat[1,pred.var.col]
-
-    ## save some things before we start deleting rows - BR
-    pred.data.originaldim=dim(pred.data)
-    loncol=which(names(pred.data) %in% c('long','lon','longitude'))[1] ## try to allow for variants of longitude name
-    latcol=which(names(pred.data) %in% c('lat','latitude'))[1] ## try to allow for variants of latitude name
-    nlon=length(unique(pred.data[,loncol]))
-    nlat=length(unique(pred.data[,latcol]))
-    ## reconstruct lon and lat grids
-    temp=rep(NA,pred.data.originaldim[1])
-    temp[as.numeric(rownames(pred.data))]=pred.data[,loncol]
-    longrid=matrix(temp,nrow=nlon)
-    temp=rep(NA,pred.data.originaldim[1])
-    temp[as.numeric(rownames(pred.data))]=pred.data[,latcol]
-    latgrid=matrix(temp,nrow=nlon)
-
     for (i in c(predvar)) {
         pred.data<-pred.data[!is.na(pred.data[,i]),]
     }
@@ -147,31 +131,17 @@ do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effec
     ## calculate indicator species using dufrene-legendre method
     if (do.indicator.species) {
         require(labdsv)
-        ## use predicted clusters on gridded data, and then
-        ## interpolate station cluster labels from those gridded cluster labels
-        ## assume that grid is regular and rectangular
-        ## this code is probably quite fragile! beware! - ben
-        ## note that pred.data has been modified to delete rows with NAs, so need to reconstruct full matrix including NAs (in order to get correct shape of grid)
-        temp=rep(NA,pred.data.originaldim[1])
-        temp[as.numeric(rownames(pred.data))]=pred.data$cluster
-        cgrid=matrix(temp,nrow=nlon)
-        ## which grid cells are closest to each of our training data points?
-        loncol=which(names(dat) %in% c('long','lon','longitude'))[1] ## try to allow for variants of longitude name
-        latcol=which(names(dat) %in% c('lat','latitude'))[1] ## try to allow for variants of latitude name
-        datlonidx=round(approx(longrid[,1],1:dim(longrid)[1],dat[,loncol])$y)
-        ## datlonidx holds the row indices into the lon/lat grids of the training data
-        datlatidx=round(approx(latgrid[1,],1:dim(longrid)[2],dat[,latcol])$y)
-        ## datlonidx holds the col indices into the lon/lat grids of the training data
-        dat.cluster=rep(NA,dim(dat)[1])
-        for (k in 1:dim(dat)[1]) {
-            dat$cluster[k]=cgrid[datlonidx[k],datlatidx[k]]
-        }
+        library(reshape)
+        temp <- as.matrix(cast(pred.data, lat ~  long, value = "cluster",add.missing=T))
+        datlonidx <- round(approx(as.numeric(colnames(temp)),1:ncol(temp),dat$long)$y)
+        datlatidx <- round(approx(as.numeric(rownames(temp)),1:nrow(temp),dat$lat)$y)
+
+        dat$cluster <- ifelse(!is.na(datlatidx) & !is.na(datlonidx), temp[datlatidx,datlonidx], NA)
+
         nnanidx=which(!is.na(dat$cluster)) ## only include non-NA clusters
         ## calculate indicator species stuff
         frodo.baggins=indval(dat[nnanidx,resp.var.col],clustering=dat$cluster[nnanidx])
     }
-
-    # save.image(paste(image.name,".RData",sep=""))
 
     if (do.indicator.species) {
       return(list('predicted'=pred.data,'model'=no.gdm,'dat.cluster'=dat$cluster,'indval'=frodo.baggins))
