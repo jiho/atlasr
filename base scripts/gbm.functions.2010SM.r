@@ -1661,8 +1661,8 @@ for (j in c(1:n.plots)) {
    }
 
    if (plot.count == 0) {
-     dev.new(width = 11, height = 8)
      par(mfrow = plot.layout)
+     # NB: this also creates a new page when there is none
    }
 
     plot.count <- plot.count + 1
@@ -2386,8 +2386,8 @@ gbm.plot.fits <- function(
     }
 
     if (plot.count == 0) {
-     dev.new(width = 11, height = 8)
      par(mfrow = plot.layout)
+     # NB: this also creates a new page when there is none
     }
 
     plot.count <- plot.count + 1
@@ -3286,8 +3286,8 @@ gbm.plot.boot <- function(
     }
 
     if (plot.count == 0) {
-      dev.new(width = 11, height = 8)
       par(mfrow = plot.layout)
+      # NB: this also creates a new page when there is none
     }
 
     plot.count <- plot.count + 1
