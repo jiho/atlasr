@@ -74,14 +74,14 @@ for (resp in resp.vars) {
   ###########################################################################
   # run the BRT
   ###########################################################################
-  cat(paste("  ", resp,":\n  -> optimising BRT model \n",sep=""))
+  cat(paste("  ", resp,":\n  -> optimising BRT model ",sep=""))
 
   # initial values before entering the while loop
   lr <- 0.05
   no.trees <- 0
 
   while ( no.trees < 1000 & lr > 0.0005 ) {
-
+    cat(".")
     try( obj <-  gbm.step(
                            data = dat,
                            gbm.x = match(predvar, names(dat)),
@@ -109,6 +109,7 @@ for (resp in resp.vars) {
     # decrease the learning rate
     lr <- lr / 2
   }
+  cat("\n")
 
   # store the gbm object in the result object
   result[[resp]]$obj <- obj
