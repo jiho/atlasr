@@ -20,7 +20,7 @@ require(cluster)
 # example of use
 # result <- do.gdm(dat=fam,resp.vars=resp.vars,predvar=predvar,samp=15000,pred.data=env.Ant)
 
-  do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plot.name = "GDM",image.name=NULL,pred.data,  do.indicator.species=F,n.clust=NA) {
+  do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plot.name = "GDM",pred.data,  do.indicator.species=F,n.clust=NA,...) {
 
     ## Base case GDM running
     ## dat has your dataset of responses
@@ -133,7 +133,7 @@ require(cluster)
     pred.data[,"cluster"]<-kclust$clustering
 
     ## plot the results
-     p = polar.ggplot(pred.data, aes(colour=cluster), geom="point")
+    p = polar.ggplot(pred.data, aes(colour=cluster), geom="point")
     # add a title
     p = p + opts(title="GDM")
     # display the plot
@@ -154,6 +154,10 @@ require(cluster)
         ## calculate indicator species stuff
         frodo.baggins=indval(dat[nnanidx,resp.var.col],clustering=dat$cluster[nnanidx])
     }
+
+    pred.data$cluster<-factor(pred.data$cluster)
+    dat$cluster <- factor(dat$cluster)
+
 
   # close the PDF file
   if (!is.null(plot.name)) {

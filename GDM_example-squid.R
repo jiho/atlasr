@@ -20,7 +20,7 @@ source("base scripts/load env data.r")
 load("env.data.RData")
 
 # OR if you want to load your own predictive grid
-# env.data <- load.env(dataset=NA, env.dat=T, path="C:\\Projects\\Specific projects\\ANT and Arctic env layers\\Antarctic\\",lat.lim=c(-80,-30),lat.step=1,long.lim=c(-180,180),long.step=2)
+# env.data <- load.env(dataset=NA, env.dat=T, path="../Antarctic/",lat.lim=c(-80,-30),lat.step=1,long.lim=c(-180,180),long.step=2)
 # env.data <- env.data[["env.dat"]]
 
 
@@ -73,6 +73,7 @@ resp.vars <- c("Electrona_carlsbergi","Electrona_antarctica", "Electrona_paucira
 
 ############################################################################
 # Do GDM on important species
+# at the moment ggplot doesn't plot well the cluster
 ############################################################################
 
 # Get suppport functions
@@ -110,3 +111,7 @@ result$indval
 polar.ggplot(result$predicted, mapping=aes(colour=cluster), geom="points")
 # plot tiles and subsample the predicted data
 polar.ggplot(result$predicted, mapping=aes(fill=cluster), geom="tile", lat.precision=1, lon.precision=2)
+
+
+# save the R Data file for future work
+save.image("mycto.RData")
