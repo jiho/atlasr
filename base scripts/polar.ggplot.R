@@ -70,15 +70,29 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
   coast = coast[coast$lat <= max(data$lat)+2,]
 	p = p + geom_path(data=coast)
 
-  # make nicer colour gradients for continuous variables
+  # use nicer colours
   if ("fill" %in% names(mapping)) {
-    if (is.numeric(data[as.character(mapping$fill)])) {
+    fill.data = data[,as.character(mapping$fill)]
+    if (is.numeric(fill.data)) {
+      # if the data is numeric, use a yellow to red gradient
       p = p + scale_fill_gradient(low="#FAF3A9", high="#F62B32")
+    } else if (is.factor(fill.data)) {
+      # if the data is discrete, use a colorbrewer scale if possible (less than 12 colours)
+      if (nlevels(fill.data)<=12) {
+        p = p + scale_fill_brewer(palette="Set3")
+      }
+      # otherwise just use the default colours of ggplot
     }
   }
+  # same for coulour
   if ("colour" %in% names(mapping)) {
-    if (is.numeric(data[as.character(mapping$colour)])) {
+    colour.data = data[,as.character(mapping$colour)]
+    if (is.numeric(colour.data)) {
       p = p + scale_colour_gradient(low="#FAF3A9", high="#F62B32")
+    } else if (is.factor(colour.data)) {
+      if (nlevels(colour.data)<=12) {
+        p = p + scale_colour_brewer(palette="Set3")
+      }
     }
   }
 
