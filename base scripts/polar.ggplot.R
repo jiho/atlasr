@@ -35,7 +35,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
   }
   if (!('long' %in% tempnames)) {
       longcol=which(tolower(tempnames) %in% c('longitude','lon','long'))
-      tempnames[latcol]='long'
+      tempnames[longcol]='long'
   }
   names(data)=tempnames
 
