@@ -4,20 +4,24 @@
 
 # Adapt the path to your computer setup
 # setwd("C:\\Projects\\Specific projects\\2011\\Bioregionalisation\\R")
-
+# Name of the file containing your dataset
+# It must be a CSV (comma separated values) file
+# with lat and long as the first and second columns
+dataset.filename = "../Data/Austropallene.csv"
 
 ############################################################################
 # Load environmental data for the full grid
 #  = grid on which the predictions will be made
 ############################################################################
 
-env.data.file = "env.data.RData"
+env.data.saved.copy = "env.data.RData"
 
-# either read it from the saved copy (this is faster than re-reading it every time)
-if (file.exists(env.data.file)) {
-	load(env.data.file)
+# when the saved copy exists, read it
+# (this is faster than re-reading it every time)
+if (file.exists(env.data.saved.copy)) {
+	load(env.data.saved.copy)
 
-# or extract it from the files
+# if there is no saved copy, extract the data from the original files
 } else {
 	source("base scripts/load env data.r")
   # total.env <- load.env(dataset=NA, env.dat=T, path="../Antarctic/")
@@ -29,7 +33,7 @@ if (file.exists(env.data.file)) {
 	env.data <- env.data[env.data$bathymetry < 0, ]
 
 	# save it for later
-	save(env.data, file=env.data.file)
+	save(env.data, file=env.data.saved.copy)
 }
 
 ############################################################################
@@ -37,16 +41,17 @@ if (file.exists(env.data.file)) {
 #  = data points on which the model is built
 ############################################################################
 
-dataset.file = "spider.comm.RData"
+dataset.saved.copy = "spider.comm.RData"
 
-# either read it from the saved copy (this is faster than re-reading it every time)
-if (file.exists(dataset.file)) {
-	load(dataset.file)
+# when the saved copy exists, read it
+# (this is faster than re-reading it every time)
+if (file.exists(dataset.saved.copy)) {
+	load(dataset.saved.copy)
 
-# or extract it from the files
+# if there is no saved copy, extract the data from the original files
 } else {
 	# read your dataset
-	dataset <- read.csv("../Data/Austropallene.csv")
+	dataset <- read.csv(dataset.filename)
 	# optionnally, get a few informations about the dataset
 	# names(dataset)
 	# summary(dataset)
@@ -68,9 +73,8 @@ if (file.exists(dataset.file)) {
 	dataset <- dataset[dataset$bathymetry<0,]
 
 	# save the dataset for later
-	save(dataset, file=dataset.file)
+	save(dataset, file=dataset.saved.copy)
 }
-
 
 
 ############################################################################
