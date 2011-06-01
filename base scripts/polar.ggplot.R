@@ -51,6 +51,18 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
     data = ddply(data, ~long+lat, mean)
   }
 
+  # Get and recut coastline
+  # extract the whole world
+  coast = map("world", interior=FALSE, plot=FALSE)
+  coast = data.frame(long=coast$x, lat=coast$y)
+  # restrict the coastline info to what we need given the data
+  expand = 1       # add a little wiggle room
+  # compute extent of data
+  lats = range(data$lat) + c(-expand, +expand)
+  longs = range(data$long) + c(-expand, +expand)
+  # recut the coastline
+  coast = coast[coast$lat >= lats[1] & coast$lat <= lats[2] & coast$long >= longs[1] & coast$long <= longs[2],]
+
   # Plot
   # prepare plot
   p = ggplot(data, aes(x=long, y=lat)) +
@@ -65,9 +77,6 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
   )
 
 	# plot the coastline
-  coast = map("world", interior=FALSE, plot=FALSE)
-  coast = data.frame(long=coast$x, lat=coast$y)
-  coast = coast[coast$lat <= max(data$lat)+2,]
 	p = p + geom_path(data=coast)
 
   # use nicer colours
@@ -97,7 +106,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
   }
 
 	# nicer, simpler scales
-	p = p + scale_x_continuous(breaks=180) + labs(x="Longitude", y="Latitude")
+	p = p + labs(x="Longitude", y="Latitude")
 
 	# no background
 	p = p +	theme_bw()
