@@ -4,6 +4,7 @@
 
 # Adapt the path to your computer setup
 # setwd("C:\\Projects\\Specific projects\\2011\\Bioregionalisation\\R")
+
 # Name of the file containing your dataset
 # It must be a CSV (comma separated values) file
 # with lat and long as the first and second columns
