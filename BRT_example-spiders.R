@@ -56,7 +56,7 @@ if (file.exists(dataset.saved.copy)) {
 	# optionnally, get a few informations about the dataset
 	# names(dataset)
 	# summary(dataset)
-	# make sure the first two collumns are named "lat" and "long"
+	# make sure the first two columns are named "lat" and "long"
 	names(dataset)[1:2] <- c("lat","long")
 
 	# load the corresponding environmental data
