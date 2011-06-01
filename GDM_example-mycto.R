@@ -31,8 +31,8 @@ load("env.data.RData")
 dataset <- read.csv("../Data/data_butch_update.csv")
 
 # load the corresponding environmental data
-#dataset.env <- load.env(dataset=dataset, env.dat=NA, path="../Antarctic/")
-dataset.env <- load.env(dataset=dataset, env.dat=NA, path="C:\\Projects\\Specific projects\\ANT and Arctic env layers\\Antarctic\\")
+dataset.env <- load.env(dataset=dataset, env.dat=NA, path="../Antarctic/")
+#dataset.env <- load.env(dataset=dataset, env.dat=NA, path="C:\\Projects\\Specific projects\\ANT and Arctic env layers\\Antarctic\\")
 dataset <- dataset.env[["dataset"]]
 # optionnally inspect the content of the new dataset, with environmental data added
 # names(dataset)

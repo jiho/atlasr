@@ -83,15 +83,7 @@ require(cluster)
         plot(env.ranges[,i],no.curves[,i],type='l',cex=1.5,
              xlab=tp, ylab = "transform")
         rug(quantile(dat[,names(no.curves)[i]], probs = seq(0, 1, 0.1), na.rm = TRUE))
-#        if (j %%12 ==0) {
-#            savePlot(paste(plot.name,j%/%12,".",plot.type,sep=""))
-#            windows(height=7.4,width=11.6,rescale="fixed")
-#            par(mfrow=c(3,4))
-#            par(cex=0.9)
-#        }
-#        j<- j+1
     }
-# savePlot(paste(plot.name,j%/%12+1,".",plot.type,sep=""))
 
 
 
@@ -148,7 +140,12 @@ require(cluster)
         datlonidx <- round(approx(as.numeric(colnames(temp)),1:ncol(temp),dat$long)$y)
         datlatidx <- round(approx(as.numeric(rownames(temp)),1:nrow(temp),dat$lat)$y)
 
-        dat$cluster <- ifelse(!is.na(datlatidx) & !is.na(datlonidx), temp[datlatidx,datlonidx], NA)
+        dat$cluster <- NA
+        for (i in 1:length(datlonidx)){
+          if (!is.na(datlonidx) && !is.na(datlatidx)) {
+            dat[i,"cluster"] <- temp[datlatidx[i],datlonidx[i]]
+          }
+        }
 
         nnanidx=which(!is.na(dat$cluster)) ## only include non-NA clusters
         ## calculate indicator species stuff
