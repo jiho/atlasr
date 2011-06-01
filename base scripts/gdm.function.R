@@ -20,19 +20,24 @@ require(cluster)
 # example of use
 # result <- do.gdm(dat=fam,resp.vars=resp.vars,predvar=predvar,samp=15000,pred.data=env.Ant)
 
-do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effects",image.name="gdm.file",pred.data, plot.type="wmf", do.indicator.species=F,n.clust=NA) {
+  do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plot.name = "GDM",image.name=NULL,pred.data,  do.indicator.species=F,n.clust=NA) {
 
     ## Base case GDM running
     ## dat has your dataset of responses
     ## resp.vars are the names of different variables you want to predict
     ## predvar are your predictive variable names
     ## samp is your sample size, if too big the function will fall over. The function will randomly pick that number of samples from the dataset
-    ## lookup names variables is where I put general names to your variables names, for plotting.
-    ## plotname = what name will the plot be saved under, can include a relative path or full path, ignore extension, it will be .eps
+    ## plot.name = what name will the plot be saved under, can include a relative path or full path, ignore extension, it will be .eps
     ## pred.data: predictive dataframe, needs lat and long, and environmental variables as in predvar
-    ## plot.type: can be "wmf", "png" or any of the other types supported by savePlot (default="wmf")
     ## n.clust = NA if automatically chose cluster number, or give a number
     ## do.indicator.species: calculate indicator species for clusters?
+    ## image.name superseded, not saved anymore, left in for code running elsewhere
+
+
+  # create a new PDF file for the plots
+  if (!is.null(plot.name)) {
+    pdf(paste(plot.name, ".pdf" ,sep=""), width=10, height=8, useDingbats=FALSE, onefile=TRUE)
+  }
 
 
     pred.var.col <- which(names(dat) %in% predvar)
@@ -66,7 +71,6 @@ do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effec
 
 
     ## then plot them out
-    windows(height=7.4,width=11.6,rescale="fixed")
     par(mfrow=c(3,4))
     par(cex=0.9)
     j<-1
@@ -79,20 +83,20 @@ do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effec
         plot(env.ranges[,i],no.curves[,i],type='l',cex=1.5,
              xlab=tp, ylab = "transform")
         rug(quantile(dat[,names(no.curves)[i]], probs = seq(0, 1, 0.1), na.rm = TRUE))
-        if (j %%12 ==0) {
-            savePlot(paste(plotname,j%/%12,".",plot.type,sep=""))
-            windows(height=7.4,width=11.6,rescale="fixed")
-            par(mfrow=c(3,4))
-            par(cex=0.9)
-        }
-        j<- j+1
+#        if (j %%12 ==0) {
+#            savePlot(paste(plot.name,j%/%12,".",plot.type,sep=""))
+#            windows(height=7.4,width=11.6,rescale="fixed")
+#            par(mfrow=c(3,4))
+#            par(cex=0.9)
+#        }
+#        j<- j+1
     }
-    savePlot(paste(plotname,j%/%12+1,".",plot.type,sep=""))
+# savePlot(paste(plot.name,j%/%12+1,".",plot.type,sep=""))
 
 
 
 
-    ## #######################################
+    #########################################################
     ## now cluster the data and write the results
 
     pred<-dat[1,pred.var.col]
@@ -128,6 +132,14 @@ do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effec
 
     pred.data[,"cluster"]<-kclust$clustering
 
+    ## plot the results
+     p = polar.ggplot(pred.data, aes(colour=cluster), geom="point")
+    # add a title
+    p = p + opts(title="GDM")
+    # display the plot
+    suppressWarnings(print(p))
+    # NB: suppress warnings about missing values: they are necessary to split the coastline in several bits
+
     ## calculate indicator species using dufrene-legendre method
     if (do.indicator.species) {
         require(labdsv)
@@ -143,10 +155,15 @@ do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plotname = "gdm.effec
         frodo.baggins=indval(dat[nnanidx,resp.var.col],clustering=dat$cluster[nnanidx])
     }
 
+  # close the PDF file
+  if (!is.null(plot.name)) {
+    dev.off()
+  }
+
     if (do.indicator.species) {
-      return(list('predicted'=pred.data,'model'=no.gdm,'dat.cluster'=dat$cluster,'indval'=frodo.baggins))
+      return(list('predicted'=pred.data,'model'=no.gdm,'plot.obj'=p,'dat.cluster'=dat$cluster,'indval'=frodo.baggins))
     } else {
-      return(list('predicted'=pred.data,'model'=no.gdm))
+      return(list('predicted'=pred.data,'model'=no.gdm,'plot.obj'=p))
       }
 
 }
