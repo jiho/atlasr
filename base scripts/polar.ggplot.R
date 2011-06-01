@@ -27,18 +27,11 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
 
   # Check arguments
   geom = match.arg(geom)
-  # change lon/lat col names of data, if needed
-  tempnames=names(data)
-  if (!('lat' %in% tempnames)) {
-      latcol=which(tolower(tempnames) %in% c('latitude','lat'))
-      tempnames[latcol]='lat'
-  }
-  if (!('long' %in% tempnames)) {
-      longcol=which(tolower(tempnames) %in% c('longitude','lon','long'))
-      tempnames[longcol]='long'
-  }
-  names(data)=tempnames
 
+  # Allow long/lat to be called more liberally
+  names(data)[tolower(names(data)) %in% c("latitude","lat")] = "lat"
+  names(data)[tolower(names(data)) %in% c("longitude","lon","long")] = "long"
+  # check that we have someting that looks like lat and long
   if (! all(c("lat","long") %in% names(data)) ) {
     stop("Need two columns named lat and long to be able to plot\nYou have ", paste(names(data), collapse=", "))
   }
@@ -56,8 +49,19 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
 
     # compute the average within the new grid cells
     data = ddply(data, ~long+lat, mean)
-
   }
+
+  # Get and recut coastline
+  # extract the whole world
+  coast = map("world", interior=FALSE, plot=FALSE)
+  coast = data.frame(long=coast$x, lat=coast$y)
+  # restrict the coastline info to what we need given the data
+  expand = 1       # add a little wiggle room
+  # compute extent of data
+  lats = range(data$lat) + c(-expand, +expand)
+  longs = range(data$long) + c(-expand, +expand)
+  # recut the coastline
+  coast = coast[coast$lat >= lats[1] & coast$lat <= lats[2] & coast$long >= longs[1] & coast$long <= longs[2],]
 
   # Plot
   # prepare plot
@@ -73,21 +77,36 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
   )
 
 	# plot the coastline
-  coast = map("world", interior=FALSE, plot=FALSE)
-  coast = data.frame(long=coast$x, lat=coast$y)
-  coast = coast[coast$lat <= max(data$lat)+2,]
 	p = p + geom_path(data=coast)
 
-  # use nice colours
+  # use nicer colours
   if ("fill" %in% names(mapping)) {
-    p = p + scale_fill_gradient(low="#FAF3A9", high="#F62B32")
+    fill.data = data[,as.character(mapping$fill)]
+    if (is.numeric(fill.data)) {
+      # if the data is numeric, use a yellow to red gradient
+      p = p + scale_fill_gradient(low="#FAF3A9", high="#F62B32")
+    } else if (is.factor(fill.data)) {
+      # if the data is discrete, use a colorbrewer scale if possible (less than 12 colours)
+      if (nlevels(fill.data)<=12) {
+        p = p + scale_fill_brewer(palette="Set3")
+      }
+      # otherwise just use the default colours of ggplot
+    }
   }
-  if (any(c("colour", "color") %in% names(mapping))) {
-    p = p + scale_colour_gradient(low="#FAF3A9", high="#F62B32")
+  # same for coulour
+  if ("colour" %in% names(mapping)) {
+    colour.data = data[,as.character(mapping$colour)]
+    if (is.numeric(colour.data)) {
+      p = p + scale_colour_gradient(low="#FAF3A9", high="#F62B32")
+    } else if (is.factor(colour.data)) {
+      if (nlevels(colour.data)<=12) {
+        p = p + scale_colour_brewer(palette="Set3")
+      }
+    }
   }
 
 	# nicer, simpler scales
-	p = p + scale_x_continuous(breaks=180) + labs(x="Longitude", y="Latitude")
+	p = p + labs(x="Longitude", y="Latitude")
 
 	# no background
 	p = p +	theme_bw()
