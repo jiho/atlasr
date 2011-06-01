@@ -42,20 +42,18 @@ if (file.exists(env.data.file)) {
 
 dataset <- read.csv("../Data/data_butch_update.csv")
 
-  # load the corresponding environmental data
-  source("base scripts/load env data.r")
-  #dataset.env <- load.env(dataset=dataset, env.dat=NA, path="../Antarctic/")
-  dataset.env <- load.env(dataset=dataset, env.dat=NA, path="C:\\Projects\\Specific projects\\ANT and Arctic env layers\\Antarctic\\")
-  dataset <- dataset.env[["dataset"]]
-  # optionnally inspect the content of the new dataset, with environmental data added
-  # names(dataset)
-  # summary(dataset)
+# load the corresponding environmental data
+source("base scripts/load env data.r")
+dataset.env <- load.env(dataset=dataset, env.dat=NA, path="../Antarctic/")
+# optionnally inspect the content of the new dataset, with environmental data added
+# names(dataset)
+# summary(dataset)
 
-  # remove (completely) points which are on land
-  # those points are probably coastal points for which the grid cell
-  # is mostly land, so the average altitude is positive and the rest
-  # of the environemental data is probably representing mostly land also
-  dataset <- dataset[dataset$bathymetry<0,]
+# remove (completely) points which are on land
+# those points are probably coastal points for which the grid cell
+# is mostly land, so the average altitude is positive and the rest
+# of the environemental data is probably representing mostly land also
+dataset <- dataset[dataset$bathymetry<0,]
 
 
 ############################################################################
