@@ -56,7 +56,7 @@ if (file.exists(dataset.saved.copy)) {
 	# optionnally, get a few informations about the dataset
 	# names(dataset)
 	# summary(dataset)
-	# make sure the first two collumns are named "lat" and "long"
+	# make sure the first two columns are named "lat" and "long"
 	names(dataset)[1:2] <- c("lat","long")
 
 	# load the corresponding environmental data
@@ -103,7 +103,7 @@ source("base scripts/gbm.functions.2010SM.r")
 source("base scripts/brt.function.r")
 source("base scripts/polar.ggplot.R")
 
-result <- do.brt(dat=dataset, resp.vars=resp.vars, predvar=pred.vars, int=2, distrib="bernoulli", wghts=NULL, monotone=NULL, n.boot=NA, plot.name="BRT", image.name="spider.brt.file", n.pred=1, pred.data=env.data)
+result <- do.brt(dat=dataset, resp.vars=resp.vars, predvar=pred.vars, int=2, distrib="bernoulli", wghts=NULL, monotone=NULL, n.boot=NA, plot.name="BRT", n.pred=1, pred.data=env.data)
 # Where:
 # dat         dataset containing coords, species presence, environmental data
 # resp.vars   names or indexes of response variables (species to model)
@@ -123,9 +123,6 @@ result <- do.brt(dat=dataset, resp.vars=resp.vars, predvar=pred.vars, int=2, dis
 #             can be a relative path or full path
 #             plots will be saved as PDF files, one for each response variable
 #             if NULL plots are only displayed to screen and not saved
-# image.name  name the R workspace is saved under
-#             ignore the extension, it will be RData
-#             can be a relative path or full path
 # n.pred      number of bootstraps for predictions
 #             1 if no bootstraps wanted and NA if no predictions wanted
 # pred.data   predictive dataframe, needs lat and long and environmental

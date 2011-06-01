@@ -7,7 +7,7 @@
 #
 ###########################################################################
 
-do.brt <- function (dat, resp.vars, predvar, int = 2, distrib = "bernoulli", wghts = NULL, monotone = NULL, n.boot = NA, plot.name = NULL, image.name = "brt.file", n.pred = NA, pred.data, ...) {
+do.brt <- function (dat, resp.vars, predvar, int = 2, distrib = "bernoulli", wghts = NULL, monotone = NULL, n.boot = NA, plot.name = NULL, n.pred = NA, pred.data, ...) {
 
 # Arguments
 #
@@ -29,9 +29,6 @@ do.brt <- function (dat, resp.vars, predvar, int = 2, distrib = "bernoulli", wgh
 #             can be a relative path or full path
 #             plots will be saved as PDF files, one for each response variable
 #             if NULL plots are only displayed to screen and not saved
-# image.name  name the R workspace is saved under
-#             ignore the extension, it will be RData
-#             can be a relative path or full path
 # n.pred      number of bootstraps for predictions
 #             1 if no bootstraps wanted and NA if no predictions wanted
 # pred.data   predictive dataframe, needs lat and long and environmental
@@ -200,7 +197,7 @@ for (resp in resp.vars) {
       CVpred = NA # CV can't be computed without bootstrap
     }
     # store it in the result object
-    result[[resp]]$pred <- data.frame(pred.data[,c("long","lat")], pred, CVpred)
+    result[[resp]]$pred <- data.frame(pred.data[,c("lat", "long")], pred, CVpred)
 
     cat("  -> plot predictions\n")
     # plot the predictions
