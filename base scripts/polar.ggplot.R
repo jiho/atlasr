@@ -49,7 +49,6 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
 
     # compute the average within the new grid cells
     data = ddply(data, ~long+lat, mean)
-
   }
 
   # Plot
@@ -71,12 +70,16 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
   coast = coast[coast$lat <= max(data$lat)+2,]
 	p = p + geom_path(data=coast)
 
-  # use nice colours
+  # make nicer colour gradients for continuous variables
   if ("fill" %in% names(mapping)) {
-    p = p + scale_fill_gradient(low="#FAF3A9", high="#F62B32")
+    if (is.numeric(data[as.character(mapping$fill)])) {
+      p = p + scale_fill_gradient(low="#FAF3A9", high="#F62B32")
+    }
   }
-  if (any(c("colour", "color") %in% names(mapping))) {
-    p = p + scale_colour_gradient(low="#FAF3A9", high="#F62B32")
+  if ("colour" %in% names(mapping)) {
+    if (is.numeric(data[as.character(mapping$colour)])) {
+      p = p + scale_colour_gradient(low="#FAF3A9", high="#F62B32")
+    }
   }
 
 	# nicer, simpler scales
