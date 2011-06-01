@@ -148,4 +148,5 @@ do.nppen <- function(dat, resp.vars, pred.data, pred.vars, plot.name=NULL)
     result[[resp]] = list(pred, prob.plot, conf.plot)
   }
   
+  return(result)
 }
