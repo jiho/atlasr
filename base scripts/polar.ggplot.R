@@ -27,6 +27,18 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
 
   # Check arguments
   geom = match.arg(geom)
+  # change lon/lat col names of data, if needed
+  tempnames=names(data)
+  if (!('lat' %in% tempnames)) {
+      latcol=which(tolower(tempnames) %in% c('latitude','lat'))
+      tempnames[latcol]='lat'
+  }
+  if (!('long' %in% tempnames)) {
+      longcol=which(tolower(tempnames) %in% c('longitude','lon','long'))
+      tempnames[longcol]='long'
+  }
+  names(data)=tempnames
+
   if (! all(c("lat","long") %in% names(data)) ) {
     stop("Need two columns named lat and long to be able to plot\nYou have ", paste(names(data), collapse=", "))
   }
