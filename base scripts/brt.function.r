@@ -200,7 +200,7 @@ for (resp in resp.vars) {
       CVpred = NA # CV can't be computed without bootstrap
     }
     # store it in the result object
-    result[[resp]]$pred <- data.frame(pred.data[,c("long","lat")], pred, CVpred)
+    result[[resp]]$pred <- data.frame(pred.data[,c("lat", "long")], pred, CVpred)
 
     cat("  -> plot predictions\n")
     # plot the predictions
