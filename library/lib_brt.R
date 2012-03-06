@@ -573,9 +573,6 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     # start the output object
     result <- list()
     class(result) <- c("brt", "list")
-    result$data <- data
-    result$resp.var <- resp.var
-    result$pred.vars <- pred.vars
 
     ## Setup data
     #-----------------------------------------------------------------------------
@@ -586,6 +583,11 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
     # make the data binomial if it needs to be
     if (family == "bernoulli") { data[,resp.var] = data[,resp.var] > 0 }
+
+    # store reformated data in the result object
+    result$data <- data
+    result$resp.var <- resp.var
+    result$pred.vars <- pred.vars
 
 
     ## Run BRT model
