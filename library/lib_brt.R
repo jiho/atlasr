@@ -766,8 +766,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   }
   
   # get selected environment variables
-  allVariables <- list.env.variables(path)
-  variables <- match.vars(variables, allVariables)
+  variables <- list.env.variables(variables=variables, path=path)
   
   # read relevant variables from the database
   database <- read.env.data(variables)

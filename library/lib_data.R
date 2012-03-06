@@ -50,58 +50,60 @@ check.get.env.data <- function(path="env_data") {
 }
 
 
-list.env.variables <- function(path="env_data", full=FALSE) {
+list.env.variables <- function(variables="", path="env_data", full=FALSE) {
   #
   # List available environment variables
   #
-  # path  where to look for netCDF files
-  # full  when TRUE, return the full path to the files, otherwise only return the variable name
+  # variables   only output variables matching this (matches all when "")
+  # path        where to look for netCDF files
+  # full        when TRUE, return the full path to the files, otherwise only return the variable name
   #
-  
+
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+
   check.get.env.data(path=path)
-  
-  ncVariables <- list.files(path, pattern=glob2rx("*.nc"), full.names=TRUE)
-  if ( ! full ) {
-    ncVariables <- gsub(paste(path, "/", sep=""), "", ncVariables)
-    ncVariables <- gsub("_0.1_0.1.nc", "", ncVariables)
+
+  ncFiles <- list.files(path, pattern=glob2rx("*.nc"), full.names=TRUE)
+
+  ncVariables <- str_replace(ncFiles, paste(path, "/", sep=""), "")
+  ncVariables <- str_replace(ncVariables, "_0.1_0.1.nc", "")
+
+  # possibly expand variable names
+  ncVariablesMatched <- match.vars(variables, ncVariables, quiet=T)
+  ncFilesMatched <- ncFiles[ncVariables %in% ncVariablesMatched]
+
+  if (full) {
+    return(ncFilesMatched)
+  } else {
+    return(ncVariablesMatched)
   }
-  
-  return(ncVariables)
 }
 
 
-read.env.data <- function(variables=NULL, path="env_data", ...) {
+read.env.data <- function(variables="", path="env_data") {
   # Read data from the netCDF files
   #
-  # variables   when not NULL, only read those variables
+  # variables   only output variables matching this (matches all when "")
   # path        path to the location of netCDF files
-  # ...         passed to match.vars
   #
   # NB: previously we saved the database in a RData file, but it is actually quicker to read it directly from the netCDF files
 
   check.get.env.data(path=path)
-  
+
   message("-> Read environment data")
 
   # functions to access netCDF files
   suppressPackageStartupMessages(require("ncdf"))
   # functions to automate loops and split-apply functions
-  suppressPackageStartupMessages(require("plyr"))   
+  suppressPackageStartupMessages(require("plyr"))
 
   # select which netCDF files to read
-  ncFiles = list.env.variables(path, full=T)
-  ncVariables = list.env.variables(path)
-  if (!is.null(variables)) {
-    # possibly expand variable names
-    variables <- match.vars(variables, ncVariables, ...)
-    ncFiles <- ncFiles[ncVariables %in% variables]
-  } else {
-    variables <- ncVariables
-  }
+  ncFiles = list.env.variables(variables, path, full=T)
+  ncVariables = list.env.variables(variables, path)
 
   # read data inside each file
   database <- alply(ncFiles, 1, function(ncFile) {
-    
+
     # open netCDF file
     ncid <- open.ncdf(ncFile)
 
