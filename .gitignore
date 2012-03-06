@@ -1,6 +1,10 @@
 # R output stuff
 *.Rdata
 *.pdf
+
 # backup stuff
 *.bak
 *~
+
+# Environmental data
+env_data
