@@ -953,7 +953,7 @@ plot.pred.brt <- function(x, type=c("quick", "full"), overlay.stations=FALSE, ..
       if (!all(c("lat", "lon") %in% names(x$data))) {
         warning("Cannot overlay data points because the coordinates were not in the original dataset", immediate.=TRUE)
       } else {
-        p <- p + geom_point(aes_string(x="lon", y="lat", size=x$resp.var), data=x$data) + scale_size(to=c(1,2), breaks=seq(from=0, to=max(x$data[,resp.var], by=1)))
+        p <- p + geom_point(aes_string(x="lon", y="lat", size=x$resp.var), data=x$data) + scale_size(range=c(1,2), breaks=seq(from=0, to=max(x$data[,x$resp.var], by=1)))
       }
     }
     
