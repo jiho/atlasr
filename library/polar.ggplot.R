@@ -104,7 +104,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
     fill.data <- data[,as.character(mapping$fill)]
     if (is.numeric(fill.data)) {
       # if the data is numeric, use a yellow to red gradient
-      p <- p + scale_fill_gradient(low="#FAF3A9", high="#F62B32")
+      p <- p + scale_fill_continuous(low="#FAF3A9", high="#F62B32")
     } else if (is.factor(fill.data)) {
       # if the data is discrete, use a colorbrewer scale if possible (less than 12 colours)
       if (nlevels(fill.data)<=12) {
