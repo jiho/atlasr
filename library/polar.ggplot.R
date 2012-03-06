@@ -10,6 +10,15 @@
 #-----------------------------------------------------------------------------
 
 
+polar_proj <- function(projection="stereographic", orientation=c(-90,0,0)) {
+  #
+  # Easy access to a suitable polar projection
+  #
+  suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+  coord_map(projection=projection, orientation=orientation)
+}
+
+
 polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.precision=NULL, lon.precision=NULL, coast=NULL, ...) {
   #
   # data          data frame with columns lat, lon, and variables to plot
@@ -79,7 +88,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
   p <- ggplot(data, aes(x=lon, y=lat)) +
         # stereographic projection
         # NB: view from south pole (-90)
-        coord_map(projection="stereographic", orientation=c(-90,0,0))
+        polar_proj()
 
   # plot points or tiles depending on the geom argument
   p <- p + switch(geom,
