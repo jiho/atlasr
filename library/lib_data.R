@@ -50,13 +50,14 @@ check.get.env.data <- function(path="env_data") {
 }
 
 
-list.env.data <- function(variables="", path="env_data", full=FALSE) {
+list.env.data <- function(variables="", path="env_data", full=FALSE, ...) {
   #
   # List available environment variables
   #
   # variables   only output variables matching this (matches all when "")
   # path        where to look for netCDF files
   # full        when TRUE, return the full path to the files, otherwise only return the variable name
+  # ...         passed to match.vars() (in particular to use quiet)
   #
 
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
@@ -68,8 +69,8 @@ list.env.data <- function(variables="", path="env_data", full=FALSE) {
   ncVariables <- str_replace(ncFiles, paste(path, "/", sep=""), "")
   ncVariables <- str_replace(ncVariables, "_0.1_0.1.nc", "")
 
-  # possibly expand variable names
-  ncVariablesMatched <- match.vars(variables, ncVariables, quiet=T)
+  # possibly match and expand variable names
+  ncVariablesMatched <- match.vars(variables, ncVariables, ...)
   ncFilesMatched <- ncFiles[ncVariables %in% ncVariablesMatched]
 
   if (full) {
@@ -80,11 +81,12 @@ list.env.data <- function(variables="", path="env_data", full=FALSE) {
 }
 
 
-read.env.data <- function(variables="", path="env_data") {
+read.env.data <- function(variables="", path="env_data", ...) {
   # Read data from the netCDF files
   #
   # variables   only output variables matching this (matches all when "")
   # path        path to the location of netCDF files
+  # ...         passed to list.env.data()
   #
   # NB: previously we saved the database in a RData file, but it is actually quicker to read it directly from the netCDF files
 
@@ -98,8 +100,9 @@ read.env.data <- function(variables="", path="env_data") {
   suppressPackageStartupMessages(require("plyr"))
 
   # select which netCDF files to read
-  ncFiles = list.env.data(variables, path, full=T)
-  ncVariables = list.env.data(variables, path)
+  ncFiles = list.env.data(variables, path, full=T, quiet=FALSE)
+  ncVariables = list.env.data(variables, path, quiet=TRUE)
+  # NB: inform about variable names expansion only for the first pass
 
   # read data inside each file
   database <- alply(ncFiles, 1, function(ncFile) {
@@ -253,7 +256,7 @@ build.grid <- function(lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon
 ## Utility functions
 #-----------------------------------------------------------------------------
 
-match.vars <- function(vars, choices, quiet = FALSE) {
+match.vars <- function(vars, choices, quiet=TRUE) {
   # Match abbreviated or partial variable names
   #
   # vars  variable names to match
