@@ -108,7 +108,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
     coast <- map("world", interior=FALSE, plot=FALSE)
     coast <- data.frame(lon=coast$x, lat=coast$y)
     # restrict the coastline info to what we need given the data
-    expand <- 1       # add a little wiggle room
+    expand <- 2       # add a little wiggle room
     # compute extent of data
     lats <- range(data$lat) + c(-expand, +expand)
     lons <- range(data$lon) + c(-expand, +expand)
@@ -117,7 +117,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
     coast <- coast[coast$lat <= lats[2] & coast$lon >= lons[1] & coast$lon <= lons[2],]
 
     # prepare the geom
-    coast <- geom_path(data=coast, na.rm=TRUE, fill="grey50")
+    coast <- geom_path(data=coast, na.rm=TRUE, colour="grey50")
     # NB: silently remove missing values which are inherent to coastline data
   }
 
