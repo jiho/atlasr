@@ -940,6 +940,11 @@ plot.brt <- function(x, plot.layout=c(2,2), ...) {
   return(invisible(x))
 }
 
+
+plot.pred <- function(x, ...) {
+  UseMethod("plot.pred")
+}
+
 plot.pred.brt <- function(x, type=c("quick", "full"), overlay.stations=FALSE, ...) {
   #
   # Plot BRT predictions
