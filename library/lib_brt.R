@@ -750,7 +750,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   }
   # get selected taxa
   allTaxa <- setdiff(names(observed_data), c("lat", "lon"))
-  taxa <- match.vars(taxa, allTaxa)
+  taxa <- match.vars(taxa, allTaxa, quiet=FALSE)
   observed_data <- observed_data[, c("lat", "lon", taxa)]
 
   # filter-out unwanted locations
@@ -765,11 +765,11 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
     
   }
   
-  # get selected environment variables
-  variables <- list.env.data(variables=variables, path=path)
+  # read selected variables from the database
+  database <- read.env.data(variables, path=path, quiet=FALSE)
   
-  # read relevant variables from the database
-  database <- read.env.data(variables)
+  # get full, expanded names of selected environment variables
+  variables <- names(database)
 
   # get environment data for the observations
   obsdata <- associate.env.data(observed_data, database)
