@@ -294,14 +294,14 @@ match.vars <- function(vars, choices, quiet=TRUE) {
 
 rasterize <- function(x, vars, n=10, precisions=sapply(lapply(x[vars],range),diff)/n, fun=sum, ...) {
   #
-  # Reduce the precision of certain columns of a data.frame to bins and summarize the information per bin
+  # Reduce the precision of certain columns of a data.frame to bins and summarize the rest of the information per bin
   # This is a bit like reducing the precise information on locations in a 2D plane to pixels of a given grey level, hence the name
   #
-  # x       original data.frame
-  # vars    columns to bin
-  # n       scalar, number of bins
+  # x           original data.frame
+  # vars        columns to bin
+  # n           scalar, number of bins
   # precisions  the precisions used to cut each column in vars
-  #             overrides n
+  #             (overrides n)
   # fun         function used to perform the summary
   # ...         further arguments to `fun`
   #
@@ -320,9 +320,9 @@ rasterize <- function(x, vars, n=10, precisions=sapply(lapply(x[vars],range),dif
     x[,vars[j]] <- plyr::round_any(x[,vars[j]], accuracy=precisions[j])
   }
 
-  # compute total abundance per bin
+  # summarize information per bin
   x <- ddply(x, .variables=vars, function(X, .vars, ...) {
-    actualData <- X[! names(X) %in% vars]
+    actualData <- X[! names(X) %in% .vars]
     sapply(actualData, fun, ...)
   }, .vars=vars, ...)
 
