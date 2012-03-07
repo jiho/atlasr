@@ -49,8 +49,9 @@ scale_brewerc <- function(aesthetic=c("fill", "colour"), type=c("div", "seq"), p
   }
 
   # compute the colours
-  maxN <- palInfo[palette,"maxcolors"]
-  colours <- brewer.pal(n=maxN, name=palette)
+  # maxN <- palInfo[palette,"maxcolors"]
+  colours <- brewer.pal(n=6, name=palette)
+  # Nb: using the maximum range of colors gives palettes that are a little too saturated to be well behaved in a a continuous gradient
 
   # reverse the colour scale because it matches the direction of the data better
   colours <- rev(colours)
