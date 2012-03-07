@@ -18,6 +18,28 @@ polar_proj <- function(projection="stereographic", orientation=c(-90,0,0)) {
   coord_map(projection=projection, orientation=orientation)
 }
 
+spectral_colours <- function(aesthetic=c("fill", "colour"), ...) {
+  #
+  # Spectral colour scale from http://colorbrewer2.org/ used a continuous scale in ggplot2
+  #
+  # aesthetic   type of scale to generate (fill or colour)
+  # ...         passed to scale_***_gradientn
+  #
+  aesthetic <- match.arg(aesthetic)
+
+  # get the palette
+  suppressPackageStartupMessages(require("RColorBrewer", quietly=TRUE))
+  colours <- rev(brewer.pal(6, "Spectral"))
+
+  if (aesthetic == "fill") {
+    s <- scale_fill_gradientn(colours=colours, guide=guide_colorbar(), ...)
+  } else {
+    s <- scale_colour_gradientn(colours=colours, guide=guide_colorbar(), ...)
+  }
+
+  return(s)
+}
+spectral_colors <- spectral_colours
 
 polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.precision=NULL, lon.precision=NULL, coast=NULL, ...) {
   #
