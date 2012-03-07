@@ -62,8 +62,10 @@ list.env.data <- function(variables="", path="env_data", full=FALSE, ...) {
 
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
 
+  # check that environment data exists
   check.get.env.data(path=path)
 
+  # list all files and transform file names into variable names
   ncFiles <- list.files(path, pattern=glob2rx("*.nc"), full.names=TRUE)
 
   ncVariables <- str_replace(ncFiles, paste(path, "/", sep=""), "")
@@ -90,14 +92,15 @@ read.env.data <- function(variables="", path="env_data", ...) {
   #
   # NB: previously we saved the database in a RData file, but it is actually quicker to read it directly from the netCDF files
 
-  check.get.env.data(path=path)
-
-  message("-> Read environment data")
-
   # functions to access netCDF files
   suppressPackageStartupMessages(require("ncdf"))
   # functions to automate loops and split-apply functions
   suppressPackageStartupMessages(require("plyr"))
+
+  # check that environment data exists
+  check.get.env.data(path=path)
+
+  message("-> Read environment data")
 
   # select which netCDF files to read
   ncFiles = list.env.data(variables, path, full=T, quiet=FALSE)
@@ -259,9 +262,9 @@ build.grid <- function(lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon
 match.vars <- function(vars, choices, quiet=TRUE) {
   # Match abbreviated or partial variable names
   #
-  # vars  variable names to match
+  # vars    variable names to match
   # choices list of matching possibilities
-  # quiet wether to provide a message about matches
+  # quiet   wether to provide a message about matches
   #
   
   res = c()
