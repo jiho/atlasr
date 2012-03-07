@@ -168,7 +168,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
   # plot the coastline
   p <- p + coast
 
-  # use nicer ColorBrewer colours
+  # use nice ColorBrewer colours
   if ("fill" %in% names(mapping)) {
     fill.data <- data[,as.character(mapping$fill)]
     if (is.numeric(fill.data)) {
