@@ -772,7 +772,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
                                  
   # bin observation data
   if (bin) {
-    observed_data <- rasterize(observed_data, c("lat", "lon"), precisions=c(lat.step, lon.step), fun=sum)
+    observed_data <- rasterize(observed_data, c("lat", "lon"), precisions=c(lat.step, lon.step), fun=sum, na.rm=T)
     # NB: when the initial data is presence, we compute total number of observations per bin
     #     but this is OK, because the family should then be `bernoulli` and the data is reconverted to presence/absence
     
