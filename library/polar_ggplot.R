@@ -155,10 +155,15 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
         polar_proj()
 
   # plot points or tiles depending on the geom argument
-  p <- p + switch(geom,
-    point = geom_point(mapping=mapping, ...),
-    tile  = geom_tile(mapping=mapping, ...)
-  )
+  if (geom == "point") {
+    # add mapping of size to better cover the space (smaller points near the center)
+    mapping = c(aes(size=lat), mapping)
+    class(mapping) = "uneval"
+    # plot
+    p <- p + geom_point(mapping=mapping, ...) + scale_size(range=c(0.5, 1.5), guide=FALSE)
+  } else if (geom == "tile"){
+    p <- p + geom_tile(mapping=mapping, ...)
+  }
 
   # plot the coastline
   p <- p + coast
