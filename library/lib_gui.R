@@ -237,7 +237,7 @@ do.brt <- function(...) {
       message("Aborting");
       return(win)
     })
-    rp.button(win, "Run",    quitbutton=TRUE, pos=c(3*w/4, rowY, w/4, h), action=function(win, ...) {
+    rp.button(win, "Run", pos=c(3*w/4, rowY, w/4, h), action=function(win, ...) {
       # print(win$file)
 
       if (nTaxa <= nBoxes) {
