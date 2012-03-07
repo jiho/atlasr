@@ -796,11 +796,22 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   
   for (i in seq(along=taxa)) {
     message("-> Running BRT for ", taxa[i])
-    b <- brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, plot.layout=plot.layout, ...)
-    result[[taxa[i]]] <- b
+
+    b <- NULL
+    tryCatch(
+      b <- brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, plot.layout=plot.layout, ...),
+      # do not stop on error
+      error=function(e) {}
+    )
     
-    # detect first
-    write.table(b$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
+    if (is.null(b)) {
+      # there was an error, just skip to the next species
+      next
+    } else {
+      # write the results
+      write.table(b$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
+    }
+    result[[taxa[i]]] <- b
   }
 
   # close PDF file
