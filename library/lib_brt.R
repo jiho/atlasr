@@ -787,15 +787,25 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   # prepare storage for the results
   result <- list()
   class(result) <- c("brt.list", "list")
-  
-  # prepare files to write down the results
-  pdfFile <- str_c(file, "brt.pdf", sep="-")
-  pdf(pdfFile, paper="a4r")
-  csvFile <- str_c(file, "brt.csv", sep="-")
-  rdataFile <- str_c(file, "brt.Rdata", sep="-")
-  
+
   for (i in seq(along=taxa)) {
     message("-> Running BRT for ", taxa[i])
+
+    # prepare names of the files where the results will be written
+    # taxon name
+    cTaxon <- taxa[i]
+    # data file without extension
+    fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
+    # prepare a basic name from this
+    baseName <- str_c(fileName, cTaxon, "BRT", sep="-")
+
+    # prepare specific filenames
+    pdfFile <- str_c(baseName, ".pdf", sep="")
+    csvFile <- str_c(baseName, ".csv", sep="")
+    rdataFile <- str_c(baseName, ".Rdata", sep="")
+
+    # open the PDF
+    pdf(pdfFile, paper="a4r")
 
     b <- NULL
     tryCatch(
@@ -803,19 +813,25 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
       # do not stop on error
       error=function(e) {}
     )
-    
+
+    # close PDF
+    dev.off()
+
     if (is.null(b)) {
       # there was an error, just skip to the next species
       next
+
     } else {
-      # write the results
-      write.table(b$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
+      # write the results in files
+      save(b, file=rdataFile)
+      if (predict) {
+        write.table(b$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
+      }
     }
+
+    # store the result in the total object
     result[[taxa[i]]] <- b
   }
-
-  # close PDF file
-  dev.off()
 
   return(invisible(result))
 }
