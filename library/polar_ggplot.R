@@ -63,6 +63,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
   #               (in degrees). If they are larger than the original
   #               precision, the data is averaged within the new cells
   # coast         coastline geom, if none is provided, a basic coastline is drawn
+  # ...           passed to the appropriate geom
   #
 
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
@@ -130,8 +131,8 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
 
   # plot points or tiles depending on the geom argument
   p <- p + switch(geom,
-    point = geom_point(mapping=mapping),
-    tile  = geom_tile(mapping=mapping)
+    point = geom_point(mapping=mapping, ...),
+    tile  = geom_tile(mapping=mapping, ...)
   )
 
   # plot the coastline
