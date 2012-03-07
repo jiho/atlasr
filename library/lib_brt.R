@@ -606,7 +606,8 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
     while ( no.trees < 1000 & lr > 0.0005 ) {
         if ( ! quiet ) { cat(".") }
-        try( obj <- gbm.step(
+        obj <- tryCatch(
+                    gbm.step(
                     data = myDataSetForGbmPlot,
                     gbm.x = match(pred.vars, names(data)),
                     gbm.y = match(resp.var, names(data)),
@@ -617,7 +618,11 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
                     family = family,
                     tree.complexity = tree.complexity,
                     ...
-                    )
+                    ),
+                    error=function(e) {
+                      warning(e)
+                      NULL
+                    }
         )
 
         # if the GBM does not converge, the return object is NULL or of size 0
@@ -633,6 +638,13 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
         lr = lr / 2
     }
     if ( ! quiet ) { cat("\n") }
+
+    # if the object is still NULL the fit failed and we cleanup and stop there
+    if (is.null(obj)) {
+      rm(myDataSetForGbmPlot, pos=.GlobalEnv)
+      stop("Cannot fit model")
+    }
+
 
     # store the gbm object in the result object
     result$obj = obj
