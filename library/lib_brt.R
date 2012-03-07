@@ -962,10 +962,9 @@ plot.pred.brt <- function(x, type=c("quick", "full"), overlay.stations=FALSE, ..
     type <- match.arg(type)
 
     # check wether CV error is computed
-    pred <- x$prediction
-    if (all(is.na(pred$CVpred))) {
+    if (all(is.na(x$prediction$CVpred))) {
       # map only prediction
-      mapping <- aes(fill=pred, colour=pred)
+      mapping <- aes_string(fill="pred", colour="pred")
     } else {
       # map prediction as colour and error as transparency
       mapping <- aes(fill=pred, colour=pred, alpha=CVpred)
@@ -974,10 +973,10 @@ plot.pred.brt <- function(x, type=c("quick", "full"), overlay.stations=FALSE, ..
     # main plot
     if (type == "quick") {
       # use points (and possibly regrid)
-      p = polar.ggplot(pred, mapping=mapping, geom="point", ...)
+      p = polar.ggplot(x$prediction, mapping=mapping, geom="point", ...)
     } else {
       # use tiles
-      p = polar.ggplot(pred, mapping=mapping, geom="tile", ...)
+      p = polar.ggplot(x$prediction, mapping=mapping, geom="tile", ...)
     }
 
     # overlay stations
