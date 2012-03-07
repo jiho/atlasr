@@ -35,9 +35,9 @@ if (length(missingPackages) > 0) {
     install.packages(missingPackages, repos="http://cran.at.r-project.org")
 }
 
-for (pack in requiredPackages) {
-  suppressPackageStartupMessages(library(pack, character.only=TRUE, quietly=TRUE))
-}
+# for (pack in requiredPackages) {
+#   suppressPackageStartupMessages(library(pack, character.only=TRUE, quietly=TRUE))
+# }
 
 # Source required functions
 for (file in sourceFiles) {
