@@ -63,12 +63,12 @@ rp.listbox.mult <- function (panel, var, vals, labels = vals, rows = length(vals
                 command = function(...) tkyview(listBox, ...))
             # if ((is.null(pos$width)) && (is.null(pos$height))) {
                 listBox <- tklistbox(newlistbox, height = rows,
-                  selectmode = "multiple", yscrollcommand = function(...) tkset(scr,
+                  selectmode = "extended", yscrollcommand = function(...) tkset(scr,
                     ...), background = "white")
             # }
             # else {
             #     listBox <- tklistbox(newlistbox, height = rows,
-            #       selectmode = "multiple", yscrollcommand = function(...) tkset(scr,
+            #       selectmode = "extended", yscrollcommand = function(...) tkset(scr,
             #         ...), background = "white", width = pos$width,
             #       height = pos$height)
             # }
@@ -76,11 +76,11 @@ rp.listbox.mult <- function (panel, var, vals, labels = vals, rows = length(vals
         else {
             # if ((is.null(pos$width)) && (is.null(pos$height))) {
                 listBox <- tklistbox(newlistbox, height = rows,
-                  selectmode = "multiple", background = "white")
+                  selectmode = "extended", background = "white")
             # }
             # else {
             #     listBox <- tklistbox(newlistbox, height = rows,
-            #       selectmode = "multiple", background = "white",
+            #       selectmode = "extended", background = "white",
             #       width = pos$width, height = pos$height)
             # }
         }
