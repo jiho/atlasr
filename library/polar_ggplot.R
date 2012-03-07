@@ -104,14 +104,16 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
     stop("Need two columns named lat and lon to be able to plot\nYou have ", paste(names(data), collapse=", "))
   }
 
-  # if we need to re-grid, we need both a lat and a lon precision
-  if (! all(is.null(c(lat.precision, lon.precision))) ) {
-    stop("Need to provide both lat and lon precision to be able to regrid the data")
+  # if we need to re-grid, we need *both* a lat and a lon precision
+  if ( any(is.null(c(lat.precision, lon.precision))) ) {
+    if( ! all(is.null(c(lat.precision, lon.precision))) ) {
+      stop("Need to provide both lat and lon precision to be able to regrid the data"
+      )
+    }
   }
 
-
   # If new precisions are specified for lon or lat, regrid the data (for speed purposes)
-  if (! all(is.null(c(lat.precision, lon.precision))) ) {
+  if ( any(is.null(c(lat.precision, lon.precision))) ) {
 
     # NB: use only numeric columns to avoid issues when rasterizing
     numColumns <- sapply(data, is.numeric)
