@@ -807,11 +807,15 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
     # open the PDF
     pdf(pdfFile, paper="a4r")
 
-    b <- NULL
-    tryCatch(
-      b <- brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, plot.layout=plot.layout, ...),
+    # b <- brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, plot.layout=plot.layout, ...)
+
+    b <- tryCatch(
+      brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, plot.layout=plot.layout, ...),
       # do not stop on error
-      error=function(e) {}
+      error=function(e) {
+        warning(e)
+        return(NULL)
+      }
     )
 
     # close PDF
