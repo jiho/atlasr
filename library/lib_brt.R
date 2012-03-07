@@ -868,6 +868,7 @@ print.brt <- function(x, ...) {
   }
   cat("\n")
 
+  return(invisible(x))
 }
 
 
