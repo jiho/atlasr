@@ -130,8 +130,8 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
 
   # plot points or tiles depending on the geom argument
   p <- p + switch(geom,
-    points = geom_point(mapping=mapping),
-    tiles  = geom_tile(mapping=mapping)
+    point = geom_point(mapping=mapping),
+    tile  = geom_tile(mapping=mapping)
   )
 
   # plot the coastline
