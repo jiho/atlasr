@@ -10,17 +10,23 @@
 #-----------------------------------------------------------------------------
 
 
+## Toolbox functions
+#-----------------------------------------------------------------------------
+
 polar_proj <- function(projection="stereographic", orientation=c(-90,0,0)) {
   #
   # Easy access to a suitable polar projection
+  # NB: view from south pole (-90)
   #
   suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
-  coord_map(projection=projection, orientation=orientation)
+  c <- coord_map(projection=projection, orientation=orientation)
+  return(c)
 }
+
 
 spectral_colours <- function(aesthetic=c("fill", "colour"), ...) {
   #
-  # Spectral colour scale from http://colorbrewer2.org/ used a continuous scale in ggplot2
+  # Spectral colour scale from http://colorbrewer2.org/ used as a continuous scale in ggplot2
   #
   # aesthetic   type of scale to generate (fill or colour)
   # ...         passed to scale_***_gradientn
@@ -41,13 +47,17 @@ spectral_colours <- function(aesthetic=c("fill", "colour"), ...) {
 }
 spectral_colors <- spectral_colours
 
-polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.precision=NULL, lon.precision=NULL, coast=NULL, ...) {
+
+## Plotting functions
+#-----------------------------------------------------------------------------
+
+polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.precision=NULL, lon.precision=NULL, coast=NULL, ...) {
   #
   # data          data frame with columns lat, lon, and variables to plot
   # mapping       a call to `aes()` which maps a variable to a plotting
   #               aesthetic characteristic (fill, colour, size, alpha, etc.)
   # geom          the type of plot ("geometry" in ggplot parlance) to produce
-  #               = points (the default) or tiles
+  #               = points (the default) or tiles (possibly better looking, longer)
   # lat.precision
   # lon.precision the precision at which lat and lon are considered
   #               (in degrees). If they are larger than the original
@@ -57,11 +67,13 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
 
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
   suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
 
   # Check arguments
+  # geoms
   geom <- match.arg(geom)
 
-  # Allow lon/lat to be called more liberally
+  # allow lon/lat to be called more liberally
   names(data)[tolower(names(data)) %in% c("latitude","lat")] <- "lat"
   names(data)[tolower(names(data)) %in% c("longitude","lon","long")] <- "lon"
   # check that we have something that looks like lat and lon
@@ -85,12 +97,13 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
     data <- ddply(data[, sapply(data, is.numeric)], ~lon+lat, colMeans, na.rm=T)
   }
 
+
   # Get and re-cut coastline if none is provided
   if (is.null(coast)) {
     # extract the whole world
     suppressPackageStartupMessages(require("maps", quietly=TRUE))
     coast <- map("world", interior=FALSE, plot=FALSE)
-    coast <- data.frame(lon=coast$x, lat=coast$y)    
+    coast <- data.frame(lon=coast$x, lat=coast$y)
     # restrict the coastline info to what we need given the data
     expand <- 1       # add a little wiggle room
     # compute extent of data
@@ -99,17 +112,17 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
     # re-cut the coastline
     # coast <- coast[coast$lat >= lats[1] & coast$lat <= lats[2] & coast$lon >= lons[1] & coast$lon <= lons[2],]
     coast <- coast[coast$lat <= lats[2] & coast$lon >= lons[1] & coast$lon <= lons[2],]
-    
+
     # prepare the geom
     coast <- geom_path(data=coast, na.rm=TRUE, fill="grey50")
     # NB: silently remove missing values which are inherent to coastline data
   }
 
+
   # Plot
   # prepare plot
   p <- ggplot(data, aes(x=lon, y=lat)) +
         # stereographic projection
-        # NB: view from south pole (-90)
         polar_proj()
 
   # plot points or tiles depending on the geom argument
