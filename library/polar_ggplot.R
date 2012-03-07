@@ -81,20 +81,23 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
     stop("Need two columns named lat and lon to be able to plot\nYou have ", paste(names(data), collapse=", "))
   }
 
+  # if we need to re-grid, we need both a lat and a lon precision
+  if (! all(is.null(c(lat.precision, lon.precision))) ) {
+    stop("Need to provide both lat and lon precision to be able to regrid the data")
+  }
+
+
   # If new precisions are specified for lon or lat, regrid the data (for speed purposes)
   if (! all(is.null(c(lat.precision, lon.precision))) ) {
 
-    # round latitude and longitude to the given precision
-    if (!is.null(lat.precision)) {
-      data$lat <- round_any(data$lat, lat.precision)
-    }
-    if (!is.null(lon.precision)) {
-      data$lon <- round_any(data$lon, lon.precision)
+    # NB: use only numeric columns to avoid issues when rasterizing
+    numColumns <- sapply(data, is.numeric)
+    if (sum(numColumns) != ncols(data)) {
+      warning("Columns", str_c(names(data)[!numColumns], collapse=", "), "were deleted to allow regriding")
     }
 
-    # compute the average within the new grid cells
-    # NB: use only numeric columns to avoid issues with mean
-    data <- ddply(data[, sapply(data, is.numeric)], ~lon+lat, colMeans, na.rm=T)
+    # compute mean per bin
+    data <- rasterize(data[numColumns], vars=c("lat", "lon"), precisions=c(lat.precision, lon.precision), fun=mean, na.rm=T)
   }
 
 
