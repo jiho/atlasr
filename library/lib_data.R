@@ -9,7 +9,7 @@
 #   - collate environmental data to a given dataset
 #
 # (c) Copyright 2011-2012 S Mormede, J-O Irisson
-#   GNU General Public License v3
+#     GNU General Public License v3
 #
 #-----------------------------------------------------------------------------
 
