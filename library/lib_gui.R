@@ -303,7 +303,7 @@ do.brt <- function(...) {
 # tab[2,1:2] <- speciesW
 #
 # # variables choice
-# envVariables <- list.env.variables()
+# envVariables <- list.env.data()
 # envVariables <- data.frame(Variables=envVariables)
 # variablesW <- gtable(envVariables, multiple=TRUE, container=tab)
 # allVariablesW <- gcheckbox("Select All", checked=FALSE, container=tab, handler=function(h, ...) {

@@ -50,7 +50,7 @@ check.get.env.data <- function(path="env_data") {
 }
 
 
-list.env.variables <- function(variables="", path="env_data", full=FALSE) {
+list.env.data <- function(variables="", path="env_data", full=FALSE) {
   #
   # List available environment variables
   #
@@ -98,8 +98,8 @@ read.env.data <- function(variables="", path="env_data") {
   suppressPackageStartupMessages(require("plyr"))
 
   # select which netCDF files to read
-  ncFiles = list.env.variables(variables, path, full=T)
-  ncVariables = list.env.variables(variables, path)
+  ncFiles = list.env.data(variables, path, full=T)
+  ncVariables = list.env.data(variables, path)
 
   # read data inside each file
   database <- alply(ncFiles, 1, function(ncFile) {
