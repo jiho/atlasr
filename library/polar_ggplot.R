@@ -24,28 +24,50 @@ polar_proj <- function(projection="stereographic", orientation=c(-90,0,0)) {
 }
 
 
-spectral_colours <- function(aesthetic=c("fill", "colour"), ...) {
+scale_brewerc <- function(aesthetic=c("fill", "colour"), type=c("div", "seq"), palette=1, ...) {
   #
-  # Spectral colour scale from http://colorbrewer2.org/ used as a continuous scale in ggplot2
+  # Continuous colour scales based on ColorBrewer palettes
+  # http://colorbrewer2.org/
+  # NB: scale_fill/colour_brewer currently work for discrete variables only in ggplot
   #
-  # aesthetic   type of scale to generate (fill or colour)
-  # ...         passed to scale_***_gradientn
+  # aesthetic   which type of aesthetic to use
+  # type        one of seq (sequential) or div (diverging)
+  # palette     if a string, will use that named palette.
+  #             if a number, will index into the list of palettes of appropriate 'type'
+  # ...         passed to scale_fill/colour_gradientn
   #
-  aesthetic <- match.arg(aesthetic)
 
-  # get the palette
-  suppressPackageStartupMessages(require("RColorBrewer", quietly=TRUE))
-  colours <- rev(brewer.pal(6, "Spectral"))
+  palInfo <- brewer.pal.info
+  palInfo <- palInfo[palInfo$category %in% c("div", "seq"),]
 
-  if (aesthetic == "fill") {
-    s <- scale_fill_gradientn(colours=colours, guide=guide_colorbar(), ...)
+  # get palette name
+  if (is.numeric(palette)) {
+    type <- match.arg(type)
+    palette <- row.names(palInfo[palInfo$category == type,])[palette]
   } else {
-    s <- scale_colour_gradientn(colours=colours, guide=guide_colorbar(), ...)
+    palette <- match.arg(palette, row.names(palInfo))
   }
+
+  # compute the colours
+  maxN <- palInfo[palette,"maxcolors"]
+  colours <- brewer.pal(n=maxN, name=palette)
+
+  # reverse the colour scale because it matches the direction of the data better
+  colours <- rev(colours)
+
+  # call the appropriate function
+  aesthetic <- match.arg(aesthetic)
+  s <- switch(aesthetic,
+          fill = scale_fill_gradientn(..., colours=colours),
+          colour = scale_colour_gradientn(..., colours=colours)
+  )
 
   return(s)
 }
-spectral_colors <- spectral_colours
+
+scale_fill_brewerc <- function(...) { scale_brewerc(..., aesthetic="fill") }
+scale_colour_brewerc <- function(...) { scale_brewerc(..., aesthetic="colour") }
+scale_color_brewerc <- scale_colour_brewerc
 
 
 ## Plotting functions
@@ -138,14 +160,14 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
   # plot the coastline
   p <- p + coast
 
-  # use nicer colours
+  # use nicer ColorBrewer colours
   if ("fill" %in% names(mapping)) {
     fill.data <- data[,as.character(mapping$fill)]
     if (is.numeric(fill.data)) {
-      # if the data is numeric, use a yellow to red gradient
-      p <- p + scale_fill_continuous(low="#FAF3A9", high="#F62B32")
+      # if the data is numeric, use a continuous, diverging scale
+      p <- p + scale_fill_brewerc(palette="Spectral", guide="colorbar")
     } else if (is.factor(fill.data)) {
-      # if the data is discrete, use a colorbrewer scale if possible (less than 12 colours)
+      # if the data is discrete, use a ColorBrewer scale only when possible (less than 12 colours)
       if (nlevels(fill.data)<=12) {
         p <- p + scale_fill_brewer(palette="Set3")
       }
@@ -156,7 +178,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
   if ("colour" %in% names(mapping)) {
     colour.data <- data[,as.character(mapping$colour)]
     if (is.numeric(colour.data)) {
-      p <- p + scale_colour_continuous(low="#FAF3A9", high="#F62B32")
+      p <- p + scale_colour_brewerc(palette="Spectral", guide="colorbar")
     } else if (is.factor(colour.data)) {
       if (nlevels(colour.data)<=12) {
         p <- p + scale_colour_brewer(palette="Set3")
