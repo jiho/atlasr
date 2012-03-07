@@ -156,3 +156,77 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("points", "tiles"), lat.pre
   return(p)
 }
 
+
+plot.env.data <- function(variables="", path="env_data", ...) {
+  #
+  # Plot all environmental data to PNG files
+  #
+  # variables   only output variables matching this (matches all when "")
+  # path        path to environmental database
+  #
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+  suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+  suppressPackageStartupMessages(require("ncdf", quietly=TRUE))
+  suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
+
+  # read all data files
+  database <- read.env.data(variables=variables, path=path)
+
+  # identify each element by its name and file of origin
+  ncVariables <- names(database)
+  ncFiles <- list.env.data(variables=variables, path=path, full=T)
+  for (i in seq(along=database)) {
+    database[[i]]$variable <- ncVariables[i]
+    database[[i]]$file <- ncFiles[i]
+  }
+
+  message("-> Plot variables")
+
+  # loop on all files
+  l_ply(database, function(x) {
+
+    # convert into a data.frame, for ggplot
+    d <- melt(x$z)
+    names(d) <- c("x", "y", "z")
+    d$x <- x$x[d$x]
+    d$y <- x$y[d$y]
+
+    # better variable name
+    variable <- str_replace_all(x$variable, "_", "\n")
+
+    # png file to plot into
+    file <- str_replace(x$file, "\\.nc$", ".png")
+
+    # plot in the png file
+    png(file=file, width=1200, height=900, units="px", res=90)
+
+    p <- ggplot(d) +
+      # plot points
+      geom_point(aes(x=x, y=y, colour=z), size=0.5) +
+      # nice colour gradient
+      spectral_colours(aes="colour", name=variable) +
+      # blank theme
+      opts(panel.background=theme_blank(),
+           panel.grid.major=theme_blank(),
+           axis.ticks=theme_blank(),
+           axis.title.x=theme_blank(),
+           axis.title.y=theme_blank(),
+           axis.text.x=theme_blank(),
+           axis.text.y=theme_blank(),
+           plot.margins=c(0,0,0,0)
+      ) +
+      # polar view
+      polar_proj()
+    print(p)
+
+    dev.off()
+
+    # cleanup
+    rm(d, p)
+
+    return(NULL)
+
+  }, .progress="text")
+
+  return(invisible(NULL))
+}
