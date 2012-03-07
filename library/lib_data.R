@@ -144,7 +144,7 @@ read.env.data <- function(variables="", path="env_data") {
 
   # name elements of the list
   # NB: sometimes the data names in the netCDF files are the same across several files, we will instead use a name derived from the file
-  names(database) <- variables
+  names(database) <- ncVariables
   
   return(database)
 }
