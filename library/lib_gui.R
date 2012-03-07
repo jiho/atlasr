@@ -123,80 +123,130 @@ do.brt <- function(...) {
 
   suppressPackageStartupMessages(require("rpanel"))
 
+
+  # default dimensions (in px)
+  w <- 600      # width of the window
+  h <- 50       # height of elements
+  spacer <- 10  # height of spacer
+
   # main window
-  win <- rp.control(title="Run BRT model")
+  win <- rp.control(title="Run BRT model", size=c(w,700))
 
-  # default dimensions
-  h <- 40
-  spacer <- 10
 
-  rp.button(win, title="Choose file", pos=c(0, 0, 125, h), action=function(win) {
+  rp.button(win, title="Choose file", pos=c(0, 0, w/4, h), action=function(win) {
 
     # choose the data file
-    # file <- file.choose()
-    file <- "Austropallene.csv"
+    file <- file.choose()
+    # file <- "Austropallene.csv"
     file <- win2unix(file, ...)
-    
+
 
     # write the filename, for information
-    rp.textentry(win, file, title="Dataset", initval=file, pos=c(125, h/4, 375, h))
+    rp.textentry(win, file, title="Dataset", initval=file, pos=c(w/4, h/4, 3*w/4, h))
 
     # build species list
     suppressMessages(data <- read.data(file))
+
+    # the selection panel should be 380px high for the whole window to fit in 700px height
+    hSel <- 380
+    # this is roughly equivalent to 20 rows in the listbox
+    nRows <- 20
+
+    # we can fit ~20 checkboxes into that space, so we need to split the checkbox list into columns when there are more than that
+    nBoxes <- 20
+    # however, it is not possible to do that programmatically in a for loop because variables with numbered names have to be defined in each case and this requires eval(parse(...)) constructs which mostly don't work
+    # so we only accommodate for a situation with two columns
     allTaxa <- setdiff(names(data), c("lat", "lon"))
     nTaxa <- length(allTaxa)
-    rp.checkbox(win, var=taxa, labels=allTaxa, title="Taxa", initval=c(TRUE, rep(FALSE, times=nTaxa-1)), pos=c(0, h, 250, h*nTaxa), action=function(win) {
-      if (all(! win$taxa)) {
-        rp.messagebox("At least one taxon must be selected", title="Warning")
-      }
-      return(win)
-    })
+
+    if (nTaxa <= nBoxes) {
+      # when all taxa can fit into one column, just use this
+      rp.checkbox(win, var=taxa, labels=allTaxa, title="Taxa", initval=c(TRUE, rep(FALSE, times=nTaxa-1)), pos=c(0, h, 2*w/3, hSel), action=function(win) {
+        if (all(! win$taxa)) {
+          rp.messagebox("At least one taxon must be selected", title="Warning")
+        }
+        return(win)
+      })
+
+    } else {
+      # otherwise, split in half
+      half <- ceiling(nTaxa/2)
+      rest <- nTaxa - half
+      allTaxa1 <- allTaxa[1:half]
+      allTaxa2 <- allTaxa[(half+1):nTaxa]
+
+      rp.checkbox(win, var=taxa1, labels=allTaxa1, title="Taxa", initval=c(TRUE, rep(FALSE, times=half-1)), pos=c(0, h, w/3, hSel), action=function(win) {
+        if (all(! c(win$taxa1, win$taxa2))) {
+          rp.messagebox("At least one taxon must be selected", title="Warning")
+        }
+        return(win)
+      })
+      rp.checkbox(win, var=taxa2, labels=allTaxa2, title="", initval=rep(FALSE, times=rest), pos=c(w/3, h+7, w/3, hSel-7), action=function(win) {
+        if (all(! c(win$taxa1, win$taxa2))) {
+          rp.messagebox("At least one taxon must be selected", title="Warning")
+        }
+        return(win)
+      })
+
+    }
 
     # build environment variables list
-    allVariables <- list.env.variables()
-    rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables",  rows=round(nTaxa*2), pos=c(250, h, 250, h*(nTaxa-1)), action=function(win) {
+    allVariables <- list.env.data()
+    rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables",  rows=nRows, pos=c(2*w/3, h, w/3, hSel-h), action=function(win) {
       if (all(win$variables == "")) {
         rp.messagebox("At least one variable must be selected", title="Warning")
       }
       return(win)
     })
-    rp.checkbox(win, var=selAllVariables, title="Select all", initval=FALSE, pos=c(250, h*nTaxa, 250, h))
-
-    mid <- h*(nTaxa+1) + spacer
+    rp.checkbox(win, var=selAllVariables, title="Select all", initval=FALSE, pos=c(2*w/3, hSel, w/3, h))
 
 
-    # Left
-    # effects
-    rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, 125, h*2))
-    rp.checkbox(win, bootstrap.effects, title="Bootstrap", initialval=FALSE, pos=c(125, mid, 125, h*2))
-
-    # prediction
-    rp.radiogroup(win, prediction, values=c("no", "yes", "bootstrap"), title="Prediction", pos=c(0, mid+h*2, 125, h*2))
-
-    # plot
-    rp.radiogroup(win, plot.type, values=c("quick", "full"), title="Plot", pos=c(125, mid+h*2, 125, h*2))
-    rp.checkbox(win, overlay.stations, title="Overlay stations", initialval=FALSE, pos=c(125, mid+h*4, 125, h))
+    # compute vertical coordinate of the middle of the window
+    mid <- hSel + h + spacer
 
 
-    # Right
+    # effects options
+    rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, w/4, h*2))
+    rp.checkbox(win, bootstrap.effects, title="Bootstrap", initialval=FALSE, pos=c(w/4, mid, w/4, h))
+    rp.checkbox(win, bin, title="Bin Data", initval=FALSE, pos=c(w/4, mid+h, w/4, h))
+
+    # prediction options
+    rp.radiogroup(win, prediction, values=c("no", "yes", "yes + bootstrap"), title="Prediction", pos=c(0, mid+h*2, w/4, h*2))
+
+    # prediction plot options
+    rp.radiogroup(win, plot.type, values=c("quick", "full"), title="Prediction plot", pos=c(w/4, mid+h*2, w/4, h+spacer))
+    rp.checkbox(win, overlay.stations, title="Overlay stations", initialval=FALSE, pos=c(w/4, mid+h*3+spacer, w/4, h-spacer))
+
+
     # location
-    rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(313, mid+h*0, 125, h))
-    rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=-180, showvalue=TRUE, pos=c(250, mid+h*1, 125, h))
-    rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=180 , showvalue=TRUE, pos=c(375, mid+h*1, 125, h))
-    rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=-80 , showvalue=TRUE, pos=c(313, mid+h*2, 125, h))
-    rp.slider(win, lon.step, from=0.1, to=5  ,  resolution=0.1, title="Step lon", initval=0.5 , showvalue=TRUE, pos=c(250, mid+h*3, 125, h))
-    rp.slider(win, lat.step, from=0.1, to=5   , resolution=0.1, title="Step lat", initval=0.1 , showvalue=TRUE, pos=c(375, mid+h*3, 125, h))
-
-    rp.checkbox(win, bin, title="Bin Data", initval=FALSE, pos=c(250, mid+h*4, 250, h))
+    rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
+    rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=-180, showvalue=TRUE, pos=c(w/2, mid+h*1, w/4, h))
+    rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=180 , showvalue=TRUE, pos=c(3*w/4, mid+h*1, w/4, h))
+    rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=-80 , showvalue=TRUE, pos=c(w/2+w/8, mid+h*2, w/4, h))
+    rp.slider(win, lon.step, from=0.1, to=4  ,  resolution=0.1, title="Step lon", initval=0.5 , showvalue=TRUE, pos=c(w/2, mid+h*3, w/4, h))
+    rp.slider(win, lat.step, from=0.1, to=4   , resolution=0.1, title="Step lat", initval=0.1 , showvalue=TRUE, pos=c(3*w/4, mid+h*3, w/4, h))
 
 
-    # buttons
-    rp.button(win, "Cancel", action=function(win) {message("Aborting"); win},  quitbutton=TRUE, pos=c(250, mid+h*5+spacer, 125, h))
-    rp.button(win, "Run", quitbutton=TRUE, pos=c(375, mid+h*5+spacer, 125, h), action=function(win, ...) {
+    # action buttons
+    rowY <- mid+h*4+spacer
+    rp.button(win, "Help", pos=c(0, rowY, w/4, h), action=function(win) {
+      rp.messagebox("Someday... Maybe", title="Help")
+      return(win)
+    })
+    rp.button(win, "Cancel", quitbutton=TRUE, pos=c(w/2, rowY, w/4, h) , action=function(win) {
+      message("Aborting");
+      return(win)
+    })
+    rp.button(win, "Run",    quitbutton=TRUE, pos=c(3*w/4, rowY, w/4, h), action=function(win, ...) {
       # print(win$file)
 
-      # print(win$taxa)
-      taxa <- names(win$taxa)[win$taxa]
+      if (nTaxa <= nBoxes) {
+        taxa <- names(win$taxa)[win$taxa]
+      } else {
+        taxa <- names(win$taxa1)[win$taxa1]
+        taxa <- c(taxa, names(win$taxa2)[win$taxa2])
+      }
+      # print(taxa)
 
       # print(win$variables)
       # print(win$selAllVariables)
