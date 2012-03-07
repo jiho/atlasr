@@ -740,7 +740,8 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 }
 
 brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, predict=FALSE, bin=FALSE, path="env_data", plot.layout=c(3,4), ...) {
-  
+
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
 
   # read dataset
   if (file.exists(file)) {
@@ -788,9 +789,10 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   class(result) <- c("brt.list", "list")
   
   # prepare files to write down the results
-  pdfFile <- paste(file, "brt.pdf", sep="-")
+  pdfFile <- str_c(file, "brt.pdf", sep="-")
   pdf(pdfFile, paper="a4r")
-  csvFile <- paste(file, "brt.csv", sep="-")
+  csvFile <- str_c(file, "brt.csv", sep="-")
+  rdataFile <- str_c(file, "brt.Rdata", sep="-")
   
   for (i in seq(along=taxa)) {
     message("-> Running BRT for ", taxa[i])
