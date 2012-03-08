@@ -71,6 +71,14 @@ scale_colour_brewerc <- function(...) { scale_brewerc(..., aesthetic="colour") }
 scale_color_brewerc <- scale_colour_brewerc
 
 
+plot.pred <- function(x, ...) {
+  #
+  # Generic for the plot of predictions from a model
+  #
+  UseMethod("plot.pred")
+}
+
+
 ## Plotting functions
 #-----------------------------------------------------------------------------
 
