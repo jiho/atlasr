@@ -524,7 +524,7 @@ require(gbm)
 ## Run BRT analysis 
 #-----------------------------------------------------------------------------
 
-brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "poisson"), tree.complexity = 2, n.boot.effects=0, plot.layout = c(2,2), predict=FALSE, newdata=data, extrapolate.env=FALSE, n.boot.pred=0, quiet=FALSE, ...) {
+brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "poisson"), tree.complexity = 2, n.boot.effects=0, plot.layout = c(2,2), predict=FALSE, newdata=data, extrapolate.env=FALSE, n.boot.pred=0, quick=TRUE, quiet=FALSE, ...) {
     #
     # Fit, evaluate and predict BRT (for one species)
     #
@@ -542,6 +542,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     #                   FALSE removes the points, TRUE keeps them, NA replaces the values with NA
     # n.boot.effects    number of bootstraps for the prediction
     #                   (allows to estimate error through cross validation)
+    # quick             subsmaple the output plot to be quicker
     # quiet             when TRUE, do not print messages when true
     # ...               passed to dismo::gbm.step, plot.pred.brt
     #
@@ -772,7 +773,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
         result$prediction <- prediction
 
         if ( ! quiet ) cat("   plot predictions\n")
-        p <- plot.pred.brt(result, ...)
+        p <- plot.pred.brt(result, quick=quick, ...)
         # store the plot in the result object
         result$plot.pred <- p
 
@@ -989,13 +990,12 @@ plot.brt <- function(x, plot.layout=c(2,2), ...) {
 }
 
 
-plot.pred.brt <- function(x, quick=TRUE, overlay.stations=FALSE, ...) {
+plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
   #
   # Plot BRT predictions
   #
   # x                     object of class brt
-  # type                  quick = subsample to 1º x 2º in lat x lon
-  #                       full = all points
+  # quick                 subsample to 1º x 2º in lat x lon to plot more quickly
   # overlay.observations  add points at the location of observation in to original data
   # ...                   passed on to polar.ggplot
   #
