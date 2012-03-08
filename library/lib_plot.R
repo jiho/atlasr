@@ -203,11 +203,15 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
     }
   }
 
-  # nicer, simpler scales
-  p <- p + labs(x="Longitude", y="Latitude")
-
   # no background
   p <- p + theme_bw()
+
+  # nicer, simpler scales
+  p <- p +
+    # scale_x_continuous(name="", breaks=c(0)) +
+    # NB: fails due to a bug in ggplot now, instead use
+    opts(axis.text.x=theme_blank(), axis.title.x=theme_blank()) +
+    scale_y_continuous(name="Latitude")
 
   return(p)
 }
