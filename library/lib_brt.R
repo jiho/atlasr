@@ -524,7 +524,7 @@ require(gbm)
 ## Run BRT analysis 
 #-----------------------------------------------------------------------------
 
-brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "poisson"), tree.complexity = 2, n.boot.effects=0, plot.layout = c(2,2), predict=FALSE, newdata=data, n.boot.pred=0, quiet=FALSE, ...) {
+brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "poisson"), tree.complexity = 2, n.boot.effects=0, plot.layout = c(2,2), predict=FALSE, newdata=data, extrapolate.env=FALSE, n.boot.pred=0, quiet=FALSE, ...) {
     #
     # Fit, evaluate and predict BRT (for one species)
     #
@@ -538,6 +538,8 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     # plot.layout       dimension of the matrix of effects plots
     # predict           whether to perform the prediction or only fit the model
     # newdata           environmental conditions at locations where presence/abundance should be predicted
+    # extrapolate.env   wether to extrapolate outside of the environmental range for the prediction
+    #                   FALSE removes the points, TRUE keeps them, NA replaces the values with NA
     # n.boot.effects    number of bootstraps for the prediction
     #                   (allows to estimate error through cross validation)
     # quiet             when TRUE, do not print messages when true
@@ -732,9 +734,42 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
             CVpred = NA     # CV can't be computed without bootstrap
         }
 
-        # store it in the result object
-        result$prediction = data.frame(taxon=resp.var, newdata[,c("lat", "lon")], pred, CVpred)
+        # store it as a data.frame
+        prediction = data.frame(taxon=resp.var, newdata[,c("lat", "lon")], pred, CVpred)
 
+        # if we choose *not* to extrapolate, remove the data outside of the original environmental range
+        if (is.na(extrapolate.env)) {
+          # extrapolate.env = NA means we want to replace extrapolated points with NA; i.e. we don't want to extrapolate
+          extrapolate <- FALSE
+        } else {
+          extrapolate <- extrapolate.env
+        }
+        if ( ! extrapolate ) {
+          # compute original range of all predicted
+          ranges <- ldply(data[pred.vars], range, na.rm=T)
+
+          # detect points in the prediction range which are outside the original range
+          outsideRange <- c()
+          for (pred.var in pred.vars) {
+            cValues <- newdata[,pred.var]
+            cRange <- ranges[ranges$.id == pred.var,]
+            outsideRange <- c(outsideRange, which(cValues < cRange$V1 | cValues > cRange$V2))
+          }
+          outsideRange <- unique(outsideRange)
+          # inform the user about it
+          message("   Removed ", length(outsideRange), " points outside of the original data environmental range")
+
+          if (is.na(extrapolate.env)) {
+            # replaced extrapolated points with NA
+            prediction[outsideRange, c("pred", "CVpred")] <- NA
+          } else {
+            # remove extrapolated points
+            prediction <- prediction[-outsideRange,]
+          }
+        }
+
+        # store it in the resulting object
+        result$prediction <- prediction
 
         if ( ! quiet ) cat("   plot predictions\n")
         p <- plot.pred.brt(result, ...)
