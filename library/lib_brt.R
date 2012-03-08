@@ -1032,10 +1032,12 @@ plot.pred.brt <- function(x, quick=TRUE, overlay.stations=FALSE, ...) {
       if (!all(c("lat", "lon") %in% names(x$data))) {
         warning("Cannot overlay data points because the coordinates were not in the original dataset", immediate.=TRUE)
       } else {
-        # make sure the variable is numeric (when using presence absence it can be boolean)
-        x$data[,x$resp.var] <- as.numeric(x$data[,x$resp.var])
         # make the plot
-        p <- p + geom_point(aes_string(x="lon", y="lat", size=x$resp.var), data=x$data) + scale_size(range=c(1,2), breaks=seq(from=0, to=max(x$data[,x$resp.var], by=1)))
+        if (is.numeric(x$data[,x$resp.var])) {
+          p <- p + geom_point(aes_string(x="lon", y="lat", fill=x$resp.var), data=x$data, shape=21, size=1.5, colour="white", alpha=0.5) + scale_fill_continuous(low="black", high="red")
+        } else {
+          p <- p + geom_point(aes_string(x="lon", y="lat", shape=x$resp.var), data=x$data, size=1, alpha=0.7) + scale_shape_manual(values=c(4, 16))
+        }
       }
     }
     
