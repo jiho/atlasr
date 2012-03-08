@@ -215,8 +215,8 @@ do.brt <- function(...) {
     checkH <- 4*h/5
     rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initialval=FALSE, pos=c(w/4, mid, w/4, checkH))
     rp.checkbox(win, bin, title="Bin original data\non prediction grid", initval=FALSE, pos=c(w/4, mid+checkH, w/4, checkH))
-    rp.checkbox(win, extrapolate.env, title="Extrapolate\nenvironment", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH))
-    rp.checkbox(win, quick.plot, title="Quick prediction\nplot", initialval=FALSE, pos=c(w/4, mid+checkH*3, w/4, h))
+    rp.checkbox(win, extrapolate.env, title="Extrapolate envi-\nronmental range", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH))
+    rp.checkbox(win, quick.plot, title="Subsample predict-\nion plot (faster)", initialval=FALSE, pos=c(w/4, mid+checkH*3, w/4, h))
     rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initialval=FALSE, pos=c(w/4, mid+checkH*4, w/4, checkH))
 
     # location
