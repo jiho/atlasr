@@ -844,8 +844,14 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
     cTaxon <- taxa[i]
     # data file without extension
     fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
+    # prepare directory
+    dirName <- str_c(fileName, "/", cTaxon, "-BRT/")
+    dir.create(dirName, showWarnings=FALSE, recursive=TRUE)
+    if (!file.exists(dirName)) {
+      stop("Could not produce output directory : ", dirName)
+    }
     # prepare a basic name from this
-    baseName <- str_c(fileName, cTaxon, "BRT", sep="-")
+    baseName <- str_c(dirName, cTaxon, "-BRT")
 
     # prepare specific filenames
     pdfFile <- str_c(baseName, ".pdf", sep="")
