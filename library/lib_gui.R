@@ -206,17 +206,18 @@ do.brt <- function(...) {
 
 
     # effects options
-    rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, w/4, h*2))
-    rp.checkbox(win, bootstrap.effects, title="Bootstrap", initialval=FALSE, pos=c(w/4, mid, w/4, h))
-    rp.checkbox(win, bin, title="Bin Data", initval=FALSE, pos=c(w/4, mid+h, w/4, h))
+    rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Effects", pos=c(0, mid, w/4, h*2))
 
     # prediction options
-    rp.radiogroup(win, prediction, values=c("no", "yes", "yes + bootstrap"), title="Prediction", pos=c(0, mid+h*2, w/4, h*2))
+    rp.radiogroup(win, prediction, values=c("no", "yes", "yes + bootstrap"), initval="yes", title="Prediction", pos=c(0, mid+h*2, w/4, h*2))
 
-    # prediction plot options
-    rp.radiogroup(win, plot.type, values=c("quick", "full"), title="Prediction plot", pos=c(w/4, mid+h*2, w/4, h+spacer))
-    rp.checkbox(win, overlay.stations, title="Overlay stations", initialval=FALSE, pos=c(w/4, mid+h*3+spacer, w/4, h-spacer))
-
+    # checkboxes range
+    checkH <- 4*h/5
+    rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initialval=FALSE, pos=c(w/4, mid, w/4, checkH))
+    rp.checkbox(win, bin, title="Bin original data\non prediction grid", initval=FALSE, pos=c(w/4, mid+checkH, w/4, checkH))
+    rp.checkbox(win, extrapolate.env, title="Extrapolate\nenvironment", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH))
+    rp.checkbox(win, quick.plot, title="Quick prediction\nplot", initialval=FALSE, pos=c(w/4, mid+checkH*3, w/4, h))
+    rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initialval=FALSE, pos=c(w/4, mid+checkH*4, w/4, checkH))
 
     # location
     rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
@@ -283,7 +284,8 @@ do.brt <- function(...) {
       # print(win$lon.min)
       # print(win$lon.step)
 
-      # print(win$plot.type)
+      # print(win$quick.plot)
+      # print(win$extrapolate.env)
       # print(win$overlay.stations)
       # print(win$bin)
 
@@ -299,7 +301,8 @@ do.brt <- function(...) {
                   family=win$family,
                   n.boot.effects=n.boot.effects,
                   n.boot.pred=n.boot.pred,
-                  type=win$plot.type,
+                  quick=win$quick.plot,
+                  extrapolate.env=win$extrapolate.env,
                   overlay.station=win$overlay.stations,
                   ...
               )
