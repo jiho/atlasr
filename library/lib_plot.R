@@ -123,16 +123,16 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
   }
 
   # If new precisions are specified for lon or lat, regrid the data (for speed purposes)
-  if ( any(is.null(c(lat.precision, lon.precision))) ) {
+  if ( any(! is.null(c(lat.precision, lon.precision))) ) {
 
     # NB: use only numeric columns to avoid issues when rasterizing
     numColumns <- sapply(data, is.numeric)
-    if (sum(numColumns) != ncols(data)) {
-      warning("Columns", str_c(names(data)[!numColumns], collapse=", "), "were deleted to allow regriding")
+    if (sum(numColumns) != ncol(data)) {
+      warning("Columns ", str_c(names(data)[!numColumns], collapse=", "), " were deleted to allow re-griding\n  Check wether this affects your plot")
     }
 
     # compute mean per bin
-    data <- rasterize(data[numColumns], vars=c("lat", "lon"), precisions=c(lat.precision, lon.precision), fun=mean, na.rm=T)
+    suppressMessages(data <- rasterize(data[numColumns], vars=c("lat", "lon"), precisions=c(lat.precision, lon.precision), fun=mean, na.rm=T))
   }
 
 
