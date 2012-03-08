@@ -954,13 +954,13 @@ plot.brt <- function(x, plot.layout=c(2,2), ...) {
 }
 
 
-plot.pred.brt <- function(x, type=c("quick", "full"), overlay.stations=FALSE, ...) {
+plot.pred.brt <- function(x, quick=TRUE, overlay.stations=FALSE, ...) {
   #
   # Plot BRT predictions
   #
   # x                     object of class brt
-  # type                  quick = point based plot (with subsampling)
-  #                       full = tile based plot with the whole dataset
+  # type                  quick = subsample to 1º x 2º in lat x lon
+  #                       full = all points
   # overlay.observations  add points at the location of observation in to original data
   # ...                   passed on to polar.ggplot
   #
@@ -972,26 +972,25 @@ plot.pred.brt <- function(x, type=c("quick", "full"), overlay.stations=FALSE, ..
     stop("No predictions in this brt object; re-run the analysis with predict=TRUE")
 
   } else {
-    # check arguments
-    type <- match.arg(type)
 
     # check wether CV error is computed
     if (all(is.na(x$prediction$CVpred))) {
       # map only prediction
-      mapping <- aes_string(fill="pred", colour="pred")
+      mapping <- aes(colour=pred)
     } else {
       # map prediction as colour and error as transparency
-      mapping <- aes(fill=pred, colour=pred, alpha=CVpred)
+      mapping <- aes(colour=pred, alpha=CVpred)
     }
 
     # main plot
-    if (type == "quick") {
-      # use points (and possibly regrid)
-      p = polar.ggplot(x$prediction, mapping=mapping, geom="point", ...)
+    if (quick) {
+      lat.precision <- 1
+      lon.precision <- 2
     } else {
-      # use tiles
-      p = polar.ggplot(x$prediction, mapping=mapping, geom="tile", ...)
+      lat.precision <- NULL
+      lon.precision <- NULL
     }
+    p <- polar.ggplot(x$prediction, mapping=mapping, geom="point", lat.precision=lat.precision, lon.precision=lon.precision, ...)
 
     # overlay stations
     if (overlay.stations) {
