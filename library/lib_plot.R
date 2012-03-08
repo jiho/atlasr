@@ -37,6 +37,7 @@ scale_brewerc <- function(aesthetic=c("fill", "colour"), type=c("div", "seq"), p
   # ...         passed to scale_fill/colour_gradientn
   #
 
+  suppressPackageStartupMessages(require("RColorBrewer", quietly=TRUE))
   palInfo <- brewer.pal.info
   palInfo <- palInfo[palInfo$category %in% c("div", "seq"),]
 
