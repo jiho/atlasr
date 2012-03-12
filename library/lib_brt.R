@@ -790,6 +790,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, predict=FALSE, bin=FALSE, path="env_data", plot.layout=c(2,2), ...) {
 
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+  suppressPackageStartupMessages(require("shapefiles", quietly=TRUE))
 
   # read dataset
   if (file.exists(file)) {
@@ -881,9 +882,25 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
 
     } else {
       # write the results in files
+      message("   Writing output to ", dirName)
       save(b, file=rdataFile)
       if (predict) {
+        # CSV file
         write.table(b$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
+
+        # Shapefiles
+        x <- b$prediction
+
+        # need a unique Id for each point
+        x$Id <- 1:nrow(x)
+
+        # convert into a point (type=1) shapefile
+        dataTable <- x[,c("Id", "lon", "lat")]
+        attributesTable <- x[,c("Id", "pred", "CVpred")]
+        shapefile <- convert.to.shapefile(shpTable=dataTable, attTable=attributesTable, field="Id", type=1)
+
+        # write it
+        write.shapefile(shapefile, baseName, arcgis=T)
       }
     }
 
