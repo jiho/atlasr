@@ -864,7 +864,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
 
     # b <- brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, plot.layout=plot.layout, ...)
 
-    b <- tryCatch(
+    brtObj <- tryCatch(
       brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, plot.layout=plot.layout, ...),
       # do not stop on error
       error=function(e) {
@@ -876,20 +876,20 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
     # close PDF
     dev.off()
 
-    if (is.null(b)) {
+    if (is.null(brtObj)) {
       # there was an error, just skip to the next species
       next
 
     } else {
       # write the results in files
       message("   Writing output to ", dirName)
-      save(b, file=rdataFile)
+      save(brtObj, file=rdataFile)
       if (predict) {
         # CSV file
-        write.table(b$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
+        write.table(brtObj$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
 
         # Shapefiles
-        x <- b$prediction
+        x <- brtObj$prediction
 
         # need a unique Id for each point
         x$Id <- 1:nrow(x)
@@ -905,7 +905,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
     }
 
     # store the result in the total object
-    result[[taxa[i]]] <- b
+    result[[taxa[i]]] <- brtObj
   }
 
   return(invisible(result))
