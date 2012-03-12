@@ -56,4 +56,4 @@ In the console, type the command to run your analysis. For example, to run a BRT
 
 	do.brt()
 
-Read the additional documentation for each analysis in the `documentation` directory.
+Read the additional documentation for each analysis in the `documentation` directory. When you are done, quit RStudio. It asks wether you want to save an image of your session. You do not need to save anything (all results are saved appropriately when you run each analysis).
