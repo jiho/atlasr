@@ -1,7 +1,7 @@
 
 # How to get started
 
-The scripts are all written in R and should work on all platforms.
+The scripts are all written in R and should work on all platforms, provided that you have the right setup.
 
 
 ## Pre-requisites
@@ -30,14 +30,14 @@ Unzipping the file should create an `atlasr` directory with all the scripts.
 
 ### Start R and tell it were to work
 
-Open `get_functions.R` with RStudio. You should get a four panes window with the script on the top-left, the R console on the bottom-left and some stuff we don't care about yet on the right. Use the menu `Tools > Set Working Directory > To Source File Location`. This should print something starting with `setwd(` in the console.
+Open `get_functions.R` in the just-created `atlasr` directory with RStudio. You should get a four panes window with the script on the top-left, the R console on the bottom-left and some stuff we don't care about yet on the right. Use the menu `Tools > Set Working Directory > To Source File Location`. This should print something starting with `setwd(` in the console. It tells R where to find the functions. Your data can be anywhere though.
 
 Other interfaces of R, such as the default R GUI on Windows or Mac, also provide similar functionality to set the working directory. Alternatively you can use the `setwd()` command directly. You should set it to where `get_functions.R` is.
 
 
 ### Get all supporting functions
 
-In RStudio, click on the "Source" button at the top of the file pane. This should write something starting with `source(` in the console. This command loads all functions stored in the `library` folder as well as install all the "packages" that they use to get additional functionality. This is long the first time you run it because it needs to download all the packages, but should be instantaneous afterwards.
+In RStudio, click on the `Source` button at the top of the file pane. This should write something starting with `source(` in the console. This command loads all functions stored in the `library` folder as well as install all the "packages" that they use to get additional functionality. This is long the first time you run it because it needs to download all the packages, but should be instantaneous afterwards.
 
 With any R interface, you can actually just write
 
@@ -45,7 +45,7 @@ With any R interface, you can actually just write
 
 in the console.
 
-You can now close the `get_functions.R` file now.
+You can now close the `get_functions.R` file.
 
 
 ### Run an analysis
