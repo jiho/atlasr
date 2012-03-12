@@ -1,0 +1,21 @@
+
+# HOWTO create a BRT model
+
+Boosted Regression Trees use the [bgm](http://cran.r-project.org/web/packages/gbm/) and [dismo](http://cran.r-project.org/web/packages/dismo/index.html) R packages.
+
+## Formatting your data
+
+You should have one column per species and possibly two columns with latitude and longitude.
+
+## Using the GUI
+
+A custom graphical interface has been built to ease the use of the underlying functions which are documented further down. Do display this GUI, follow the instructions in the README document and then type
+
+	do.brt()
+
+in the console.
+
+This presents a window with just one button `Choose file`. Clicking on the button opens the standard file chooser on your system and should allow you to navigate to your data file.
+
+
+## Using the command line
