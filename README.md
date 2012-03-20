@@ -58,4 +58,4 @@ For example, to run a BRT model using the automatic graphical interface, type
 
 	do.brt()
 
-Read the additional documentation for each analysis in the `documentation` directory. When you are done, quit RStudio. It asks wether you want to save an image of your session. You do not need to save anything (all results are saved appropriately when you run each analysis).
+Read the additional documentation for each analysis in the [`documentation`](https://github.com/jiho/atlasr/tree/master/documentation) directory. When you are done, quit RStudio. It asks wether you want to save an image of your session. You do not need to save anything (all results are saved appropriately when you run each analysis).
