@@ -119,3 +119,18 @@ It returns a named list with one element per taxa studied. Each element is an ob
 *   `plot.pred`  a ggplot2 object with the prediction plot.
 
 
+## Analysis routine
+
+do not predict with many parameters
+trim down parameters
+do not predict and boot strap effects
+trim down parameters
+predict with quick plot
+check
+predict with bootstrap and full plot
+
+
+## Viewing and interpreting results
+
+
+## Inspecting the results again
