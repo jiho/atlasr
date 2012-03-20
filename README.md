@@ -14,7 +14,7 @@ Go to the [R download site](http://cran.at.r-project.org/) and download R for yo
 
 *	Windows users, you should select the `base` subdirectory and then the main `Download R 2.** for Windows` link. Install with the default choices  everywhere.
 
-*   Linux users, you should get it from your package management system.
+*   Linux users, you should get it from your package management system rather than on the above site.
 
 Optionally (but this is recommended as it makes things easier in the following), you can install a Graphical User Interface on top of R. We recommend [RStudio](http://rstudio.org/). On the download page, select `RStudio Desktop` and it should detect your operating system and present the recommended file for you on the next page.
 
@@ -30,7 +30,7 @@ Unzipping the file should create an `atlasr` directory with all the scripts.
 
 ## Running an analysis
 
-### Start R and tell it were to work
+### Start R and tell it where to work
 
 In the just-created `atlasr` directory, open `get_functions.R` with RStudio (right-click and `Open With...` if necessary). You should get a four panes window with the script on the top-left, the R console on the bottom-left and some stuff we don't care about yet on the right. Use the menu `Tools > Set Working Directory > To Source File Location`. This should print something starting with `setwd(` in the console. It tells R where to find the functions. Your data can be anywhere though.
 
@@ -39,13 +39,13 @@ Other interfaces of R, such as the default R GUI on Windows or Mac, also provide
 
 ### Get all supporting functions
 
-In RStudio, click on the `Source` button at the top of the file pane. This should write something starting with `source(` in the console. This command loads all functions stored in the `library` folder as well as install all the "packages" that they use to get additional functionality. This is long the first time you run it because it needs to download all the packages, but should be instantaneous afterwards.
+In RStudio, click on the `Source` button at the top of the file pane. This should write something starting with `source(` in the console. This command executes `get_functions.R` which loads all functions stored in the `library` folder and installs all the R "packages" that they use. This is long the first time you run it because it needs to download all packages, but it should be instantaneous afterwards.
 
 With any kind of R interface (not just RStudio), you could just write
 
 	source("get_functions.R")
 
-in the console.
+in the console to achieve this.
 
 You can now close the `get_functions.R` file.
 
