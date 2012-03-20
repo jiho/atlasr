@@ -10,9 +10,9 @@ The scripts are all written in R and should work on all platforms, provided that
 
 Go to the [R download site](http://cran.at.r-project.org/) and download R for your system.
 
-*	Mac OS X users you should get the `R-2.**.pkg` as well as `tcltk-**.pkg` in the `tools` subdirectory further down the page. Installing is just a matter of double-clicking and saying `OK` to everything.
+*	Mac OS X users, you should get the `R-2.**.pkg` as well as `tcltk-**.pkg` in the `tools` subdirectory further down the page. Installing is just a matter of double-clicking and saying `OK` to everything.
 
-*	Windows users you should select the `base` subdirectory and then the main `Download R 2.** for Windows` link. Install with the default choices  everywhere.
+*	Windows users, you should select the `base` subdirectory and then the main `Download R 2.** for Windows` link. Install with the default choices  everywhere.
 
 *   Linux users, you should get it from your package management system.
 
@@ -23,7 +23,7 @@ Optionally (but this is recommended as it makes things easier in the following),
 
 These scripts are rapidly evolving (at times...) and the latest version is always kept on this page (https://github.com/jiho/atlasr). You can download a zip file using the `ZIP` button or directly at the address:
 
-	https://github.com/jiho/atlasr/zipball/master
+https://github.com/jiho/atlasr/zipball/master
 
 Unzipping the file should create an `atlasr` directory with all the scripts.
 
@@ -41,7 +41,7 @@ Other interfaces of R, such as the default R GUI on Windows or Mac, also provide
 
 In RStudio, click on the `Source` button at the top of the file pane. This should write something starting with `source(` in the console. This command loads all functions stored in the `library` folder as well as install all the "packages" that they use to get additional functionality. This is long the first time you run it because it needs to download all the packages, but should be instantaneous afterwards.
 
-With any R interface (not just RStudio), you could just write
+With any kind of R interface (not just RStudio), you could just write
 
 	source("get_functions.R")
 
