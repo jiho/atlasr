@@ -840,7 +840,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   class(result) <- c("brt.list", "list")
 
   for (i in seq(along=taxa)) {
-    message("-> Running BRT for ", taxa[i])
+    message("-> Run BRT for ", taxa[i])
 
     # prepare names of the files where the results will be written
     # taxon name
@@ -884,7 +884,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
 
     } else {
       # write the results in files
-      message("   Writing output to ", dirName)
+      message("   Write output to ", dirName)
       save(brtObj, file=rdataFile)
       if (predict) {
         # CSV file
