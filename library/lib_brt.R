@@ -578,7 +578,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     class(result) <- c("brt", "list")
 
     ## Setup data
-    #-----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     if ( ! quiet ) cat("   setup data\n")
 
     # remove observations where the current species information is Non-Available
@@ -594,7 +594,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
 
     ## Run BRT model
-    #-----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     if ( ! quiet ) cat("   optimising BRT model ")
 
     # initial values before entering the while loop
@@ -654,7 +654,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
 
     ## Store additional results
-    #-----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     if ( ! quiet ) cat("   write results\n")
 
     # Deviance related information
@@ -679,7 +679,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
 
     # Plot effects
-    #-----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     if ( ! quiet ) cat("   plot effects\n")
     
     
@@ -713,7 +713,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
 
     ## Predict presence / abundance
-    #-----------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
 
     if (predict) {
         if ( ! quiet ) cat("   make predictions\n")
