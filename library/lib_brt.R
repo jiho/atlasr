@@ -790,11 +790,13 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, predict=FALSE, bin=FALSE, path="env_data", ...) {
 
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
-  suppressPackageStartupMessages(require("shapefiles", quietly=TRUE))
+  suppressPackageStartupMessages(require("maptools", quietly=TRUE))
+
 
   # read dataset
   if (file.exists(file)) {
     observed_data <- read.data(file)    
+    file <- normalizePath(file)
   } else {
     stop("Cannot find file : ", file)
   }
@@ -847,6 +849,9 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
     cTaxon <- taxa[i]
     # data file without extension
     fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
+    # replace "." by "_" because shapefile writing does not support "."
+    fileName <- str_replace_all(fileName, fixed("."), "_")
+    cTaxon <- str_replace_all(cTaxon, fixed("."), "_")
     # prepare directory
     dirName <- str_c(fileName, "/", cTaxon, "-BRT/")
     dir.create(dirName, showWarnings=FALSE, recursive=TRUE)
@@ -891,10 +896,10 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
         write.table(brtObj$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
 
         # Shapefiles
-        shapefile <- convert.to.shp(brtObj$prediction, measure.vars=c("pred", "CVpred"))
-        write.shapefile(shapefile, baseName, arcgis=T)
+        xSp <- SpatialPointsDataFrame(brtObj$prediction[,c("lon", "lat")], brtObj$prediction[,c("pred", "CVpred")], proj4string=CRS("+proj=longlat +datum=WGS84"))
+        writeSpatialShape(xSp, baseName)
 
-        # add the prj bit
+        # add the .prj file
         cat("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]\n", file=str_c(baseName, ".prj"))
       }
     }
