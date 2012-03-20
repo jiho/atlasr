@@ -39,7 +39,7 @@ The options (lists and checkboxes) map to the following arguments of the command
 
 *	Distribution : `family`
 
-*	Prediction : `predict` (and `n.boot.pred`=200 when bootstrapping)
+*	Prediction : `predict` (and `n.boot.pred=200` when bootstrapping)
 
 *	Bootstrap effects : `n.boot.effects=200` when checked
 
