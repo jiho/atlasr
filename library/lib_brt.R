@@ -602,16 +602,14 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     no.trees = 0
     
     # NB: gbm.plot uses eval() in the global environment to find the dataset which was used to fit the model
-    #     this is highly flawed and only works when used interactively directly from the command prompt
-    #     to bypass this, we write the dataset to the global environment with a funky name
-    myDataSetForGbmPlot <- data
-    assign("myDataSetForGbmPlot", myDataSetForGbmPlot, .GlobalEnv)
+    #     to avoid conflicts, we use a funky name
+    myFunkyDatasetNameForGbmPlot <- data
 
     while ( no.trees < 1000 & lr > 0.0005 ) {
         if ( ! quiet ) { cat(".") }
         obj <- tryCatch(
                     gbm.step(
-                    data = myDataSetForGbmPlot,
+                    data = myFunkyDatasetNameForGbmPlot,
                     gbm.x = match(pred.vars, names(data)),
                     gbm.y = match(resp.var, names(data)),
                     learning.rate = lr,
@@ -641,13 +639,6 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
         lr = lr / 2
     }
     if ( ! quiet ) { cat("\n") }
-
-    # if the object is still NULL the fit failed and we cleanup and stop there
-    if (is.null(obj)) {
-      rm(myDataSetForGbmPlot, pos=.GlobalEnv)
-      stop("Cannot fit model")
-    }
-
 
     # store the gbm object in the result object
     result$obj = obj
@@ -680,16 +671,9 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
     # Plot effects
     #-------------------------------------------------------------------------
-    if ( ! quiet ) cat("   plot effects\n")
     
-    
-    if (n.boot.effects == 0) {
-    
-        # no bootstrap, just plot
-        gbm.plot(obj, plot.layout = plot.layout)
-    
-    } else {
-    
+    if (n.boot.effects != 0) {
+
         # perform bootstrap
         if ( ! quiet ) cat("    running bootstrap on BRT model\n")
         boot = NULL
@@ -698,18 +682,15 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
             # when it runs correctly
             # store the output in the result object
             result$boot = boot
-            # and use bootstrapped plots
-            gbm.plot.boot(obj, boot, plot.layout = plot.layout)
-    
         } else {
             # when it does not (usually because of too few bootstraps), issue a warning and plot the simple object
             warning("Bootstrapping of effects failed, not enough information to provide a confidence interval\nTry increasing n.boot.effects")
-            gbm.plot(obj, plot.layout = plot.layout)
         }
     }
-    
-    # NB: remove the funky variable for gbm.plot
-    rm(myDataSetForGbmPlot, pos=.GlobalEnv)
+
+    # plot all effects
+    if ( ! quiet ) cat("   plot effects\n")
+    plot.brt(result, plot.layout=plot.layout)
 
 
     ## Predict presence / abundance
@@ -999,9 +980,9 @@ plot.brt <- function(x, plot.layout=c(2,2), ...) {
   
   # NB: gbm.plot uses eval() in the global environment to find the dataset which was used to fit the model
   #     this is highly flawed and only works when used interactively directly from the command prompt
-  #     to bypass this, we write the dataset to the global environment with a funky name
-  myDataSetForGbmPlot <- x$data
-  assign(x="myDataSetForGbmPlot", value=myDataSetForGbmPlot, pos=.GlobalEnv)
+  #     to ensure this works, we write the dataset to the global environment with the name it had when running the model fit
+  dataName <- x$obj$gbm.call$dataframe
+  assign(x=dataName, value=x$data, pos=.GlobalEnv)
 
   if (is.null(x$boot)) {
     gbm.plot(x$obj, plot.layout = plot.layout)
@@ -1009,7 +990,7 @@ plot.brt <- function(x, plot.layout=c(2,2), ...) {
     gbm.plot.boot(x$obj, boot, plot.layout = plot.layout)
   }
 
-  rm(myDataSetForGbmPlot, pos=.GlobalEnv)
+  rm(list=dataName, pos=.GlobalEnv)
 
   return(invisible(x))
 }
