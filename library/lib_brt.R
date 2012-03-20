@@ -891,17 +891,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
         write.table(brtObj$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
 
         # Shapefiles
-        x <- brtObj$prediction
-
-        # need a unique Id for each point
-        x$Id <- 1:nrow(x)
-
-        # convert into a point (type=1) shapefile
-        dataTable <- x[,c("Id", "lon", "lat")]
-        attributesTable <- x[,c("Id", "pred", "CVpred")]
-        shapefile <- convert.to.shapefile(shpTable=dataTable, attTable=attributesTable, field="Id", type=1)
-
-        # write it
+        shapefile <- convert.to.shp(brtObj$prediction, measure.vars=c("pred", "CVpred"))
         write.shapefile(shapefile, baseName, arcgis=T)
 
         # add the prj bit
