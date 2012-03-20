@@ -908,6 +908,8 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
     result[[taxa[i]]] <- brtObj
   }
 
+  message("\nDone\n")
+
   return(invisible(result))
 }
 
