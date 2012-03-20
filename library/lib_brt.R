@@ -826,8 +826,10 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
 
   # build prediction grid if needed
   if (predict) {
-    prediction_grid <- build.grid(lat.min=lat.min, lat.max=lat.max, lat.step=lat.step,
-                                  lon.min=lon.min, lon.max=lon.max, lon.step=lon.step)
+    prediction_grid <- build.grid(
+                          lat.min=lat.min, lat.max=lat.max, lat.step=lat.step,
+                          lon.min=lon.min, lon.max=lon.max, lon.step=lon.step
+    )
     preddata <- associate.env.data(prediction_grid, database)
   } else {
     preddata <- obsdata
