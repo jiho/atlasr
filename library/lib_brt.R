@@ -787,7 +787,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     return(result)
 }
 
-brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, predict=FALSE, bin=FALSE, path="env_data", plot.layout=c(2,2), ...) {
+brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, predict=FALSE, bin=FALSE, path="env_data", ...) {
 
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
   suppressPackageStartupMessages(require("shapefiles", quietly=TRUE))
@@ -862,10 +862,10 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
     # open the PDF
     pdf(pdfFile, paper="a4r")
 
-    # b <- brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, plot.layout=plot.layout, ...)
+    # b <- brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, ...)
 
     brtObj <- tryCatch(
-      brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, plot.layout=plot.layout, ...),
+      brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, ...),
       # do not stop on error
       error=function(e) {
         warning(e)
