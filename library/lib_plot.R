@@ -19,6 +19,7 @@ polar_proj <- function(projection="stereographic", orientation=c(-90,0,0)) {
   # NB: view from south pole (-90)
   #
   suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+  suppressPackageStartupMessages(require("mapproj", quietly=TRUE))
   c <- coord_map(projection=projection, orientation=orientation)
   return(c)
 }
