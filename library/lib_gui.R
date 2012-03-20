@@ -206,7 +206,7 @@ do.brt <- function(...) {
 
 
     # effects options
-    rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Effects", pos=c(0, mid, w/4, h*2))
+    rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, w/4, h*2))
 
     # prediction options
     rp.radiogroup(win, prediction, values=c("no", "yes", "yes + bootstrap"), initval="yes", title="Prediction", pos=c(0, mid+h*2, w/4, h*2))
