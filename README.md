@@ -52,7 +52,9 @@ You can now close the `get_functions.R` file.
 
 ### Run an analysis
 
-In the console, type the command to run your analysis. For example, to run a BRT model using the automatic graphical interface, type
+In the console, type the command to run your analysis. If the environmental database is not yet present (in the `env_data` directory), it will be downloaded.
+
+For example, to run a BRT model using the automatic graphical interface, type
 
 	do.brt()
 
