@@ -156,6 +156,29 @@ read.env.data <- function(variables="", path="env_data", ...) {
 }
 
 
+mask.env.data <- function(database, ...) {
+  #
+  # Mask points which are on land in the environmental data
+  #
+  # database  a list resulting from read.env.data
+  #
+
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+
+  # read bathymetry
+  suppressMessages(bathy <- read.env.data(variables="bathymetry", ...)[[1]])
+
+  # mask points on land (replace by NA)
+  onLand <- bathy$z >= 0
+  database <- llply(database, function(x, mask) {
+    x$z[mask] <- NA
+    return(x)
+  }, mask=onLand)
+
+  return(database)
+}
+
+
 associate.env.data <- function(dataset, database, lon.name="lon", lat.name="lat") {
   # Associate the environmental data from `database` to the points specified in `dataset`
   #
@@ -187,8 +210,11 @@ associate.env.data <- function(dataset, database, lon.name="lon", lat.name="lat"
   # store everthing in the original dataset
   dataset <- cbind(dataset, envData)
   
-  # remove points that are on land
-  dataset <- dataset[dataset$bathymetry < 0,]
+  # remove points where every envrionmental data is Non-Available
+  # NB: these are usually points on land
+  # allNA <- aaply(envData, .margin=1, .fun=function(x) {all(is.na(x)) }, .expand=FALSE)
+  allNA <- rowSums(is.na(envData)) == ncol(envData) # NB: faster implementation in this particular case
+  dataset <- dataset[!allNA,]
 
   return(dataset)
 }

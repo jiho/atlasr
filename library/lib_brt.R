@@ -800,6 +800,8 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   
   # read selected variables from the database
   database <- read.env.data(variables, path=path, quiet=FALSE)
+  # remove information on land
+  database <- mask.env.data(database, path=path)
   
   # get full, expanded names of selected environment variables
   variables <- names(database)
