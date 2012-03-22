@@ -777,7 +777,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   # read dataset
   if (file.exists(file)) {
     observed_data <- read.data(file)    
-    file <- normalizePath(file)
+    file <- normalizePath(file, winslash="/")
   } else {
     stop("Cannot find file : ", file)
   }
@@ -833,16 +833,16 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
     # data file without extension
     fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
     # replace "." by "_" because shapefile writing does not support "."
-    fileName <- str_replace_all(fileName, fixed("."), "_")
+    # fileName <- str_replace_all(fileName, fixed("."), "_")
     cTaxon <- str_replace_all(cTaxon, fixed("."), "_")
     # prepare directory
-    dirName <- str_c(fileName, "/", cTaxon, "-BRT/")
+    dirName <- str_c(fileName, "/", cTaxon, "-BRT")
     dir.create(dirName, showWarnings=FALSE, recursive=TRUE)
     if (!file.exists(dirName)) {
       stop("Could not produce output directory : ", dirName)
     }
     # prepare a basic name from this
-    baseName <- str_c(dirName, cTaxon, "-BRT")
+    baseName <- str_c(dirName, "/", cTaxon, "-BRT")
 
     # prepare specific filenames
     pdfFile <- str_c(baseName, ".pdf", sep="")
