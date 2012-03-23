@@ -319,7 +319,7 @@ match.vars <- function(vars, choices, quiet=TRUE) {
 }
 
 
-rasterize <- function(x, vars, n=10, precisions=sapply(lapply(x[vars],range),diff)/n, fun=sum, ...) {
+rasterize <- function(x, vars, n=10, precisions=NULL, fun=sum, ...) {
   #
   # Reduce the precision of certain columns of a data.frame to bins and summarize the rest of the information per bin
   # This is a bit like reducing the precise information on locations in a 2D plane to pixels of a given grey level, hence the name
@@ -333,13 +333,26 @@ rasterize <- function(x, vars, n=10, precisions=sapply(lapply(x[vars],range),dif
   # ...         further arguments to `fun`
   #
 
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
 
   # checks
-  if (length(precisions) != length(vars)) {
-    stop("The vector of precisions does not have as many elements as variables in vars")
+  OKvars <- vars %in% names(x)
+  if (! all(OKvars) ) {
+    stop("Variable(s) ", vars[!OKvars], " not in ", deparse(substitute(x)))
   }
 
-  message("-> Bin data with precisions : ", paste(vars, precisions, sep="=", collapse=" x "))
+  # if the precisions are not specified, use n
+  if (is.null(precisions)) {
+    precisions <- sapply(lapply(x[vars], range, na.rm=T), diff) / n
+  }
+  # otherwise, check that it is correctly specified
+  else {
+    if (length(precisions) != length(vars)) {
+      stop("The vector of precisions does not have as many elements as variables in vars")
+    }
+  }
+
+  message("-> Bin data with precisions : ", paste(vars, round(precisions, 3), sep="=", collapse=" x "))
 
   # round columns to the given precision
   suppressPackageStartupMessages(require("plyr"))
