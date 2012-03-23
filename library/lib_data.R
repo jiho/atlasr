@@ -360,11 +360,19 @@ rasterize <- function(x, vars, n=10, precisions=NULL, fun=sum, ...) {
     x[,vars[j]] <- plyr::round_any(x[,vars[j]], accuracy=precisions[j])
   }
 
-  # summarize information per bin
-  x <- ddply(x, .variables=vars, function(X, .vars, ...) {
-    actualData <- X[! names(X) %in% .vars]
-    sapply(actualData, fun, ...)
-  }, .vars=vars, ...)
+  # when there are variables in addition to the binned ones, summarize their information per bin
+  if (ncol(x) > length(vars)) {
+    x <- ddply(x, .variables=vars, function(X, .vars, ...) {
+      actualData <- X[! names(X) %in% .vars]
+      summarizedData <- data.frame(t(sapply(actualData, fun, ...)))
+      summarizedData$freq <- nrow(X)
+      return(summarizedData)
+    }, .vars=vars, ...)
+  }
+  # otherwise, make sure that the combinations of bins are specified only once and count the number of observations per bin
+  else {
+    x <- plyr::count(x)
+  }
 
   return(x)
 }
