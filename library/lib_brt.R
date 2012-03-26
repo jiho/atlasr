@@ -792,9 +792,10 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
                                  
   # bin observation data
   if (bin) {
-    observed_data <- rasterize(observed_data, c("lat", "lon"), precisions=c(lat.step, lon.step), fun=sum, na.rm=T)
-    # NB: when the initial data is presence, we compute total number of observations per bin
-    #     but this is OK, because the family should then be `bernoulli` and the data is reconverted to presence/absence
+    observed_data <- rasterize(observed_data, c("lat", "lon"), precisions=c(lat.step, lon.step), fun=mean, na.rm=T)
+    # NB: when the initial data is abundance, if makes sense to compute the average abundance per bin
+    #     when the initial data is presence, we compute the average number of presence per bin while we want a boolean response (0 or 1)
+    #     but it is actually OK, because the family should then be `bernoulli` and the data is reconverted to presence/absence only in the brt() function
     
   }
   
