@@ -1028,13 +1028,42 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
 
     # main plot
     if (quick) {
+      # subsample to this precision
       lat.precision <- 1
       lon.precision <- 2
-    } else {
-      lat.precision <- NULL
-      lon.precision <- NULL
+
+      # compute the steps in lat and lon on the original grid
+      lat.step <- unique(diff(sort(unique(x$prediction$lat))))[1]
+      lon.step <- unique(diff(sort(unique(x$prediction$lon))))[1]
+      # NB: we select the first element here because diff sometimes results in slightly different results because of numerical imprecision in the computation
+
+      # check that we need to regrid (if the data is predicted on an already coarse grid, not need to regrid)
+      if ( lat.step < lat.precision || lon.step < lon.precision ) {
+
+        # compute the subsample factor in lat/lon
+        lat.sub <- max(1, round(lat.precision / lat.step))
+        lon.sub <- max(1, round(lon.precision / lon.step))
+
+        # reshape the x,y,z prediction data.frame in a lat x lon matrix
+        # in the matrix we store the row index in the original data.frame; this way we know which lines to pick up afterwards
+        suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
+        x$prediction$.id <- 1:nrow(x$prediction)
+        mat <- acast(x$prediction, lat~lon, value.var=".id")
+
+        # subsample the matrix
+        lat.vec <- seq(1, nrow(mat), by=lat.sub)
+        lon.vec <- seq(1, ncol(mat), by=lon.sub)
+        mat <- mat[lat.vec, lon.vec]
+
+        # fecth the line numbers we need from the original data.frame
+        # NB: there are NAs in the matrix for positions which where not in the original dataframe: land, non-extrapolated environmental regions etc.
+        ids <- na.omit(as.numeric(mat))
+
+        # subsample the original matrix, removing the .id column (which was added last)
+        x$prediction <- x$prediction[ids,-ncol(x$prediction)]
+      }
     }
-    p <- polar.ggplot(x$prediction, mapping=mapping, geom="point", lat.precision=lat.precision, lon.precision=lon.precision, ...)
+   p <- polar.ggplot(x$prediction, mapping=mapping, geom="point", ...)
 
     # overlay stations
     if (overlay.stations) {
