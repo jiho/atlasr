@@ -315,6 +315,10 @@ match.vars <- function(vars, choices, quiet=TRUE) {
     }
   }
 
+  if (length(res) == 0) {
+    stop("Variables should be in ", paste(dQuote(choices), collapse=", "))
+  }
+
   return(res)
 }
 
