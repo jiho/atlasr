@@ -94,7 +94,9 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
   # lat.precision
   # lon.precision the precision at which lat and lon are considered
   #               (in degrees). If they are larger than the original
-  #               precision, the data is averaged within the new cells
+  #               precision, the data is *subsampled* to those locations
+  #               i.e. some data is actually dropped. If you want to average or sum
+  #               the data per cell, use rasterize() in lib_data.R
   # coast         coastline geom, if none is provided, a basic coastline is drawn
   # ...           passed to the appropriate geom
   #
@@ -115,27 +117,21 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
     stop("Need two columns named lat and lon to be able to plot\nYou have ", paste(names(data), collapse=", "))
   }
 
-  # if we need to re-grid, we need *both* a lat and a lon precision
-  if ( any(is.null(c(lat.precision, lon.precision))) ) {
-    if( ! all(is.null(c(lat.precision, lon.precision))) ) {
-      stop("Need to provide both lat and lon precision to be able to regrid the data"
-      )
-    }
+  # if new precisions are specified for lat or lon, subsample the data
+  if (!is.null(lat.precision)) {
+    # compute the vector of latitudes
+    lats <- unique(data$lat)
+    # regrid latitudes
+    lats <- unique(round_any(lats, lat.precision))
+    # NB: when the precision in the original data is coarser, nothing changes
+    # select points at those latitudes only
+    data <- data[data$lat %in% lats,]
   }
-
-  # If new precisions are specified for lon or lat, regrid the data
-  if ( any(! is.null(c(lat.precision, lon.precision))) ) {
-
-    # NB: use only numeric columns to avoid issues when rasterizing
-    numColumns <- sapply(data, is.numeric)
-    if (sum(numColumns) != ncol(data)) {
-      warning("Columns ", str_c(names(data)[!numColumns], collapse=", "), "\n  were deleted to allow to regrid data for quicker plotting.\n  Check wether this affects your plot")
-    }
-
-    # compute mean per bin
-    suppressMessages(data <- rasterize(data[numColumns], vars=c("lat", "lon"), precisions=c(lat.precision, lon.precision), fun=mean, na.rm=T))
+  if (!is.null(lon.precision)) {
+    lons <- unique(data$lon)
+    lons <- unique(round_any(lons, lon.precision))
+    data <- data[data$lon %in% lons,]
   }
-
 
   # Get and re-cut coastline if none is provided
   if (is.null(coast)) {
