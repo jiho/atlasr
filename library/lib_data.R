@@ -381,6 +381,7 @@ rasterize <- function(x, vars, n=10, precisions=NULL, fun=sum, ...) {
   return(x)
 }
 
+rasterise <- rasterize
 
 win2unix <- function(file, ...) {
   #
