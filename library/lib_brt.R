@@ -652,7 +652,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     temp = list()
 
     # deviance explained
-    temp$perc.deviance.explained = base::round( obj$cv.statistics$deviance.mean / obj$self.statistics$mean.null, 2)
+    temp$perc.deviance.explained = 1 - base::round( obj$cv.statistics$deviance.mean / obj$self.statistics$mean.null, 2)
 
     # Area Under the receiver operative Curve (AUC)
     # = quality of the prediction of presence/absence
