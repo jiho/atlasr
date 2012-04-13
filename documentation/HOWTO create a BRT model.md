@@ -6,7 +6,7 @@ Boosted Regression Trees use the [bgm](http://cran.r-project.org/web/packages/gb
 
 ## Formatting your data
 
-The data should be formatted in a table with stations as lines and one column per taxon, plus two additional columns with latitude and longitude of stations. Further columns will not fail but will show up as additional taxa.
+The input data should be formatted in a table with stations as lines and one column per taxon, plus two additional columns with latitude and longitude of stations. Further columns will not fail but will show up as additional taxa.
 
 The first line should contain column headers. The order of columns does not mater, only their header does. The header of the latitude column should be "lat" or "latitude". The header of the longitude column should be "lon", "long", or "longitude"
 
@@ -16,12 +16,12 @@ The file can be formatted as :
 
 *	`.txt`: Text file, with columns separated by tabulations (copy-paste from a spreadsheet into a text file should give this format) ;
 
-*	`.xls`: Excel file (on OS X / Linux only) with data in the first sheet.
+*	`.xls`: Excel file (readable on OS X / Linux only) with data in the first sheet.
 
 
 ## Using the GUI
 
-A custom graphical interface should ease the use of the underlying functions, which are documented further down. To display this GUI, follow the instructions in the README document to get started and then type
+A custom graphical interface should ease the use of the underlying functions, which are documented in the next paragraph. To display this GUI, follow the instructions in the README document to get started and then type
 
 	do.brt()
 
@@ -33,7 +33,7 @@ Once the data file is chosen, the interface will present two lists (taxa on the 
 
 Check the taxa you want to study. BRTs will be run independently and successively for all of them. Results will also be save independently for each taxon.
 
-Select the environmental variables you want to include in the model. This list works as a file browser: press CTRL (COMMAND on Mac OS X) to select several variables, press SHIFT to select a range. Ticking the checkbox below the list does not visually change the selection (this is an unsolvable bug) but it actually does select all variables. This can be useful as a first step but beware that several variables are repeated (in raw and interpolated forms) in the default environmental list.
+Select the environmental variables you want to include in the model. This list works as a file browser: press CTRL (COMMAND on Mac OS X) to select several variables, press SHIFT to select a range. Ticking the checkbox below the list does not visually change the selection (this is an unsolvable bug) but it actually does select all variables. This can be useful as a first step but beware that several variables are repeated (in raw and interpolated forms) in the default environmental list and using variables so correlated makes the interpretation of effects more difficult.
 
 The options (lists and checkboxes) map to the following arguments of the command line functions, which are explained in the next paragraph :
 
@@ -64,7 +64,7 @@ The function `brts()` is the direct equivalent of the GUI. It accepts the follow
 
 *	`file`	the path and name of the data file.
 
-*	`taxa`	a vector of taxa names as character strings. Those will be matched against the actual names in the data file and can therefore be abbreviated. For example, if the taxa in the data file are "calanus", "calanus_propinquus" and "calanus_simillimus", `taxa="pro"` will match "calanus_propinquus", `taxa="cala"` will match all three, but  `taxa="calanus"` will match only "calanus" (because the name is specified completely).
+*	`taxa`	a vector of taxa names as character strings. Those will be matched against the actual names in the input data file and can therefore be abbreviated. For example, if the taxa in the input data are "calanus", "calanus_propinquus" and "calanus_simillimus", `taxa="pro"` will match "calanus_propinquus", `taxa="cala"` will match all three, but  `taxa="calanus"` will match only "calanus" (because the name is specified completely).
 
 *	`variables`	a vector of environment variables names as character strings. Like `taxa` they can be abbreviated and will be matched against names of variables in the the environmental dataset.
 
@@ -72,18 +72,18 @@ The function `brts()` is the direct equivalent of the GUI. It accepts the follow
 
 *	`n.boot.effects=0`	number of bootstraps in the estimation of the effects of environmental data on the targeted taxa. This allows to judge the robustness and "significativity" of the predicted effect. Less than 50-100 will probably fail. Beware, these are long to run.
 
-*	`bin=FALSE`	wether to bin the original observations spatially, on the prediction grid. Some locations might be sampled more often than others for practical reasons. They will be associated with the same values of the environmental data when those will be extracted from the environmental database, and those values will have increased weight in the definition of the environmental niche for the taxa. This is likely to be purely a bias of the sampling. Binning the data summarizes information per grid cell: with several presence/absence observations, a presence is recorded for the cell when at least one of the observation records a presence; with several abundance observations, the mean abundance is used. 
+*	`bin=FALSE`	wether to bin the original observations spatially, on the prediction grid. Some locations might be sampled more often than others for practical reasons. They will be associated with the same values of the environmental data when those will be extracted from the environmental database, and those values will therefore have increased weight in the definition of the environmental niche for the taxa. This is likely to be purely a bias of the sampling. Binning the data summarizes information per grid cell: with several presence/absence observations, a presence is recorded for the cell when at least one of the observation records a presence; with several abundance observations, the mean abundance is used. 
 
 *	`predict=FALSE`	whether to predict the probability of presence / abundance of the species on the prediction grid. When this is `FALSE`, only the effects of environmental parameters are estimated.
 
 *	`n.boot.pred=0`	number of bootstraps for the prediction. This allows to estimate a cross-validation error on the prediction. Less than 50-100 will fail. Beware, these are long to run.
 
-*	`extrapolate.env=FALSE`	whether to extrapolate the prediction outside of the *environmental* range of the original data. The environmental range of the original data is the range of values associated with the observation points for each environmental variable. This includes points where both non-zero and zero abundances are recorded, assuming that points that were sampled could have contained the taxon, even though it was not actually detected. For example, samples might have been taken in temperatures ranging from 2 to 4ºC only. From this data alone, it might be difficult to extrapolate to what should happen at 5 or 6ºC.  
-    When `TRUE`, predictions are made for all points of the predictions grid. When `FALSE`, the predictions are deleted for points whose associated environmental data is outside the range observed in the original data (and not plotted). When `NA`, the predictions at such points are replaced by `NA` (and plotted as grey).
+*	`extrapolate.env=FALSE`	whether to extrapolate the prediction outside of the *environmental* range of the input data. The environmental range of the input data is the range of values associated with the observed points for each environmental variable. This includes points where both presence and absence, assuming that points that were sampled could have contained the taxon, even though it was not actually detected. For example, samples might have been taken in temperatures ranging from 2 to 4ºC only. From this data alone, it might be risky to extrapolate to what should happen at 5 or 6ºC. This is whay `extrapolate.env` is `FALSE` by default.  
+    When `TRUE`, predictions are made for all points of the predictions grid. When `FALSE`, the predictions are deleted for points whose associated environmental data is outside the range observed in the input data (and not plotted). When `NA`, the predictions at such points are replaced by `NA` (and plotted as grey).
 
-*	`quick=TRUE`	wether to subsample the predicted data on a 1 x 2º lat/lon grid before plotting, to speed things up.
+*	`quick=TRUE`	wether to subsample the predicted data on a 1 x 2º lat/lon grid before plotting, to speed up plotting and reduce the size of the resulting plot file.
 
-*	`overlay.stations=FALSE`	wether to overlay stations in the original dataset on top of the prediction plot.
+*	`overlay.stations=FALSE`	wether to overlay stations in the input dataset on top of the prediction plot.
 
 *	`lat.min/max/step`	definition of the latitude coordinate of the prediction grid (minimum, maximum and step). By default, from -30º to -80º with a 0.1º step.
 
@@ -93,7 +93,7 @@ The function `brts()` is the direct equivalent of the GUI. It accepts the follow
 
 *	`plot.layout=c(2,2)`	layout of the matrix of effects plots (number of lines, number of columns).
 
-*	`quiet=FALSE`	wether to remove the messages printed to the console along the analysis.
+*	`quiet=FALSE`	wether to remove the messages printed in the console along the analysis.
 
 
 It returns a named list with one element per taxa studied. Each element is an object of class `brt`, i.e. a list with components:
@@ -114,7 +114,7 @@ It returns a named list with one element per taxa studied. Each element is an ob
 
 *   `contributions`  named vector of the percentage of contributions of all prediction variables to the model (sum to 100)
 
-*   `prediction`  `data.frame` with the prediction grid (`lat`, `long`), the predicted probability of presence / abundance (`pred`) at the grid points and possibly the cross validated error (`CVpred`).
+*   `prediction`  `data.frame` with the prediction grid (`lat`, `lon`), the predicted probability of presence / abundance (`pred`) at the grid points and possibly the cross validated error (`CVpred`).
 
 *   `plot.pred`  a ggplot2 object with the prediction plot.
 

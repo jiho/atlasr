@@ -238,7 +238,7 @@ read.data <- function(file, ...) {
   file <- win2unix(file, ...)
   
   fileName <- basename(file)
-  message("-> Read data in ", file)
+  message("-> Read input data in ", file)
   
   # get file extension
   extension <- strsplit(fileName, split=".", fixed=T)[[1]]
