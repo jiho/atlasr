@@ -6,8 +6,6 @@
 #
 #-----------------------------------------------------------------------------
 
-require(cluster)
-require(vegan)
 
 # some functions to make things easier
 get.bioreg.colourmap=function(n=10) {
@@ -59,6 +57,9 @@ bioreg=function(variables=c(),n.groups=12,lat.min=-80, lat.max=-30, lat.step=0.1
     # weights: list giving the weight for each variable
     # transformations: list giving transformation function for each variable, or NULL for no transformations for any
     # output.dir: destination for output files - if NULL, no output files will be saved
+
+    suppressPackageStartupMessages(require("cluster", quietly=TRUE))
+    suppressPackageStartupMessages(require("vegan", quietly=TRUE))
 
     if (length(variables)<2) {
         stop('You must specify at least two input variables')
