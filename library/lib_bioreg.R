@@ -78,7 +78,7 @@ function.maker <- function(str) {
 }
 
 
-bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quality=c("low","high"), path="env_data", output.dir=NULL)
+bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=rep(1,length(variables)), quality=c("low","high"), path="env_data", output.dir=NULL)
 {
     #
     # Perform bioregionalisation based on clustering
@@ -89,7 +89,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     # l**.max
     # l**.step      definition of the grid on which the clustering will be done
     # transformations   list giving transformation function for each variable, or NULL for no transformations
-    # weights       list giving the weight for each variable
+    # weights       vector giving the weight for each variable
     # quality       "low" or "high"; low quality is faster, suitable for exploratory runs; high quality for final analyses
     # path          path where the environmental data is to be found
     # output.dir    destination for output files; if NULL, no output files will be saved
@@ -108,13 +108,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
 
     # weights
-    if (is.null(weights)) {
-        # default to equal (unit) weighting
-        weights=rep(1,length(variables))
-    }
-    weights=as.numeric(weights)
-    #cat(str(weights))
-    weights=weights/max(weights) # normalize so that max weight is 1
+    weights <- as.numeric(weights)
+    weights <- weights / max(weights) # normalize so that max weight is 1
 
     # transformations
     if (!is.null(transformations)) {
