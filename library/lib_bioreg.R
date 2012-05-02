@@ -50,7 +50,7 @@ function.maker <- function(str) {
 }
 
 
-bioreg=function(variables=c(),n.groups=12,lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, path="env_data", quality=c("low","high"),output.dir=NULL)
+bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, path="env_data", quality=c("low","high"), output.dir=NULL)
 {
     # n.groups: either an integer number of groups, or the height at which to cut the dendrogram (e.g. 0.13)
     # quality: "low" or "high" - low quality is faster, suitable for exploratory runs. Use high quality for final analyses.
