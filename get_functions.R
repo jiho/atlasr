@@ -7,7 +7,7 @@
 #-----------------------------------------------------------------------------
 
 # Detect names of source files
-sourceFiles = list.files("library", pattern=glob2rx("*.R|r"), full=TRUE)
+sourceFiles = list.files("library", pattern="\\.(R|r)$", full=TRUE) ## using 'pattern=glob2rx("*.R|r")' matches on backup files from emacs (*.R~)
 
 # Detect which packages are used in those source files
 requiredPackages = c()

@@ -10,7 +10,7 @@
 #-----------------------------------------------------------------------------
 
 
-rp.listbox.mult <- function (panel, var, vals, labels = vals, rows = length(vals),
+rp.listbox.mult <- function (panel, var, vals, labels = vals, rows = length(vals), cols=NULL,
     initval = vals[1], parent = window, pos = NULL, title = deparse(substitute(var)),
     action = I, ...)
 {
@@ -62,9 +62,15 @@ rp.listbox.mult <- function (panel, var, vals, labels = vals, rows = length(vals
             scr <- tkscrollbar(newlistbox, repeatinterval = 5,
                 command = function(...) tkyview(listBox, ...))
             # if ((is.null(pos$width)) && (is.null(pos$height))) {
+            if (is.null(cols)) {
                 listBox <- tklistbox(newlistbox, height = rows,
                   selectmode = "extended", yscrollcommand = function(...) tkset(scr,
                     ...), background = "white")
+            } else {
+                listBox <- tklistbox(newlistbox, height = rows, width=cols,
+                  selectmode = "extended", yscrollcommand = function(...) tkset(scr,
+                    ...), background = "white")
+            }
             # }
             # else {
             #     listBox <- tklistbox(newlistbox, height = rows,
@@ -75,8 +81,13 @@ rp.listbox.mult <- function (panel, var, vals, labels = vals, rows = length(vals
         }
         else {
             # if ((is.null(pos$width)) && (is.null(pos$height))) {
+            if (is.null(cols)) {
                 listBox <- tklistbox(newlistbox, height = rows,
                   selectmode = "extended", background = "white")
+            } else {
+                listBox <- tklistbox(newlistbox, height = rows, width=cols,
+                  selectmode = "extended", background = "white")
+            }
             # }
             # else {
             #     listBox <- tklistbox(newlistbox, height = rows,
@@ -312,6 +323,352 @@ do.brt <- function(...) {
 
     return(win)
   })
+
+}
+
+
+rp.text <- function (panel, txt="", title = "", parent = window, pos = NULL, ...)
+{
+
+    ## simple text panel
+    ## BR April 2012
+    suppressPackageStartupMessages(require("rpanel"))
+
+    ischar <- is.character(panel)
+    if (ischar) {
+        panelname <- panel
+        panel <- rpanel:::.geval(panel)
+    }
+    else {
+        panelname <- panel$intname
+        panelreturn <- deparse(substitute(panel))
+        rpanel:::.gassign(panel, panelname)
+    }
+    pos = rpanel:::.newpos(pos, ...)
+    f <- function(...) {
+        panel <- action(rpanel:::.geval(panelname))
+        if (!is.null(panel$intname)) {
+            rpanel:::.gassign(panel, panelname)
+        }
+        else {
+            stop("The panel was not passed back from the action function.")
+        }
+    }
+    if (rpanel:::.checklayout(pos)) {
+        if ((!is.list(pos)) || (is.null(pos$row))) {
+            newbutton <- tktext(panel$window,bg="grey95")
+            tkinsert(newbutton,"end",txt)
+            rpanel:::.rp.layout(newbutton, pos)
+        }
+        else {
+            if (is.null(pos$grid)) {
+                gd = panel$window
+            }
+            else {
+                gd = rpanel:::.geval(panelname, "$", pos$grid)
+            }
+            if ((is.null(pos$width)) && (is.null(pos$height))) {
+                newbutton <- tktext(panel$window)
+            }
+            else {
+                newbutton <- tktext(panel$window, width = pos$width, height = pos$height)
+            }
+            tkinsert(newbutton,"end",txt)
+            if (is.null(pos$sticky)) {
+                pos$sticky <- "w"
+            }
+            if (is.null(pos$rowspan)) {
+                pos$rowspan = 1
+            }
+            if (is.null(pos$columnspan)) {
+                pos$columnspan = 1
+            }
+            tkgrid(newbutton, row = pos$row, column = pos$column,
+                sticky = pos$sticky, `in` = gd, rowspan = pos$rowspan,
+                columnspan = pos$columnspan)
+        }
+    }
+    if (ischar)
+        invisible(panelname)
+    else assign(panelreturn, rpanel:::.geval(panelname), envir = parent.frame())
+}
+
+rp.textentry.immediate <- function (panel, var, action = I, labels = NA, names = labels,
+    title = NA, initval = NA, parent = window, pos = NULL, ...)
+{
+    ## Same as rp.textentry, but the "var" entries are modified immediately (as the user enters them)
+    ##  rather than waiting until the user presses enter
+    ##
+    ## BR April 2012
+
+    ischar <- is.character(panel)
+    if (ischar) {
+        panelname <- panel
+        panel <- rpanel:::.geval(panel)
+    }
+    else {
+        panelname <- panel$intname
+        panelreturn <- deparse(substitute(panel))
+        rpanel:::.gassign(panel, panelname)
+    }
+    pos = rpanel:::.newpos(pos, ...)
+    if (rpanel:::.checklayout(pos)) {
+        varname <- deparse(substitute(var))
+        if ((varname %in% names(panel)) && (all(is.na(initval)))) {
+            initval <- rpanel:::.geval(panelname, "$", varname)
+        }
+        if ((length(initval) == 1) && (is.na(initval))) {
+            if ((length(labels) == 1) && (is.na(labels))) {
+                nboxes <- 1
+                if (is.na(title))
+                  title <- varname
+                labels <- varname
+            }
+            else {
+                nboxes <- length(labels)
+                if (is.na(title) & (nboxes == 1))
+                  title <- labels
+            }
+            initval <- rep(NA, nboxes)
+        }
+        else {
+            nboxes <- length(initval)
+            if ((length(labels) == 1) && (is.na(labels)))
+                if (nboxes != 1) {
+                  labels <- paste(varname, 1:nboxes, sep = "")
+                }
+                else {
+                  labels <- varname
+                }
+            else if (length(labels) != nboxes)
+                stop("lengths of labels and initval do not match.")
+        }
+        if ((nboxes == 1) & (!is.na(title)))
+            labels <- title
+        rpanel:::.geval(panelname, "$", varname, " <- vector(length=",
+            nboxes, ")")
+        if (nboxes > 1)
+            if (is.na(title))
+                title <- varname
+        if ((!is.list(pos)) || (is.null(pos$grid))) {
+            gd = panel$window
+        }
+        else {
+            gd = rpanel:::.geval(panelname, "$", pos$grid)
+        }
+        if (nboxes > 1) {
+            frame <- tkwidget(gd, "labelframe", text = title,
+                padx = 2, pady = 2)
+        }
+        else {
+            frame <- tkframe(gd)
+        }
+        if ((!is.list(pos)) || ((is.null(pos$row)) && (is.null(pos$column)))) {
+            rpanel:::.rp.layout(frame, pos)
+        }
+        else {
+            if (is.null(pos$sticky)) {
+                pos$sticky <- "w"
+            }
+            if (is.null(pos$rowspan)) {
+                pos$rowspan = 1
+            }
+            if (is.null(pos$columnspan)) {
+                pos$columnspan = 1
+            }
+            tkgrid(frame, row = pos$row, column = pos$column,
+                sticky = pos$sticky, `in` = gd, rowspan = pos$rowspan,
+                columnspan = pos$columnspan)
+        }
+        for (i in 1:nboxes) {
+            if (is.na(initval[i]))
+                initval[i] <- "NA"
+            inittclvalue <- rpanel:::.rp.initialise(panelname, paste(varname,
+                i, sep = ""), initval[i])
+            tclvariable <- rpanel:::.geval(panelname, "$", varname, i,
+                ".tcl <- tclVar(", deparse(inittclvalue), ")")
+            if (is.numeric(inittclvalue)) {
+                rpanel:::.geval(panelname, "$", varname, "[", i, "] <- deparse(",
+                  inittclvalue, ")")
+            }
+            else {
+                rpanel:::.geval(panelname, "$", varname, "[", i, "] <- '",
+                  inittclvalue, "'")
+            }
+            if (!any(is.na(names))) {
+                rpanel:::.geval("names(", panelname, "$", varname, ")[",
+                  i, "] <- '", names[i], "'")
+            }
+            f <- function() {
+                for (i in 1:nboxes) {
+                  rpanel:::.geval(panelname, "$", varname, "[", i, "] <- tclvalue(",
+                    panelname, "$", varname, i, ".tcl)")
+                  if (!any(is.na(names))) {
+                    rpanel:::.geval("names(", panelname, "$", varname,
+                      ")[", i, "] <- '", names[i], "'")
+                  }
+                }
+                panel <- action(rpanel:::.geval(panelname))
+                if (!is.null(panel$intname)) {
+                  rpanel:::.gassign(panel, panelname)
+                }
+                else {
+                  stop("The panel was not passed back from the action function.")
+                }
+            }
+            if (!any(is.na(names))) {
+                rpanel:::.geval("names(", panelname, "$", varname, ")[",
+                  i, "] <- '", names[i], "'")
+            }
+            label <- tklabel(frame, text = labels[i], height = "1")
+            if ((!is.list(pos)) || ((is.null(pos$width)) && (is.null(pos$height)))) {
+                entry <- tkentry(frame, textvariable = tclvariable)
+            }
+            else {
+                entry <- tkentry(frame, textvariable = tclvariable,
+                  width = pos$width)
+            }
+            tkgrid(label, entry)
+            tkgrid.configure(label, sticky = "w")
+            tkgrid.configure(entry, sticky = "e")
+            tkbind(entry, "<Enter>", f)
+        }
+    }
+    if (ischar)
+        invisible(panelname)
+    else assign(panelreturn, rpanel:::.geval(panelname), envir = parent.frame())
+}
+
+
+
+do.bioreg <- function() {
+    ##
+    ## Open a GUI to select the arguments of the bioreg() function
+    ##
+    ## ...   passed to bioreg()
+    ##
+    ## Ben Raymond
+    ## Last-Modified: <2012-05-02 12:35:09>
+
+  suppressPackageStartupMessages(require("rpanel"))
+
+
+  # default dimensions (in px)
+  w <- 600      # width of the window
+  h <- 50       # height of elements
+  spacer <- 10  # height of spacer
+  main.height=700
+
+  # main window
+  win <- rp.control(title="Regionalisation", size=c(w,main.height),aschar=F)
+
+
+  nRows <- 30
+  nBoxes <- 20
+  hSel <- 380
+  allVariables <- list.env.data()
+
+  rp.text(win,txt="Choose the variables to use in the regionalisation analysis",pos=c(spacer,spacer,w-2*spacer,40))
+
+  blah=rp.listbox.mult(win, var=availableVariables, vals=allVariables, title="Available variables",  rows=nRows, cols=min(50,max(sapply(allVariables,nchar))), initval="", pos=c(spacer, 40+spacer, w-2*spacer, main.height-40-h-2*spacer), aschar=F, action=function(win) {
+      if (all(win$availableVariables == "")) {
+          rp.messagebox("At least two variables must be selected", title="Warning")
+      }
+      return(win)
+  })
+
+  ## destination directory for output files and then proceed to second GUI panel
+  rp.button(win, title="Choose directory for output files", pos=c(spacer,main.height-h-spacer,w-2*spacer,h), action=function(win) {
+      if (length(win$availableVariables)<2) {
+          rp.messagebox("At least two variables must be selected first", title="Warning")
+      } else {
+          outputDir=tk_choose.dir(getwd(), "Choose a suitable folder for the output files")
+          tkdestroy(win$window)
+          bioreg.secondpanel(win$availableVariables,output.dir=outputDir)
+      }
+      return(win) })
+}
+
+bioreg.secondpanel <- function(selectedVariables,varweights=rep(1,length(selectedVariables)),vartransforms=rep("",length(selectedVariables)),output.dir=getwd()) {
+    ##
+    ## Second part of the GUI. Called from do.bioreg()
+    ##
+    ## Ben Raymond
+    ## Last-Modified: <2012-05-02 12:34:54>
+
+  suppressPackageStartupMessages(require("rpanel"))
+
+
+  # default dimensions (in px)
+  w <- 1200      # width of the window
+  h <- 50       # height of elements
+  spacer <- 10  # height of spacer
+  main.height=700
+
+  # main window
+  win <- rp.control(title="Regionalisation", size=c(w,main.height),aschar=F)
+
+
+  nRows <- 20
+  nBoxes <- 20
+  hSel <- 380
+
+
+  ## selection for weights associated with each variable
+  rp.textentry.immediate(win, var=weightbox, labels=selectedVariables, title="Weighting", initval=varweights,pos=c(spacer,spacer,w/3-spacer,main.height/2-spacer),
+               action=function(win) {
+                   return(win) })
+
+  rp.textentry.immediate(win, var=transformbox, labels=selectedVariables, title="Transformations", initval=vartransforms,pos=c(w/3+spacer,spacer,w/3-spacer,main.height/2-spacer),
+               action=function(win) {
+                   return(win) })
+
+  ## provide example transformations
+  example.transforms.labels=c('log10(-1*negative values only)','log10(x+1)','Square root')
+  example.transforms.functions=list('"x[x>=0]=NA; log10(-x)"','"log10(x+1)"','"sqrt(x)"')
+  rp.textentry(win, var=exampletransformbox, labels=example.transforms.labels, title="Example transformations",initval=example.transforms.functions,pos=c(2*w/3+spacer,spacer,w/3-spacer,main.height/2-spacer),
+               action=function(win) {
+                   return(win) })
+
+  ## number of groups in final result
+  ## to add
+
+  ## quality of run? better quality is slower, which can be painful at the exploratory stage
+  rp.radiogroup(win, quality, values=c('Exploratory run (faster)','Final run (better quality)'), title="Analysis type", pos=c(spacer,main.height/2+spacer, w/4-spacer, main.height/4-spacer))
+
+  ## location
+  rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=-45 , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer,w/8-spacer,h))
+  rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=30, showvalue=TRUE, pos=c(w/4+spacer,main.height/2+spacer+h,w/8-spacer,h))
+  rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=60 , showvalue=TRUE, pos=c(w/4+5*w/32+spacer,main.height/2+spacer+h,w/8-spacer,h))
+  rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=-62 , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer+2*h,w/8-spacer,h))
+
+  rp.slider(win, n.groups,  from=2, to=40,  resolution=1,   title="Number of clusters"   , initval=12 , showvalue=TRUE, pos=c(3*w/4+spacer,main.height/2+spacer,w/4-spacer,h))
+
+  ## hide output directory for now, since we aren't using it
+  rp.text(win,txt=paste("Output directory:",output.dir),pos=c(spacer,main.height-2*h-2*spacer,w-spacer*2,h))
+
+  rp.button(win,title="Run", pos=c(w-100,main.height-h-spacer,80,h), action=function(win, ...) {
+
+      lat.step=0.1
+      lon.step=0.1
+      quality="low"
+      if (grepl('^Final',win$quality)) {
+          quality="high"
+      }
+      weights=lapply(win$weightbox,as.numeric)
+#      cat(sprintf('gui weights:\n'))
+#      cat(str(weights))
+
+      b=bioreg(variables=selectedVariables,n.groups=win$n.groups,weights=weights, transformations=win$transformbox,lat.min=win$lat.min,lat.max=win$lat.max,lat.step=lat.step,lon.min=win$lon.min,lon.max=win$lon.max,lon.step=lon.step,quality=quality,output.dir=output.dir,...)
+      return(win) })
+
+
+  rp.button(win,title="Start again", pos=c(spacer,main.height-h-spacer,80,h), action=function(win) {
+      tkdestroy(win$window)
+      do.bioreg()
+      return(win) })
+
+  return(win)
 
 }
 
