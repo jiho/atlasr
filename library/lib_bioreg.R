@@ -1,23 +1,37 @@
 #
-#   Perform abiotic regionalisation
+#     Perform abiotic regionalisation
 #
 # (c) Copyright 2012 Ben Raymond, ben dot raymond at aad dot gov dot au
 #     Last-Modified: <2012-05-02 12:33:41>
 #
 #-----------------------------------------------------------------------------
 
+## Toolbox functions
+#-----------------------------------------------------------------------------
 
-# some functions to make things easier
-get.bioreg.colourmap=function(n=10) {
-    # define some not-too-appalling colours to use
-    cmap=c("#C7D79EFF","#FA9864FF","#BEFFE8FF","#D69DBCFF","#F7ED59FF","#A5F57AFF","#FF3D4AFF","#7AB6F5FF","#369C5DFF","#A80084FF","#AA66CDFF","#FFAA00FF","#7AF5CAFF","#FFBEBEFF","#0070FFFF","#E9FFBEFF")
-    cmap=rep(cmap,ceiling(n/length(cmap)))
-    cmap=cmap[1:n]
+get.bioreg.colourmap <- function(n=10) {
+    #
+    # Define some not-too-appalling colours to use
+    #
+    # n     number of colours on the scale
+    #
+
+    # base colour map (16 colours)
+    cmap <- c("#C7D79EFF", "#FA9864FF", "#BEFFE8FF", "#D69DBCFF", "#F7ED59FF", "#A5F57AFF", "#FF3D4AFF", "#7AB6F5FF", "#369C5DFF", "#A80084FF", "#AA66CDFF", "#FFAA00FF", "#7AF5CAFF", "#FFBEBEFF", "#0070FFFF", "#E9FFBEFF")
+    # repeat it if necessary (n > 16)
+    cmap <- rep(cmap, ceiling(n/length(cmap)))
+    # extract colours
+    cmap <- cmap[1:n]
+
     return(cmap)
 }
 
-mcolor=function(x,y=NULL,z=NULL,interp=F,col=topo.colors(100),clim=NULL) {
+
+mcolor <- function(x, y=NULL, z=NULL, interp=FALSE, col=topo.colors(100), clim=NULL) {
+    # plot a colour map
+    # TODO deplace that with ggplot calls
     # uses rasterImage() as a faster alternative to image()
+
     if (is.null(y) & is.null(z)) {
         z=x
         x=1:dim(z)[1]
@@ -39,32 +53,58 @@ mcolor=function(x,y=NULL,z=NULL,interp=F,col=topo.colors(100),clim=NULL) {
     rasterImage(tempa,min(x,na.rm=T)-xbin/2,min(y,na.rm=T),max(x,na.rm=T)+xbin/2,max(y,na.rm=T),interp=F)
 }
 
+
 function.maker <- function(str) {
-  f <- function(x) {}
-  environment(f) <- baseenv()
-  str=paste('{',str,'}',sep='') # make sure str is enclosed in curly brackets (will it matter if user also supplies these? - to check)
-  body(f) <- substitute(tryCatch(expr,
-                                 error=function(e) "Error applying transformation function"),
-                        list(expr=parse(text=str)[[1]]))
-  f
+    #
+    # Transform a character string into a function
+    #
+    # str   character string defining the function
+    #
+
+    # empty function
+    f <- function(x) {}
+    environment(f) <- baseenv()
+    # TODO why is that necessary? the function should get all its arguments passed to it?
+
+    str <- paste('{',str,'}',sep='') # make sure str is enclosed in curly brackets (will it matter if user also supplies these? - to check)
+
+    # fill in the body of the function
+    body(f) <- substitute(tryCatch(expr,
+                                   error=function(e) "Error applying transformation function"),
+                          list(expr=parse(text=str)[[1]])
+    )
+
+    f
 }
 
 
-bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, path="env_data", quality=c("low","high"), output.dir=NULL)
+bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quality=c("low","high"), path="env_data", output.dir=NULL)
 {
-    # n.groups: either an integer number of groups, or the height at which to cut the dendrogram (e.g. 0.13)
-    # quality: "low" or "high" - low quality is faster, suitable for exploratory runs. Use high quality for final analyses.
-    # weights: list giving the weight for each variable
-    # transformations: list giving transformation function for each variable, or NULL for no transformations for any
-    # output.dir: destination for output files - if NULL, no output files will be saved
+    #
+    # Perform bioregionalisation based on clustering
+    #
+    # variables     vector of names of environmental variables used in the bioregionalisation
+    # n.groups      either an integer number of groups, or the height at which to cut the dendrogram (e.g. 0.13)
+    # l**.min
+    # l**.max
+    # l**.step      definition of the grid on which the clustering will be done
+    # transformations   list giving transformation function for each variable, or NULL for no transformations
+    # weights       list giving the weight for each variable
+    # quality       "low" or "high"; low quality is faster, suitable for exploratory runs; high quality for final analyses
+    # path          path where the environmental data is to be found
+    # output.dir    destination for output files; if NULL, no output files will be saved
 
+    # load packages
     suppressPackageStartupMessages(require("cluster", quietly=TRUE))
     suppressPackageStartupMessages(require("vegan", quietly=TRUE))
 
-    if (length(variables)<2) {
-        stop('You must specify at least two input variables')
+    # check input arguments
+
+    if (length(variables) < 2) {
+        stop("You must specify at least two input variables")
     }
-    quality=match.arg(quality)
+
+    quality <- match.arg(quality)
 
 
     # weights
