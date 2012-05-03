@@ -147,6 +147,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
     # Get data
     database <- read.env.data(variables=variables, path=path)
+    # remove information on land
+    database <- mask.env.data(database, path=path)
     prediction_grid <- build.grid(
                           lat.min=lat.min, lat.max=lat.max, lat.step=lat.step,
                           lon.min=lon.min, lon.max=lon.max, lon.step=lon.step
