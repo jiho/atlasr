@@ -61,12 +61,14 @@ function.maker <- function(str) {
     # str   character string defining the function
     #
 
+    suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+
     # empty function
     f <- function(x) {}
     environment(f) <- baseenv()
     # TODO why is that necessary? the function should get all its arguments passed to it?
 
-    str <- paste('{',str,'}',sep='') # make sure str is enclosed in curly brackets (will it matter if user also supplies these? - to check)
+    str <- str_c("{",str,"}") # make sure str is enclosed in curly brackets (will it matter if user also supplies these? - to check)
 
     # fill in the body of the function
     body(f) <- substitute(tryCatch(expr,
