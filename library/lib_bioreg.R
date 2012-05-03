@@ -182,12 +182,10 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         data.transformed[,i] <- data.transformed[,i] * weights[i]
     }
 
-    # which records to mask out because of missing data (including land)
-    missing.mask=which(rowSums(is.na(data.transformed))>0)
-    not.missing.mask=which(rowSums(is.na(data.transformed))==0)
+    # record which lines (i.e. locations) are masked out because of missing data (including land)
+    missing.mask <- rowSums(is.na(data.transformed)) > 0
+    data.trans.noNA <- na.omit(data.transformed)
 
-    # which columns are the data columns (i.e. not lon or lat)
-    datcols=which(!(names(data.transformed) %in% c('lon','lat')))
     message("-> Non-hierarchical clustering")
     # For the later hierarchical clustering we will need to compte a distance matrix between all data points. This is obviously impossible on the full data set, so we reduce the information to a smaller number of similar clusters through non-hierarchical clustering
     # number of clusters

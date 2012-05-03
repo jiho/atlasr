@@ -210,7 +210,7 @@ associate.env.data <- function(dataset, database, lon.name="lon", lat.name="lat"
   # store everthing in the original dataset
   dataset <- cbind(dataset, envData)
   
-  # remove points where every envrionmental data is Non-Available
+  # remove points where all environmental data is Non-Available
   # NB: these are usually points on land
   # allNA <- aaply(envData, .margin=1, .fun=function(x) {all(is.na(x)) }, .expand=FALSE)
   allNA <- rowSums(is.na(envData)) == ncol(envData) # NB: faster implementation in this particular case
