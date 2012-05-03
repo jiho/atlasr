@@ -258,7 +258,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
     # collate environmental (raw) data per cluster, and produce boxplot
     data.raw$cluster=cluster.num.new
-    dev.new(width=800, height=600, units="px")
+    dev.new(width=8, height=6)
     par(mfcol=c(1,length(datcols)))
     for (k in datcols) {
         boxplot(as.formula(sprintf('%s ~ cluster',names(data.raw)[k])),data=data.raw,col=cmap,xlab=names(data.raw[k]),horizontal=T)
