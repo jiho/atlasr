@@ -261,7 +261,7 @@ plot.env.data <- function(variables="", path="env_data", ...) {
       # plot points
       geom_point(aes(x=x, y=y, colour=z), size=0.5) +
       # nice colour gradient
-      scale_colour_brewer(name=variable, palette="Spectral") +
+      scale_colour_brewerc(name=variable, palette="Spectral", guide="colourbar") +
       # blank theme
       opts(panel.background=theme_blank(),
            panel.grid.major=theme_blank(),
