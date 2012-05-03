@@ -76,7 +76,7 @@ function.maker <- function(str) {
                           list(expr=parse(text=str)[[1]])
     )
 
-    f
+    return(f)
 }
 
 
