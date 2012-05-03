@@ -80,7 +80,7 @@ function.maker <- function(str) {
 }
 
 
-bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=rep(1,length(variables)), quality=c("low","high"), path="env_data", output.dir=NULL)
+bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quality=c("low","high"), path="env_data", output.dir=NULL)
 {
     #
     # Perform bioregionalisation based on clustering
@@ -102,6 +102,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
     # Check input arguments
     # variables
+    # expand variable names
+    variables <- list.env.data(variables, quiet=FALSE)
     if (length(variables) < 2) {
         stop("You must specify at least two input variables")
     }
@@ -110,6 +112,9 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     quality <- match.arg(quality)
 
     # weights
+    if (is.null(weights)) {
+        weights <- rep(1,length(variables))
+    }
     weights <- as.numeric(weights)
     weights <- weights / max(weights) # normalize so that max weight is 1
 
@@ -139,8 +144,6 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         transformations <- tfuncs
     }
     # cat(deparse(transformations[[1]]))
-
-    num.groups.intermediate=200 #number of clusters to produce in the non-hierarchical clustering step
 
     database=read.env.data(variables=variables, path=path)
     prediction_grid <- build.grid(
