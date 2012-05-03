@@ -100,39 +100,42 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     suppressPackageStartupMessages(require("cluster", quietly=TRUE))
     suppressPackageStartupMessages(require("vegan", quietly=TRUE))
 
-    # check input arguments
-
+    # Check input arguments
+    # variables
     if (length(variables) < 2) {
         stop("You must specify at least two input variables")
     }
 
+    # quality
     quality <- match.arg(quality)
-
 
     # weights
     weights <- as.numeric(weights)
     weights <- weights / max(weights) # normalize so that max weight is 1
 
-    # transformations
+    # transformation functions
     if (!is.null(transformations)) {
-        # convert each from string expression into actual function, if necessary
-        tfuncs=list()
-        for (i in (1:length(transformations))) {
+        tfuncs <- list()
+        for (i in seq(along=transformations)) {
             if (is.character(transformations[[i]]) & nchar(transformations[[i]])>0) {
                 tryCatch(tfuncs[[i]]<-function.maker(transformations[[i]]),
                          error=function(e) {stop(sprintf('Error parsing transformation function \"%s\"',transformations[[i]])) }
                          )
             } else if (is.function(transformations[[i]])) {
-                tfuncs[[i]]=transformations[[i]]
+                # store actual functions
+                tfuncs[[i]] <- transformations[[i]]
+
             } else if (is.null(transformations[[i]]) | (is.character(transformations[[i]]) & nchar(transformations[[i]])==0)) {
-                tfuncs[[i]]=function(x){x}
+                # pass-through for the rest
+                tfuncs[[i]] <- function(x){x}
+
             } else {
-                stop(sprintf('Supplied transformation is neither a string nor a function'))
+                stop("Supplied transformation is neither a string nor a function")
             }
         }
-        transformations=tfuncs
+        transformations <- tfuncs
     }
-#    cat(deparse(transformations[[1]]))
+    # cat(deparse(transformations[[1]]))
 
     num.groups.intermediate=200 #number of clusters to produce in the non-hierarchical clustering step
 
