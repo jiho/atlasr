@@ -2,7 +2,7 @@
 #     Perform abiotic regionalisation
 #
 # (c) Copyright 2012 Ben Raymond, ben dot raymond at aad dot gov dot au
-#     Last-Modified: <2012-05-03 09:46:53>
+#     Last-Modified: <2012-05-03 13:23:16>
 #
 #-----------------------------------------------------------------------------
 
@@ -232,7 +232,6 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
     dev.new()
     mcolor(matrix(temp$lon,nrow=attr(temp,'out.attrs')$dim[1]),matrix(temp$lat,nrow=attr(temp,'out.attrs')$dim[1]),matrix(temp$cluster.num,nrow=attr(temp,'out.attrs')$dim[1]),col=cmap)
-#    image(matrix(temp$lon,nrow=attr(temp,'out.attrs')$dim[1])[,1],matrix(temp$lat,nrow=attr(temp,'out.attrs')$dim[1])[1,],matrix(temp$cluster.num,nrow=attr(temp,'out.attrs')$dim[1]),col=cmap)
 
     # collate environmental (raw) data per cluster, and produce boxplot
     data.raw$cluster=cluster.num.new
@@ -241,9 +240,9 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     for (k in datcols) {
         boxplot(as.formula(sprintf('%s ~ cluster',names(data.raw)[k])),data=data.raw,col=cmap,xlab=names(data.raw[k]),horizontal=T)
     }
-    invisible(data.raw) # invisible() so that it doesn't get printed to console if not assigned to a variable
     if (!is.null(output.dir)) {
         output.file=normalizePath(paste(output.dir,'/','bioreg.Rdata',sep=''),winslash='/',mustWork=F)
         save(data.raw,data.transformed,file=output.file)
     }
+    invisible(data.raw) # invisible() so that it doesn't get printed to console if not assigned to a variable
 }

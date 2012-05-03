@@ -16,7 +16,7 @@ Go to the [R download site](http://cran.at.r-project.org/) and download R for yo
 
 *   Linux users, you should get it from your package management system rather than on the above site.
 
-Optionally (but this is recommended as it makes things easier in the following), you can install a Graphical User Interface on top of R. We recommend [RStudio](http://rstudio.org/). On the download page, select `RStudio Desktop` and it should detect your operating system and present the recommended file for you on the next page.
+Optionally (but this is recommended as it makes things easier in the following), you can install a Graphical User Interface on top of R. We recommend [RStudio](http://rstudio.org/). On the download page, select `RStudio Desktop` and it should detect your operating system and present the recommended file for you on the next page. If you already use RStudio, **ensure that you have the latest version installed**.
 
 
 ### Download the latest version of the scripts
