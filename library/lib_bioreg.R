@@ -118,9 +118,12 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         tfuncs <- list()
         for (i in seq(along=transformations)) {
             if (is.character(transformations[[i]]) & nchar(transformations[[i]])>0) {
-                tryCatch(tfuncs[[i]]<-function.maker(transformations[[i]]),
-                         error=function(e) {stop(sprintf('Error parsing transformation function \"%s\"',transformations[[i]])) }
-                         )
+                # convert from string expression into actual function
+                tryCatch(
+                    tfuncs[[i]] <- function.maker(transformations[[i]]),
+                    error=function(e) stop("Error parsing transformation function : ", transformations[[i]], "\n  ", e)
+                )
+
             } else if (is.function(transformations[[i]])) {
                 # store actual functions
                 tfuncs[[i]] <- transformations[[i]]
