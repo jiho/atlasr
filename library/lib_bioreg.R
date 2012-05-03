@@ -166,7 +166,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         }
 
         # clean up any Inf values
-        data.transformed[which(is.infinite(data.transformed[,i])),i] <- NA
+        data.transformed[is.infinite(data.transformed[,i]),i] <- NA
 
         # normalise each column of x to 0-1 range
         # TODO: wouldn't scaling (0 mean, unit variance) be more appropriate?
