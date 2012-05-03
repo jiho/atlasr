@@ -231,17 +231,6 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     # associate hierachical cluster number to each non-hierarchical cluster
     xc$hclust.num <- hclust.num
 
-    message(sprintf('-> Producing plots ... ')); flush.console()
-    cmap=get.bioreg.colourmap(n.groups)
-    dev.new()
-    plot(hcl,labels=F,hang=-1)
-    lines(c(1,num.groups.intermediate),c(temph,temph),lty=2,col=2)
-    # add markers for group labels
-    dorder=order.dendrogram(as.dendrogram(hcl))
-    for (k in 1:n.groups) {
-        temp=which(cn.new[dorder]==k)
-        points(temp,rep(-0.02,length(temp)),col=cmap[k],bg=cmap[k],pch=21,cex=5)
-    }
     # associate hierarchical cluster number to each data point on the total grid
     # non-hierarchical cluster number
     data.raw$clara.num[!missing.mask] <- cl$clustering
@@ -251,16 +240,31 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     data.raw$cluster <- factor(data.raw$cluster)
 
 
-    dev.new()
-    mcolor(matrix(temp$lon,nrow=attr(temp,'out.attrs')$dim[1]),matrix(temp$lat,nrow=attr(temp,'out.attrs')$dim[1]),matrix(temp$cluster.num,nrow=attr(temp,'out.attrs')$dim[1]),col=cmap)
+    message("-> Producing plots")
 
-    # collate environmental (raw) data per cluster, and produce boxplot
-    data.raw$cluster=cluster.num.new
-    dev.new(width=8, height=6)
-    par(mfcol=c(1,length(datcols)))
-    for (k in datcols) {
-        boxplot(as.formula(sprintf('%s ~ cluster',names(data.raw)[k])),data=data.raw,col=cmap,xlab=names(data.raw[k]),horizontal=T)
-    }
+    # get a nice colour map
+    cmap <- get.bioreg.colourmap(n.groups)
+
+    # Dendrogram
+    dev.new()
+    # dendrogram
+    plot(hcl, labels=F, hang=-1)
+    # cutting level
+    lines(c(1,num.groups.intermediate), c(temph,temph), lty=2, col="red")
+    # markers for group labels
+    colours <- cmap[hclust.num][hcl$order]
+    points(1:200, rep(-0.02, num.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
+
+    # Violin plot
+    dev.new()
+    datam <- melt(data.raw[,c(variables, "cluster")], id.vars="cluster")
+    # ggplot(na.omit(datam)) + geom_violin(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free")
+    # boxplot for now
+    ggplot(na.omit(datam)) + geom_boxplot(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free")
+
+    # Image map
+    dev.new()
+    polar.ggplot(data.raw, aes(colour=cluster))  + scale_colour_manual(values=cmap)
     if (!is.null(output.dir)) {
         output.file=normalizePath(paste(output.dir,'/','bioreg.Rdata',sep=''),winslash='/',mustWork=F)
         save(data.raw,data.transformed,file=output.file)
