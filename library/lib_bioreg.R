@@ -133,7 +133,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
                 # store actual functions
                 tfuncs[[i]] <- transformations[[i]]
 
-            } else if (is.null(transformations[[i]]) | (is.character(transformations[[i]]) & nchar(transformations[[i]])==0)) {
+            } else if (is.null(transformations[[i]]) | is.na(transformations[[i]]) | (is.character(transformations[[i]]) & nchar(transformations[[i]])==0)) {
                 # pass-through for the rest
                 tfuncs[[i]] <- function(x){x}
 
