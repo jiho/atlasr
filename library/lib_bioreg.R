@@ -261,13 +261,13 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     # Violin plot
     dev.new()
     datam <- melt(data.raw[,c(variables, "cluster")], id.vars="cluster")
-    # ggplot(na.omit(datam)) + geom_violin(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free")
+    # print(ggplot(na.omit(datam)) + geom_violin(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free"))
     # boxplot for now
-    ggplot(na.omit(datam)) + geom_boxplot(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free")
+    print(ggplot(na.omit(datam)) + geom_boxplot(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free"))
 
     # Image map
     dev.new()
-    polar.ggplot(data.raw, aes(colour=cluster))  + scale_colour_manual(values=cmap)
+    print(polar.ggplot(data.raw, aes(colour=cluster)) + scale_colour_manual(values=cmap))
 
     # Output data
     if (!is.null(output.dir)) {
