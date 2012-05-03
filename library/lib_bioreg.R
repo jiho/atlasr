@@ -102,6 +102,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     suppressPackageStartupMessages(require("plyr", quietly=TRUE))
     suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
     suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+    suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
 
 
     # Check input arguments
