@@ -101,6 +101,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     suppressPackageStartupMessages(require("vegan", quietly=TRUE))
     suppressPackageStartupMessages(require("plyr", quietly=TRUE))
     suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
+    suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+
 
     # Check input arguments
     # variables
@@ -265,9 +267,11 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     # Image map
     dev.new()
     polar.ggplot(data.raw, aes(colour=cluster))  + scale_colour_manual(values=cmap)
+
+    # Output data
     if (!is.null(output.dir)) {
-        output.file=normalizePath(paste(output.dir,'/','bioreg.Rdata',sep=''),winslash='/',mustWork=F)
-        save(data.raw,data.transformed,file=output.file)
+        output.file <- normalizePath(str_c(output.dir,"/bioreg.Rdata"), winslash="/", mustWork=F)
+        save(data.raw, data.transformed, file=output.file)
     }
     invisible(data.raw) # invisible() so that it doesn't get printed to console if not assigned to a variable
 }
