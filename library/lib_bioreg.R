@@ -145,17 +145,20 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     }
     # cat(deparse(transformations[[1]]))
 
-    # Get data
+
+    # Get and transform data
+    # get database
     database <- read.env.data(variables=variables, path=path)
     # remove information on land
     database <- mask.env.data(database, path=path)
+    # build region of interest
     prediction_grid <- build.grid(
                           lat.min=lat.min, lat.max=lat.max, lat.step=lat.step,
                           lon.min=lon.min, lon.max=lon.max, lon.step=lon.step
     )
+    # get environment data at the points of interest
     data.raw <- associate.env.data(prediction_grid, database)
 
-    # Transform data
     data.transformed <- data.raw[,! names(data.raw) %in% c("lon", "lat")]
     for (i in 1:ncol(data.transformed)) {
         # apply user supplied transformations
@@ -185,8 +188,11 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
     # which columns are the data columns (i.e. not lon or lat)
     datcols=which(!(names(data.transformed) %in% c('lon','lat')))
+    message("-> Non-hierarchical clustering")
+    # For the later hierarchical clustering we will need to compte a distance matrix between all data points. This is obviously impossible on the full data set, so we reduce the information to a smaller number of similar clusters through non-hierarchical clustering
+    # number of clusters
+    num.groups.intermediate <- 200
 
-    message(sprintf('-> Non-hierarchical clustering ... ')); flush.console()
 
     # non-hierarchical clustering step
     if (quality=="low") {
