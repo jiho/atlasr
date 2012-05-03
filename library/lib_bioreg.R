@@ -99,6 +99,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     # load packages
     suppressPackageStartupMessages(require("cluster", quietly=TRUE))
     suppressPackageStartupMessages(require("vegan", quietly=TRUE))
+    suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+    suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
 
     # Check input arguments
     # variables
@@ -191,46 +193,43 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     # number of clusters
     num.groups.intermediate <- 200
 
+    # number of samples according to the quality argument (smaller numbers speed-up computation)
+    samples <- switch(quality, low=5, high=50)
 
-    # non-hierarchical clustering step
-    if (quality=="low") {
-        cl=clara(data.transformed[not.missing.mask,datcols],num.groups.intermediate,metric="manhattan",stand=FALSE,samples=5)
-    } else {
-        cl=clara(data.transformed[not.missing.mask,datcols],num.groups.intermediate,metric="manhattan",stand=FALSE,samples=50)
-    }
-    cluster.num=cl$clustering
+    # perform clustering
+    cl <- clara(data.trans.noNA, k=num.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
 
-    message(sprintf('-> Hierarchical clustering ... ')); flush.console()
+    # extract cluster numbers
+    data.trans.noNA$clara.num <- cl$clustering
 
-    # now do a hierarchical clustering using the output of the nonhierarchical step
-    # first calculate mean properties of the nonhierarchical clusters
-    xc=matrix(NA,nrow=num.groups.intermediate,ncol=length(datcols))
-    u.cluster.num=unique(cluster.num)
 
-    for (k in 1:length(u.cluster.num)) {
-        tempidx=which(cluster.num==u.cluster.num[k])
-        xc[k,]=colMeans(data.transformed[not.missing.mask[tempidx],datcols],na.rm=T)
-    }
+    message("-> Hierarchical clustering")
+    # Do a hierarchical clustering using the output of the nonhierarchical step. This defines the bioregions
+
+    # first calculate mean properties of the non-hierarchical clusters
+    xc <- ddply(data.trans.noNA, ~clara.num, colMeans, na.rm=TRUE)
 
     # dissimilarities of these clusters
-    D=vegdist(xc,method="gower")
+    D <- vegdist(xc[!names(xc) %in% "cluster.num"], method="gower")
 
     # hierarchical clustering
-    hcl=hclust(D,method="ave")
+    hcl <- hclust(D, method="ave")
 
     # now extract the desired number of groups from the dendrogram
     if (floor(n.groups)==n.groups) {
-        # we specified a number of groups directly
-        cn.new=cutree(hcl,k=n.groups)
+        # n.groups is integer, i.e. we specified a number of groups directly
+        hclust.num <- cutree(hcl, k=n.groups)
         # work out the dissimilarity level (height) that corresponds to this number of groups
-        temph=mean(c(hcl$height[length(hcl$height)+2-n.groups],hcl$height[length(hcl$height)+2-n.groups-1]))
+        temph <- mean(c(hcl$height[length(hcl$height)+2-n.groups], hcl$height[length(hcl$height)+2-n.groups-1]))
     } else {
         # we specified a height at which to cut the dendrogram
         # show on the dendrogram the height at which we are cutting
-        temph=n.groups
-        cn.new=cutree(hcl,h=n.groups)
-        n.groups=length(unique(cn.new))
+        temph <- n.groups
+        hclust.num <- cutree(hcl, h=n.groups)
+        n.groups <- length(unique(cn.new))
     }
+    # associate hierachical cluster number to each non-hierarchical cluster
+    xc$hclust.num <- hclust.num
 
     message(sprintf('-> Producing plots ... ')); flush.console()
     cmap=get.bioreg.colourmap(n.groups)
@@ -243,15 +242,14 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         temp=which(cn.new[dorder]==k)
         points(temp,rep(-0.02,length(temp)),col=cmap[k],bg=cmap[k],pch=21,cex=5)
     }
+    # associate hierarchical cluster number to each data point on the total grid
+    # non-hierarchical cluster number
+    data.raw$clara.num[!missing.mask] <- cl$clustering
+    # hierarchical cluster number
+    data.raw <- join(data.raw, xc[,c("clara.num", "hclust.num")], by="clara.num", type="full")
+    data.raw <- rename(data.raw, c(hclust.num="cluster"))
+    data.raw$cluster <- factor(data.raw$cluster)
 
-    cluster.num.new=integer(length=dim(data.transformed)[1])
-    cluster.num.new[missing.mask]=NA
-    for (k in 1:length(u.cluster.num)) {
-        tempidx=which(cluster.num==u.cluster.num[k])
-        cluster.num.new[not.missing.mask[tempidx]]=cn.new[k]
-    }
-    temp=prediction_grid
-    temp$cluster.num=cluster.num.new
 
     dev.new()
     mcolor(matrix(temp$lon,nrow=attr(temp,'out.attrs')$dim[1]),matrix(temp$lat,nrow=attr(temp,'out.attrs')$dim[1]),matrix(temp$cluster.num,nrow=attr(temp,'out.attrs')$dim[1]),col=cmap)
