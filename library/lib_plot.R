@@ -237,6 +237,10 @@ plot.env.data <- function(variables="", path="env_data", ...) {
     database[[i]]$file <- ncFiles[i]
   }
 
+  # read coordinates of land masses
+  land <- read.csv(str_c(path, "/worldmap-below_30-rough-no_countries.csv"))
+  landLayer <- geom_polygon(aes(x=lon, y=lat), alpha=0.5, data=coast)
+
   message("-> Plot variables")
 
   # loop on all files
@@ -260,6 +264,8 @@ plot.env.data <- function(variables="", path="env_data", ...) {
     p <- ggplot(d) +
       # plot points
       geom_point(aes(x=x, y=y, colour=z), size=0.5) +
+      # plot land
+      landLayer +
       # nice colour gradient
       scale_colour_brewerc(name=variable, palette="Spectral", guide="colourbar") +
       # blank theme
