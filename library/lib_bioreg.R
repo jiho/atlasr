@@ -145,30 +145,36 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     }
     # cat(deparse(transformations[[1]]))
 
-    database=read.env.data(variables=variables, path=path)
+    # Get data
+    database <- read.env.data(variables=variables, path=path)
     prediction_grid <- build.grid(
                           lat.min=lat.min, lat.max=lat.max, lat.step=lat.step,
                           lon.min=lon.min, lon.max=lon.max, lon.step=lon.step
     )
     data.raw <- associate.env.data(prediction_grid, database)
 
-
-    data.transformed=data.raw
-    for (i in 3:dim(data.transformed)[2]) { # skip first two cols: those are lon and lat
-        # ** this is fragile (dependent on ordering of data with first two cols lon and lat; dependent on ordering of weights and transformations and data columns being the same): need to code it better
-        if (!is.null(transformations[[i-2]])) {
-            data.transformed[,i]=transformations[[i-2]](data.raw[,i])
+    # Transform data
+    data.transformed <- data.raw[,! names(data.raw) %in% c("lon", "lat")]
+    for (i in 1:ncol(data.transformed)) {
+        # apply user supplied transformations
+        # TODO this is fragile : dependent on ordering of weights and transformations and data columns being the same: need to code it better
+        # TODO: suggestion JO: use named lists/vectors for transformation and weights with names matching data columns? i.e. list(bathymetry="log(x)", floor_temperature=ceiling). But it's much more cumbersome to write then
+        if (!is.null(transformations[[i]])) {
+            data.transformed[,i] <- transformations[[i]](data.raw[,i])
         }
-        # clean up any Inf values
-        data.transformed[which(is.infinite(data.transformed[,i])),i]=NA
 
-        # normalise each column of x to 0-1 range (but not lon or lat)
-        data.transformed[,i]=data.transformed[,i]-min(data.transformed[,i],na.rm=T)
-        data.transformed[,i]=data.transformed[,i]/(max(data.transformed[,i],na.rm=T))
+        # clean up any Inf values
+        data.transformed[which(is.infinite(data.transformed[,i])),i] <- NA
+
+        # normalise each column of x to 0-1 range
+        # TODO: wouldn't scaling (0 mean, unit variance) be more appropriate?
+        # data.transformed[,i] <- scale(data.transformed[,i])
+        data.transformed[,i] <- data.transformed[,i] - min(data.transformed[,i], na.rm=T)
+        data.transformed[,i] <- data.transformed[,i] / max(data.transformed[,i], na.rm=T)
 
         # apply weighting
-#        cat(sprintf("i=%d, weights[i-2]: %s\n",i,str(weights[[i-2]])))
-        data.transformed[,i]=data.transformed[,i]*weights[[i-2]]
+        # cat(sprintf("i=%d, weights[i-2]: %s\n",i,str(weights[[i-2]])))
+        data.transformed[,i] <- data.transformed[,i] * weights[i]
     }
 
     # which records to mask out because of missing data (including land)
