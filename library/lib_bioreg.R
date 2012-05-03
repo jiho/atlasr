@@ -191,7 +191,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     missing.mask <- rowSums(is.na(data.transformed)) > 0
     data.trans.noNA <- na.omit(data.transformed)
 
-    message("-> Non-hierarchical clustering")
+    message("-> Perform non-hierarchical clustering first")
     # For the later hierarchical clustering we will need to compte a distance matrix between all data points. This is obviously impossible on the full data set, so we reduce the information to a smaller number of similar clusters through non-hierarchical clustering
     # number of clusters
     num.groups.intermediate <- 200
@@ -206,7 +206,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     data.trans.noNA$clara.num <- cl$clustering
 
 
-    message("-> Hierarchical clustering")
+    message("-> Perform hierarchical clustering on the result")
     # Do a hierarchical clustering using the output of the nonhierarchical step. This defines the bioregions
 
     # first calculate mean properties of the non-hierarchical clusters
@@ -243,7 +243,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     data.raw$cluster <- factor(data.raw$cluster)
 
 
-    message("-> Producing plots")
+    message("-> Produce plots")
 
     # get a nice colour map
     cmap <- get.bioreg.colourmap(n.groups)
