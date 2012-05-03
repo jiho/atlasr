@@ -267,7 +267,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
     # Image map
     dev.new()
-    print(polar.ggplot(data.raw, aes(colour=cluster)) + scale_colour_manual(values=cmap))
+    print(polar.ggplot(data.raw, aes(colour=cluster), lat.precision=1, lon.precision=2) + scale_colour_manual(values=cmap))
+    # TODO subsample the plot for speed. need to find a workaround or have an option in the function + GUI
 
     # Output data
     if (!is.null(output.dir)) {
