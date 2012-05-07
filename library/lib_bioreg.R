@@ -29,7 +29,7 @@ get.bioreg.colourmap <- function(n=10) {
 
 mcolor <- function(x, y=NULL, z=NULL, interp=FALSE, col=topo.colors(100), clim=NULL) {
     # plot a colour map
-    # TODO deplace that with ggplot calls
+    # TODO replace that with ggplot calls
     # uses rasterImage() as a faster alternative to image()
 
     if (is.null(y) & is.null(z)) {
