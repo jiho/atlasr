@@ -2,7 +2,7 @@
 #     Perform abiotic regionalisation
 #
 # (c) Copyright 2012 Ben Raymond, ben dot raymond at aad dot gov dot au
-#     Last-Modified: <2012-05-03 13:23:16>
+#     Last-Modified: <2012-05-07 12:54:13>
 #
 #-----------------------------------------------------------------------------
 
@@ -170,7 +170,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         # TODO this is fragile : dependent on ordering of weights and transformations and data columns being the same: need to code it better
         # TODO: suggestion JO: use named lists/vectors for transformation and weights with names matching data columns? i.e. list(bathymetry="log(x)", floor_temperature=ceiling). But it's much more cumbersome to write then
         if (!is.null(transformations[[i]])) {
-            data.transformed[,i] <- transformations[[i]](data.raw[,i])
+            data.transformed[,i] <- transformations[[i]](data.raw[,c(names(data.transformed)[i])]) # can't use i to index data.raw, because it has lon and lat cols and data.transformed does not!
         }
 
         # clean up any Inf values
@@ -267,8 +267,20 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
     # Image map
     dev.new()
-    print(polar.ggplot(data.raw, aes(colour=cluster), lat.precision=1, lon.precision=2) + scale_colour_manual(values=cmap))
-    # TODO subsample the plot for speed. need to find a workaround or have an option in the function + GUI
+    if (quality=="low") {
+        # use rasterImage() for fast but not very pretty display of map
+        # first construct full matrix including missing (masked) pixels
+        temp <- join(prediction_grid, data.raw[,c("lon","lat","cluster")], by=c("lon","lat"))
+        nrow=attr(prediction_grid,'out.attrs')$dim[1]
+        temp$cluster=as.numeric(temp$cluster)
+        mcolor(matrix(temp$lon,nrow=nrow),matrix(temp$lat,nrow=nrow),matrix(temp$cluster,nrow=nrow),col=cmap)
+    } else {
+        print(polar.ggplot(data.raw, geom="tile", aes(colour=cluster,fill=cluster), lat.precision=1, lon.precision=2) + scale_colour_manual(values=cmap) + scale_fill_manual(values=cmap))
+        ## TODO subsample the plot for speed. need to find a workaround or have an option in the function + GUI
+        ## BR: may not need subsampling: this will only be run now for "high" quality, so speed is not quite so much of an issue. Final plots should not be subsampled anyway: we lose too much detail
+        ## BR: have switched to geom=tile, which is slower, but looks much nicer (for "high" quality). If you prefer point geometry that's fine by me
+        ## TODO fix error when longitudes of [-180,180] are used: gap in plot at lon==180
+    }
 
     # Output data
     if (!is.null(output.dir)) {
