@@ -24,14 +24,14 @@ dl.env.data <- function(url="http://dl.dropbox.com/u/1047321/antarctic_data_arch
   # url   URL where the database can be downloaded
   # path  where to store the netCDF files of the database
   #
-  
+
   message("-> Download environment database")
-  
+
   temp <- tempfile() # download the zip as a temporary file
   download.file(url, destfile=temp)
   unzip(temp, exdir=path)
   unlink(temp)
-  
+
   return(invisible(path))
 }
 
@@ -41,7 +41,7 @@ check.get.env.data <- function(path="env_data") {
   #
   # path  where to store the netCDF files of the database
   #
-  
+
   if (! file.exists(path)) {
     warning("No environment database", call.=FALSE, immediate.=TRUE)
     dl.env.data(path=path)
@@ -73,7 +73,11 @@ list.env.data <- function(variables="", path="env_data", full=FALSE, ...) {
 
   # possibly match and expand variable names
   ncVariablesMatched <- match.vars(variables, ncVariables, ...)
-  ncFilesMatched <- ncFiles[ncVariables %in% ncVariablesMatched]
+  #ncFilesMatched <- ncFiles[ncVariables %in% ncVariablesMatched]   ## this does not maintain consistent ordering between ncVariablesMatched and ncFilesMatched, which causes problems later
+  ncFilesMatched=c()
+  for (i in 1:length(ncVariablesMatched)) {
+      ncFilesMatched[i] <- ncFiles[ncVariables == ncVariablesMatched[[i]]]
+  }
 
   if (full) {
     return(ncFilesMatched)
@@ -141,7 +145,7 @@ read.env.data <- function(variables="", path="env_data", ...) {
 
     # display data as a reality check
     # image(dat, main=varName)
-  
+
     return(dat)
   }, .progress=ifelse(length(ncFiles) > 5,"text","none"))  # get a nice progress bar when there are several files to read
 
@@ -151,7 +155,7 @@ read.env.data <- function(variables="", path="env_data", ...) {
   # name elements of the list
   # NB: sometimes the data names in the netCDF files are the same across several files, we will instead use a name derived from the file
   names(database) <- ncVariables
-  
+
   return(database)
 }
 
@@ -194,22 +198,22 @@ associate.env.data <- function(dataset, database, lon.name="lon", lat.name="lat"
   # TODO test if we can be faster by skipping the interpolation if we are always exactly on the grid
   suppressPackageStartupMessages(require("fields"))
   # contains function rename
-  suppressPackageStartupMessages(require("plyr"))   
+  suppressPackageStartupMessages(require("plyr"))
 
   # rename lon and lat to ensure consistency in the following
   names(dataset)[which(names(dataset) == lon.name)] <- "lon"
   names(dataset)[which(names(dataset) == lat.name)] <- "lat"
   # extract lon and lat from the dataset
   coord <- dataset[,c("lon","lat")]
-  
+
   # extract/interpolate the environmental data at the locations specified in the dataset
   envData <- as.data.frame(lapply(database, function(x) {
     interp.surface(x, coord)
   }))
-  
+
   # store everthing in the original dataset
   dataset <- cbind(dataset, envData)
-  
+
   # remove points where all environmental data is Non-Available
   # NB: these are usually points on land
   # allNA <- aaply(envData, .margin=1, .fun=function(x) {all(is.na(x)) }, .expand=FALSE)
@@ -230,20 +234,20 @@ read.data <- function(file, ...) {
   # file  path to the data file
   # ...   passed to the method used for reading the file: gdata::read.xls, read.csv, read.txt
   #
-  
+
   if (length(file) > 1) {
     stop("Read only one file at a time")
   }
-  
+
   file <- win2unix(file, ...)
-  
+
   fileName <- basename(file)
   message("-> Read input data in ", file)
-  
+
   # get file extension
   extension <- strsplit(fileName, split=".", fixed=T)[[1]]
   extension <- extension[length(extension)]
-  
+
   if (extension == "xls") {
     suppressPackageStartupMessages(require("gdata"))
     d <- read.xls(xls=file, ...)
@@ -254,7 +258,7 @@ read.data <- function(file, ...) {
   } else {
     stop("Unknown file type")
   }
-  
+
   # give some flexibility in naming lat and lon
   names(d)[tolower(names(d)) %in% c("latitude","lat")] = "lat"
   names(d)[tolower(names(d)) %in% c("longitude","lon","long")] = "lon"
@@ -272,7 +276,7 @@ build.grid <- function(lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon
   # lat/lon.lim   vector with the minimum and maximum coordinates
   # lat/lon.step  step in degrees
   #
-  
+
   # compute coordinates
   lat = seq(from=lat.min, to=lat.max, by=lat.step)
   lon = seq(from=lon.min, to=lon.max, by=lon.step)
@@ -293,7 +297,7 @@ match.vars <- function(vars, choices, quiet=TRUE) {
   # choices list of matching possibilities
   # quiet   wether to provide a message about matches
   #
-  
+
   res = c()
   for (i in seq(along=vars)) {
     # try exact matches first
