@@ -541,14 +541,14 @@ rp.textentry.immediate <- function (panel, var, action = I, labels = NA, names =
 
 
 
-do.bioreg <- function() {
+do.bioreg <- function(...) {
     ##
     ## Open a GUI to select the arguments of the bioreg() function
     ##
     ## ...   passed to bioreg()
     ##
     ## Ben Raymond
-    ## Last-Modified: <2012-05-02 12:35:09>
+    ## Last-Modified: <2012-05-10 10:22:33>
 
   suppressPackageStartupMessages(require("rpanel"))
 
@@ -584,12 +584,12 @@ do.bioreg <- function() {
       } else {
           outputDir=tk_choose.dir(getwd(), "Choose a suitable folder for the output files")
           tkdestroy(win$window)
-          bioreg.secondpanel(win$availableVariables,output.dir=outputDir)
+          bioreg.secondpanel(win$availableVariables,output.dir=outputDir,...)
       }
       return(win) })
 }
 
-bioreg.secondpanel <- function(selectedVariables,varweights=rep(1,length(selectedVariables)),vartransforms=rep("",length(selectedVariables)),output.dir=getwd()) {
+bioreg.secondpanel <- function(selectedVariables,varweights=rep(1,length(selectedVariables)),vartransforms=rep("",length(selectedVariables)),output.dir=getwd(),lon.min=30,lon.max=60,lat.min=-62,lat.max=-45) {
     ##
     ## Second part of the GUI. Called from do.bioreg()
     ##
@@ -637,10 +637,10 @@ bioreg.secondpanel <- function(selectedVariables,varweights=rep(1,length(selecte
   rp.radiogroup(win, quality, values=c('Exploratory run (faster)','Final run (better quality)'), title="Analysis type", pos=c(spacer,main.height/2+spacer, w/4-spacer, main.height/4-spacer))
 
   ## location
-  rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=-45 , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer,w/8-spacer,h))
-  rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=30, showvalue=TRUE, pos=c(w/4+spacer,main.height/2+spacer+h,w/8-spacer,h))
-  rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=60 , showvalue=TRUE, pos=c(w/4+5*w/32+spacer,main.height/2+spacer+h,w/8-spacer,h))
-  rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=-62 , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer+2*h,w/8-spacer,h))
+  rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=lat.max , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer,w/8-spacer,h))
+  rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=lon.min, showvalue=TRUE, pos=c(w/4+spacer,main.height/2+spacer+h,w/8-spacer,h))
+  rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=lon.max , showvalue=TRUE, pos=c(w/4+5*w/32+spacer,main.height/2+spacer+h,w/8-spacer,h))
+  rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=lat.min , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer+2*h,w/8-spacer,h))
 
   rp.slider(win, n.groups,  from=2, to=40,  resolution=1,   title="Number of clusters"   , initval=12 , showvalue=TRUE, pos=c(3*w/4+spacer,main.height/2+spacer,w/4-spacer,h))
 
