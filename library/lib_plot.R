@@ -238,7 +238,7 @@ plot.env.data <- function(variables="", path="env_data", ...) {
   }
 
   # read coordinates of land masses
-  land <- read.csv(str_c(path, "/worldmap-below_30-rough-no_countries.csv"))
+  land <- read.csv(str_c(path, "/worldmap-below_30-rough-no_countries.csv"), sep="\t")
   landLayer <- geom_polygon(aes(x=lon, y=lat), alpha=0.5, data=land)
 
   message("-> Plot variables")
