@@ -156,7 +156,7 @@ do.brt <- function(...) {
 
 
     # write the filename, for information
-    rp.textentry(win, file, title="Dataset", initval=file, pos=c(w/4, h/4, 3*w/4, h))
+    rp.text(win, txt=file, initval=file, pos=c(w/4, 0, 3*w/4, h))
 
     # build species list
     suppressMessages(data <- read.data(file))
