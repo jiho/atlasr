@@ -330,70 +330,67 @@ do.brt <- function(...) {
 }
 
 
-rp.text <- function (panel, txt="", title = "", parent = window, pos = NULL, ...)
-{
+rp.text <- function (panel, txt="", parent = window, pos = NULL, ...) {
+  #
+  # Simple text-displaying panel
+  #
+  # BR April 2012
 
-    ## simple text panel
-    ## BR April 2012
-    suppressPackageStartupMessages(require("rpanel"))
+  suppressPackageStartupMessages(require("rpanel"))
 
-    ischar <- is.character(panel)
-    if (ischar) {
-        panelname <- panel
-        panel <- rpanel:::.geval(panel)
+  ischar <- is.character(panel)
+  if (ischar) {
+    panelname <- panel
+    panel <- rpanel:::.geval(panel)
+  } else {
+    panelname <- panel$intname
+    panelreturn <- deparse(substitute(panel))
+    rpanel:::.gassign(panel, panelname)
+  }
+  pos = rpanel:::.newpos(pos, ...)
+  f <- function(...) {
+    panel <- action(rpanel:::.geval(panelname))
+    if (!is.null(panel$intname)) {
+      rpanel:::.gassign(panel, panelname)
+    } else {
+      stop("The panel was not passed back from the action function.")
     }
-    else {
-        panelname <- panel$intname
-        panelreturn <- deparse(substitute(panel))
-        rpanel:::.gassign(panel, panelname)
+  }
+  if (rpanel:::.checklayout(pos)) {
+    if ((!is.list(pos)) || (is.null(pos$row))) {
+      newbutton <- tktext(panel$window, borderwidth=0, fg="black", bg="grey85", wrap="char")
+      tkinsert(newbutton,"end",txt)
+      rpanel:::.rp.layout(newbutton, pos)
+    } else {
+      if (is.null(pos$grid)) {
+        gd = panel$window
+      } else {
+        gd = rpanel:::.geval(panelname, "$", pos$grid)
+      }
+      if ((is.null(pos$width)) && (is.null(pos$height))) {
+        newbutton <- tktext(panel$window)
+      } else {
+        newbutton <- tktext(panel$window, width = pos$width, height = pos$height)
+      }
+      tkinsert(newbutton,"end",txt)
+      if (is.null(pos$sticky)) {
+        pos$sticky <- "w"
+      }
+      if (is.null(pos$rowspan)) {
+        pos$rowspan = 1
+      }
+      if (is.null(pos$columnspan)) {
+        pos$columnspan = 1
+      }
+      tkgrid(newbutton, row = pos$row, column = pos$column,
+             sticky = pos$sticky, `in` = gd, rowspan = pos$rowspan,
+             columnspan = pos$columnspan
+      )
     }
-    pos = rpanel:::.newpos(pos, ...)
-    f <- function(...) {
-        panel <- action(rpanel:::.geval(panelname))
-        if (!is.null(panel$intname)) {
-            rpanel:::.gassign(panel, panelname)
-        }
-        else {
-            stop("The panel was not passed back from the action function.")
-        }
-    }
-    if (rpanel:::.checklayout(pos)) {
-        if ((!is.list(pos)) || (is.null(pos$row))) {
-            newbutton <- tktext(panel$window,bg="grey95")
-            tkinsert(newbutton,"end",txt)
-            rpanel:::.rp.layout(newbutton, pos)
-        }
-        else {
-            if (is.null(pos$grid)) {
-                gd = panel$window
-            }
-            else {
-                gd = rpanel:::.geval(panelname, "$", pos$grid)
-            }
-            if ((is.null(pos$width)) && (is.null(pos$height))) {
-                newbutton <- tktext(panel$window)
-            }
-            else {
-                newbutton <- tktext(panel$window, width = pos$width, height = pos$height)
-            }
-            tkinsert(newbutton,"end",txt)
-            if (is.null(pos$sticky)) {
-                pos$sticky <- "w"
-            }
-            if (is.null(pos$rowspan)) {
-                pos$rowspan = 1
-            }
-            if (is.null(pos$columnspan)) {
-                pos$columnspan = 1
-            }
-            tkgrid(newbutton, row = pos$row, column = pos$column,
-                sticky = pos$sticky, `in` = gd, rowspan = pos$rowspan,
-                columnspan = pos$columnspan)
-        }
-    }
-    if (ischar)
-        invisible(panelname)
-    else assign(panelreturn, rpanel:::.geval(panelname), envir = parent.frame())
+  }
+  if (ischar)
+      invisible(panelname)
+  else assign(panelreturn, rpanel:::.geval(panelname), envir = parent.frame())
 }
 
 rp.textentry.immediate <- function (panel, var, action = I, labels = NA, names = labels,
