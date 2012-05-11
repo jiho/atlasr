@@ -24,10 +24,6 @@ get.bioreg.colourmap <- function(n=10) {
     # prepare saturated and under-saturated versions of the colors for use when n > 122
     cmapHSV <- rgb2hsv(col2rgb(cmap))
 
-mcolor <- function(x, y=NULL, z=NULL, interp=FALSE, col=topo.colors(100), clim=NULL) {
-    # plot a colour map
-    # TODO replace that with ggplot calls
-    # uses rasterImage() as a faster alternative to image()
     cmapSat <- cmapHSV
     # saturate
     cmapSat["s",] <- cmapSat["s",] + 0.2
@@ -36,16 +32,6 @@ mcolor <- function(x, y=NULL, z=NULL, interp=FALSE, col=topo.colors(100), clim=N
     # convert to colors
     cmapSat <- hsv(cmapSat[1,], cmapSat[2,], cmapSat[3,])
 
-    if (is.null(y) & is.null(z)) {
-        z=x
-        x=1:dim(z)[1]
-        y=1:dim(z)[2]
-    }
-    ncolours=length(col)
-    tempz=z
-    if (!is.null(clim)) {
-       tempz[tempz<clim[1]]=clim[1]
-       tempz[tempz>clim[2]]=clim[2]
     cmapUndersat <- cmapHSV
     # de-saturate
     cmapUndersat["s",] <- cmapUndersat["s",] - 0.3
@@ -61,14 +47,6 @@ mcolor <- function(x, y=NULL, z=NULL, interp=FALSE, col=topo.colors(100), clim=N
     if (n > length(cmap)) {
       warning("Not enough colours to plot everything. It is unlikely that you will be able to discriminate between more than 36 colors on the plot anyway.")
     }
-    temp=round((apply(t(tempz),2,rev)-min(tempz,na.rm=T))*(ncolours-1)/(max(tempz,na.rm=T)-min(tempz,na.rm=T)))+1
-    tempa=as.raster(col[temp],nrow=dim(temp)[1])
-
-    # show on figure
-    xbin=mean(abs(diff(x)))
-    ybin=mean(abs(diff(y)))
-    plot(c(min(x,na.rm=T)-xbin/2,max(x,na.rm=T)+xbin/2),c(min(y,na.rm=T)-ybin/2,max(y,na.rm=T)+ybin/2),type="n",xlab="",ylab="",xlim=c(min(x,na.rm=T)-xbin/2-0.05,max(x,na.rm=T)+xbin/2+0.05),ylim=c(min(y,na.rm=T)-ybin/2-0.05,max(y,na.rm=T)+ybin/2+0.05),yaxs='i', xaxs='i')
-    rasterImage(tempa,min(x,na.rm=T)-xbin/2,min(y,na.rm=T),max(x,na.rm=T)+xbin/2,max(y,na.rm=T),interp=F)
     cmap <- cmap[1:n]
 
     return(cmap)
@@ -286,12 +264,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     # Image map
     dev.new()
     if (quality=="low") {
-        # use rasterImage() for fast but not very pretty display of map
-        # first construct full matrix including missing (masked) pixels
-        temp <- join(prediction_grid, data.raw[,c("lon","lat","cluster")], by=c("lon","lat"))
-        nrow=attr(prediction_grid,'out.attrs')$dim[1]
-        temp$cluster=as.numeric(temp$cluster)
-        mcolor(matrix(temp$lon,nrow=nrow),matrix(temp$lat,nrow=nrow),matrix(temp$cluster,nrow=nrow),col=cmap)
+        clusterMap <- ggplot(data.raw, aes(x=lon, y=lat)) + geom_raster(aes(fill=cluster)) + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) + scale_fill_manual(values=c(cmap))
+
     } else {
         print(polar.ggplot(data.raw, geom="tile", aes(colour=cluster,fill=cluster), lat.precision=1, lon.precision=2) + scale_colour_manual(values=cmap) + scale_fill_manual(values=cmap))
         ## TODO subsample the plot for speed. need to find a workaround or have an option in the function + GUI
