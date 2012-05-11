@@ -72,6 +72,49 @@ scale_fill_brewerc <- function(...) { scale_brewerc(..., aesthetic="fill") }
 scale_colour_brewerc <- function(...) { scale_brewerc(..., aesthetic="colour") }
 scale_color_brewerc <- scale_colour_brewerc
 
+discrete.colourmap <- function(n=10) {
+    #
+    # Define some qualitatively different colours
+    #
+    # n     number of colours on the scale
+    #
+
+    # base colour map from http://colorbrewer2.org/
+    suppressPackageStartupMessages(require("RColorBrewer", quietly=TRUE))
+    cmap <- brewer.pal(12, "Set3")    # NB: 12 is the maximum
+
+    # prepare saturated and under-saturated versions of the colors for use when n > 122
+    cmapHSV <- rgb2hsv(col2rgb(cmap))
+
+    cmapSat <- cmapHSV
+    # saturate
+    cmapSat["s",] <- cmapSat["s",] + 0.2
+    # ensure saturation is less than 1
+    cmapSat["s",][cmapSat["s",] > 1] <- 1
+    # convert to colors
+    cmapSat <- hsv(cmapSat[1,], cmapSat[2,], cmapSat[3,])
+
+    cmapUndersat <- cmapHSV
+    # de-saturate
+    cmapUndersat["s",] <- cmapUndersat["s",] - 0.3
+    # ensure saturation is less than 1
+    cmapUndersat["s",][cmapUndersat["s",] < 0] <- 0
+    # convert to colors
+    cmapUndersat <- hsv(cmapUndersat[1,], cmapUndersat[2,], cmapUndersat[3,])
+
+    cmap <- c(cmap, cmapSat, cmapUndersat)
+    # barplot(rep(1, times=36), col=cmap)
+
+    # extract colours
+    if (n > length(cmap)) {
+      warning("Not enough colours to plot everything. It is unlikely that you will be able to discriminate between more than 36 colors on the plot anyway.")
+    }
+    cmap <- cmap[1:n]
+
+    return(cmap)
+}
+
+
 
 plot.pred <- function(x, ...) {
   #
