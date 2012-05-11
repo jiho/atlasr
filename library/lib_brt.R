@@ -1057,3 +1057,212 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
   }
 }
 
+
+## GUI
+#-----------------------------------------------------------------------------
+
+do.brt <- function(...) {
+  #
+  # Open a GUI to select the arguments of the brts() function
+  #
+  # ...   passed to brts()
+  #
+
+  suppressPackageStartupMessages(require("rpanel"))
+
+
+  # default dimensions (in px)
+  w <- 600      # width of the window
+  w.h <- 700    # height of the window
+  h <- 50       # height of elements
+  spacer <- 10  # height of spacer
+
+  # main window
+  win <- rp.control(title="Run BRT model", size=c(w,w.h))
+
+  # NB: positions are x, y, width, eight
+  #     x, y are the coordinates of the top-left hand corner
+
+  rp.button(win, title="Choose file", pos=c(0, 0, w/4, h), action=function(win) {
+
+    # choose the data file
+    file <- file.choose()
+    # file <- "../data/Austropallene.csv"
+    file <- win2unix(file, ...)
+
+
+    # write the filename, for information
+    rp.text(win, txt=file, initval=file, pos=c(w/4, 0, 3*w/4, h))
+
+    # build species list
+    suppressMessages(data <- read.data(file))
+
+    # the selection panel should be 380px high for the whole window to fit in 700px height
+    hSel <- 380
+    # this is roughly equivalent to 20 rows in the listbox
+    nRows <- 20
+
+    # we can fit ~20 checkboxes into that space, so we need to split the checkbox list into columns when there are more than that
+    nBoxes <- 20
+    # however, it is not possible to do that programmatically in a for loop because variables with numbered names have to be defined in each case and this requires eval(parse(...)) constructs which mostly don't work
+    # so we only accommodate for a situation with two columns
+    allTaxa <- setdiff(names(data), c("lat", "lon"))
+    nTaxa <- length(allTaxa)
+
+    if (nTaxa <= nBoxes) {
+      # when all taxa can fit into one column, just use this
+      rp.checkbox(win, var=taxa, labels=allTaxa, title="Taxa", initval=c(TRUE, rep(FALSE, times=nTaxa-1)), pos=c(0, h, 2*w/3, hSel), action=function(win) {
+        if (all(! win$taxa)) {
+          rp.messagebox("At least one taxon must be selected", title="Warning")
+        }
+        return(win)
+      })
+
+    } else {
+      # otherwise, split in half
+      half <- ceiling(nTaxa/2)
+      rest <- nTaxa - half
+      allTaxa1 <- allTaxa[1:half]
+      allTaxa2 <- allTaxa[(half+1):nTaxa]
+
+      rp.checkbox(win, var=taxa1, labels=allTaxa1, title="Taxa", initval=c(TRUE, rep(FALSE, times=half-1)), pos=c(0, h, w/3, hSel), action=function(win) {
+        if (all(! c(win$taxa1, win$taxa2))) {
+          rp.messagebox("At least one taxon must be selected", title="Warning")
+        }
+        return(win)
+      })
+      rp.checkbox(win, var=taxa2, labels=allTaxa2, title="", initval=rep(FALSE, times=rest), pos=c(w/3, h+7, w/3, hSel-7), action=function(win) {
+        if (all(! c(win$taxa1, win$taxa2))) {
+          rp.messagebox("At least one taxon must be selected", title="Warning")
+        }
+        return(win)
+      })
+
+    }
+
+    # build environment variables list
+    allVariables <- list.env.data()
+    rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables",  rows=nRows, pos=c(2*w/3, h, w/3, hSel-h), action=function(win) {
+      if (all(win$variables == "")) {
+        rp.messagebox("At least one variable must be selected", title="Warning")
+      }
+      return(win)
+    })
+    rp.checkbox(win, var=selAllVariables, title="Select all", initval=FALSE, pos=c(2*w/3, hSel, w/3, h))
+
+
+    # compute vertical coordinate of the middle of the window
+    mid <- hSel + h + spacer
+
+
+    # effects options
+    rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, w/4, h*2))
+
+    # prediction options
+    rp.radiogroup(win, prediction, values=c("no", "yes", "yes + bootstrap"), initval="yes", title="Prediction", pos=c(0, mid+h*2, w/4, h*2))
+
+    # checkboxes range
+    checkH <- 4*h/5
+    rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initialval=FALSE, pos=c(w/4, mid, w/4, checkH))
+    rp.checkbox(win, bin, title="Bin original data\non prediction grid", initval=FALSE, pos=c(w/4, mid+checkH, w/4, checkH))
+    rp.checkbox(win, extrapolate.env, title="Extrapolate envi-\nronmental range", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH))
+    rp.checkbox(win, quick.plot, title="Subsample predict-\nion plot (faster)", initialval=FALSE, pos=c(w/4, mid+checkH*3, w/4, h))
+    rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initialval=FALSE, pos=c(w/4, mid+checkH*4, w/4, checkH))
+
+    # location
+    rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
+    rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=-180, showvalue=TRUE, pos=c(w/2, mid+h*1, w/4, h))
+    rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=180 , showvalue=TRUE, pos=c(3*w/4, mid+h*1, w/4, h))
+    rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=-80 , showvalue=TRUE, pos=c(w/2+w/8, mid+h*2, w/4, h))
+    rp.slider(win, lon.step, from=0.1, to=4  ,  resolution=0.1, title="Step lon", initval=0.5 , showvalue=TRUE, pos=c(w/2, mid+h*3, w/4, h))
+    rp.slider(win, lat.step, from=0.1, to=4   , resolution=0.1, title="Step lat", initval=0.1 , showvalue=TRUE, pos=c(3*w/4, mid+h*3, w/4, h))
+
+
+    # action buttons
+    rowY <- mid+h*4+spacer
+    rp.button(win, "Help", pos=c(0, rowY, w/4, h), action=function(win) {
+      rp.messagebox("Someday... Maybe", title="Help")
+      return(win)
+    })
+    rp.button(win, "Cancel", quitbutton=TRUE, pos=c(w/2, rowY, w/4, h) , action=function(win) {
+      message("Aborting");
+      return(win)
+    })
+    rp.button(win, "Run", pos=c(3*w/4, rowY, w/4, h), action=function(win, ...) {
+      # print(win$file)
+
+      if (nTaxa <= nBoxes) {
+        taxa <- names(win$taxa)[win$taxa]
+      } else {
+        taxa <- names(win$taxa1)[win$taxa1]
+        taxa <- c(taxa, names(win$taxa2)[win$taxa2])
+      }
+      # print(taxa)
+
+      # print(win$variables)
+      # print(win$selAllVariables)
+      if (win$selAllVariables) {
+        variables <- allVariables
+      } else {
+        variables <- win$variables
+      }
+
+      # print(win$family)
+      # print(win$bootstrap.effects)
+      if(win$bootstrap.effects) {
+        n.boot.effects <- 200
+      } else {
+        n.boot.effects <- 0
+      }
+
+      # print(win$prediction)
+      if (win$prediction == "no") {
+        predict <- FALSE
+        n.boot.pred <- 0
+      } else if (win$prediction == "yes") {
+        predict <- TRUE
+        n.boot.pred <- 0
+      } else if (win$prediction == "bootstrap") {
+        predict <- TRUE
+        n.boot.pred <- 200
+      }
+
+      # print(win$lat.max)
+      # print(win$lat.min)
+      # print(win$lat.step)
+      # print(win$lon.max)
+      # print(win$lon.min)
+      # print(win$lon.step)
+
+      # print(win$quick.plot)
+      # print(win$extrapolate.env)
+      # print(win$overlay.stations)
+      # print(win$bin)
+
+
+      b <- brts(
+                  file=win$file,
+                  taxa=taxa, variables=variables,
+                  lat.min=win$lat.min, lat.max=win$lat.max, lat.step=win$lat.step,
+                  lon.min=win$lon.min, lon.max=win$lon.max, lon.step=win$lon.step,
+                  predict=predict,
+                  bin=win$bin,
+                  #
+                  family=win$family,
+                  n.boot.effects=n.boot.effects,
+                  n.boot.pred=n.boot.pred,
+                  quick=win$quick.plot,
+                  extrapolate.env=win$extrapolate.env,
+                  overlay.station=win$overlay.stations,
+                  ...
+              )
+      return(win)
+    }, ...)
+
+
+    return(win)
+  })
+
+}
+
+

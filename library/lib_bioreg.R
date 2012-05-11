@@ -281,3 +281,138 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     }
     invisible(data.raw) # invisible() so that it doesn't get printed to console if not assigned to a variable
 }
+
+
+## GUI
+#-----------------------------------------------------------------------------
+
+do.bioreg <- function(...) {
+    ##
+    ## Open a GUI to select the arguments of the bioreg() function
+    ##
+    ## ...   passed to bioreg()
+    ##
+    ## Ben Raymond
+    ## Last-Modified: <2012-05-10 10:22:33>
+
+  suppressPackageStartupMessages(require("rpanel"))
+
+
+  # default dimensions (in px)
+  w <- 600      # width of the window
+  h <- 50       # height of elements
+  spacer <- 10  # height of spacer
+  main.height=700
+
+  # main window
+  win <- rp.control(title="Regionalisation", size=c(w,main.height),aschar=F)
+
+
+  nRows <- 30
+  nBoxes <- 20
+  hSel <- 380
+  allVariables <- list.env.data()
+
+  rp.text(win,txt="Choose the variables to use in the regionalisation analysis",pos=c(spacer,spacer,w-2*spacer,40))
+
+  blah=rp.listbox.mult(win, var=availableVariables, vals=allVariables, title="Available variables",  rows=nRows, cols=min(50,max(sapply(allVariables,nchar))), initval="", pos=c(spacer, 40+spacer, w-2*spacer, main.height-40-h-2*spacer), aschar=F, action=function(win) {
+      if (all(win$availableVariables == "")) {
+          rp.messagebox("At least two variables must be selected", title="Warning")
+      }
+      return(win)
+  })
+
+  ## destination directory for output files and then proceed to second GUI panel
+  rp.button(win, title="Choose directory for output files", pos=c(spacer,main.height-h-spacer,w-2*spacer,h), action=function(win) {
+      if (length(win$availableVariables)<2) {
+          rp.messagebox("At least two variables must be selected first", title="Warning")
+      } else {
+          outputDir=tk_choose.dir(getwd(), "Choose a suitable folder for the output files")
+          tkdestroy(win$window)
+          bioreg.secondpanel(win$availableVariables,output.dir=outputDir,...)
+      }
+      return(win) })
+}
+
+bioreg.secondpanel <- function(selectedVariables,varweights=rep(1,length(selectedVariables)),vartransforms=rep("",length(selectedVariables)),output.dir=getwd(),lon.min=30,lon.max=60,lat.min=-62,lat.max=-45) {
+    ##
+    ## Second part of the GUI. Called from do.bioreg()
+    ##
+    ## Ben Raymond
+    ## Last-Modified: <2012-05-02 12:34:54>
+
+  suppressPackageStartupMessages(require("rpanel"))
+
+
+  # default dimensions (in px)
+  w <- 1200      # width of the window
+  h <- 50       # height of elements
+  spacer <- 10  # height of spacer
+  main.height=700
+
+  # main window
+  win <- rp.control(title="Regionalisation", size=c(w,main.height),aschar=F)
+
+
+  nRows <- 20
+  nBoxes <- 20
+  hSel <- 380
+
+
+  ## selection for weights associated with each variable
+  rp.textentry.immediate(win, var=weightbox, labels=selectedVariables, title="Weighting", initval=varweights,pos=c(spacer,spacer,w/3-spacer,main.height/2-spacer),
+               action=function(win) {
+                   return(win) })
+
+  rp.textentry.immediate(win, var=transformbox, labels=selectedVariables, title="Transformations", initval=vartransforms,pos=c(w/3+spacer,spacer,w/3-spacer,main.height/2-spacer),
+               action=function(win) {
+                   return(win) })
+
+  ## provide example transformations
+  example.transforms.labels=c('log10(-1*negative values only)','log10(x+1)','Square root')
+  example.transforms.functions=list('"x[x>=0]=NA; log10(-x)"','"log10(x+1)"','"sqrt(x)"')
+  rp.textentry(win, var=exampletransformbox, labels=example.transforms.labels, title="Example transformations",initval=example.transforms.functions,pos=c(2*w/3+spacer,spacer,w/3-spacer,main.height/2-spacer),
+               action=function(win) {
+                   return(win) })
+
+  ## number of groups in final result
+  ## to add
+
+  ## quality of run? better quality is slower, which can be painful at the exploratory stage
+  rp.radiogroup(win, quality, values=c('Exploratory run (faster)','Final run (better quality)'), title="Analysis type", pos=c(spacer,main.height/2+spacer, w/4-spacer, main.height/4-spacer))
+
+  ## location
+  rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=lat.max , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer,w/8-spacer,h))
+  rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=lon.min, showvalue=TRUE, pos=c(w/4+spacer,main.height/2+spacer+h,w/8-spacer,h))
+  rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=lon.max , showvalue=TRUE, pos=c(w/4+5*w/32+spacer,main.height/2+spacer+h,w/8-spacer,h))
+  rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=lat.min , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer+2*h,w/8-spacer,h))
+
+  rp.slider(win, n.groups,  from=2, to=40,  resolution=1,   title="Number of clusters"   , initval=12 , showvalue=TRUE, pos=c(3*w/4+spacer,main.height/2+spacer,w/4-spacer,h))
+
+  ## hide output directory for now, since we aren't using it
+  rp.text(win,txt=paste("Output directory:",output.dir),pos=c(spacer,main.height-2*h-2*spacer,w-spacer*2,h))
+
+  rp.button(win,title="Run", pos=c(w-100,main.height-h-spacer,80,h), action=function(win, ...) {
+
+      lat.step=0.1
+      lon.step=0.1
+      quality="low"
+      if (grepl('^Final',win$quality)) {
+          quality="high"
+      }
+      weights=lapply(win$weightbox,as.numeric)
+#      cat(sprintf('gui weights:\n'))
+#      cat(str(weights))
+
+      b=bioreg(variables=selectedVariables,n.groups=win$n.groups,weights=weights, transformations=win$transformbox,lat.min=win$lat.min,lat.max=win$lat.max,lat.step=lat.step,lon.min=win$lon.min,lon.max=win$lon.max,lon.step=lon.step,quality=quality,output.dir=output.dir,...)
+      return(win) })
+
+
+  rp.button(win,title="Start again", pos=c(spacer,main.height-h-spacer,80,h), action=function(win) {
+      tkdestroy(win$window)
+      do.bioreg()
+      return(win) })
+
+  return(win)
+
+}
