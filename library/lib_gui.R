@@ -137,11 +137,12 @@ do.brt <- function(...) {
 
   # default dimensions (in px)
   w <- 600      # width of the window
+  w.h <- 700    # height of the window
   h <- 50       # height of elements
   spacer <- 10  # height of spacer
 
   # main window
-  win <- rp.control(title="Run BRT model", size=c(w,700))
+  win <- rp.control(title="Run BRT model", size=c(w,w.h))
 
 
   rp.button(win, title="Choose file", pos=c(0, 0, w/4, h), action=function(win) {
