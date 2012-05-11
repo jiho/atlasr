@@ -34,6 +34,9 @@ function.maker <- function(str) {
 }
 
 
+## Run bioregionalisation
+#-----------------------------------------------------------------------------
+
 bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quality=c("low","high"), path="env_data", output.dir=NULL)
 {
     #
