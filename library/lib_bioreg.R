@@ -16,21 +16,25 @@ get.bioreg.colourmap <- function(n=10) {
     # n     number of colours on the scale
     #
 
-    # base colour map (16 colours)
-    cmap <- c("#C7D79EFF", "#FA9864FF", "#BEFFE8FF", "#D69DBCFF", "#F7ED59FF", "#A5F57AFF", "#FF3D4AFF", "#7AB6F5FF", "#369C5DFF", "#A80084FF", "#AA66CDFF", "#FFAA00FF", "#7AF5CAFF", "#FFBEBEFF", "#0070FFFF", "#E9FFBEFF")
-    # repeat it if necessary (n > 16)
-    cmap <- rep(cmap, ceiling(n/length(cmap)))
-    # extract colours
-    cmap <- cmap[1:n]
 
-    return(cmap)
-}
+    # base colour map from http://colorbrewer2.org/
+    suppressPackageStartupMessages(require("RColorBrewer", quietly=TRUE))
+    cmap <- brewer.pal(12, "Set3")    # NB: 12 is the maximum
 
+    # prepare saturated and under-saturated versions of the colors for use when n > 122
+    cmapHSV <- rgb2hsv(col2rgb(cmap))
 
 mcolor <- function(x, y=NULL, z=NULL, interp=FALSE, col=topo.colors(100), clim=NULL) {
     # plot a colour map
     # TODO replace that with ggplot calls
     # uses rasterImage() as a faster alternative to image()
+    cmapSat <- cmapHSV
+    # saturate
+    cmapSat["s",] <- cmapSat["s",] + 0.2
+    # ensure saturation is less than 1
+    cmapSat["s",][cmapSat["s",] > 1] <- 1
+    # convert to colors
+    cmapSat <- hsv(cmapSat[1,], cmapSat[2,], cmapSat[3,])
 
     if (is.null(y) & is.null(z)) {
         z=x
@@ -42,6 +46,20 @@ mcolor <- function(x, y=NULL, z=NULL, interp=FALSE, col=topo.colors(100), clim=N
     if (!is.null(clim)) {
        tempz[tempz<clim[1]]=clim[1]
        tempz[tempz>clim[2]]=clim[2]
+    cmapUndersat <- cmapHSV
+    # de-saturate
+    cmapUndersat["s",] <- cmapUndersat["s",] - 0.3
+    # ensure saturation is less than 1
+    cmapUndersat["s",][cmapUndersat["s",] < 0] <- 0
+    # convert to colors
+    cmapUndersat <- hsv(cmapUndersat[1,], cmapUndersat[2,], cmapUndersat[3,])
+
+    cmap <- c(cmap, cmapSat, cmapUndersat)
+    # barplot(rep(1, times=36), col=cmap)
+
+    # extract colours
+    if (n > length(cmap)) {
+      warning("Not enough colours to plot everything. It is unlikely that you will be able to discriminate between more than 36 colors on the plot anyway.")
     }
     temp=round((apply(t(tempz),2,rev)-min(tempz,na.rm=T))*(ncolours-1)/(max(tempz,na.rm=T)-min(tempz,na.rm=T)))+1
     tempa=as.raster(col[temp],nrow=dim(temp)[1])
@@ -51,6 +69,9 @@ mcolor <- function(x, y=NULL, z=NULL, interp=FALSE, col=topo.colors(100), clim=N
     ybin=mean(abs(diff(y)))
     plot(c(min(x,na.rm=T)-xbin/2,max(x,na.rm=T)+xbin/2),c(min(y,na.rm=T)-ybin/2,max(y,na.rm=T)+ybin/2),type="n",xlab="",ylab="",xlim=c(min(x,na.rm=T)-xbin/2-0.05,max(x,na.rm=T)+xbin/2+0.05),ylim=c(min(y,na.rm=T)-ybin/2-0.05,max(y,na.rm=T)+ybin/2+0.05),yaxs='i', xaxs='i')
     rasterImage(tempa,min(x,na.rm=T)-xbin/2,min(y,na.rm=T),max(x,na.rm=T)+xbin/2,max(y,na.rm=T),interp=F)
+    cmap <- cmap[1:n]
+
+    return(cmap)
 }
 
 
