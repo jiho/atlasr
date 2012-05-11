@@ -144,6 +144,8 @@ do.brt <- function(...) {
   # main window
   win <- rp.control(title="Run BRT model", size=c(w,w.h))
 
+  # NB: positions are x, y, width, eight
+  #     x, y are the coordinates of the top-left hand corner
 
   rp.button(win, title="Choose file", pos=c(0, 0, w/4, h), action=function(win) {
 
