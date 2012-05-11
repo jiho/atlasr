@@ -4,7 +4,7 @@
 #     - modification of rpanel widgets
 #     - BRT GUI
 #
-# (c) Copyright 2012 Jean-Olivier Irisson
+# (c) Copyright 2012 Jean-Olivier Irisson, Ben Raymond
 #     GNU General Public License v3
 #
 #-----------------------------------------------------------------------------
