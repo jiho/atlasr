@@ -66,7 +66,6 @@ function.maker <- function(str) {
     # empty function
     f <- function(x) {}
     environment(f) <- baseenv()
-    # TODO why is that necessary? the function should get all its arguments passed to it?
 
     str <- str_c("{",str,"}") # make sure str is enclosed in curly brackets (will it matter if user also supplies these? - to check)
 
@@ -177,8 +176,6 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         data.transformed[is.infinite(data.transformed[,i]),i] <- NA
 
         # normalise each column of x to 0-1 range
-        # TODO: wouldn't scaling (0 mean, unit variance) be more appropriate?
-        # data.transformed[,i] <- scale(data.transformed[,i])
         data.transformed[,i] <- data.transformed[,i] - min(data.transformed[,i], na.rm=T)
         data.transformed[,i] <- data.transformed[,i] / max(data.transformed[,i], na.rm=T)
 
