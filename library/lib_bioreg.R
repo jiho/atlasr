@@ -259,7 +259,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     datam <- melt(data.raw[,c(variables, "cluster")], id.vars="cluster")
     # print(ggplot(na.omit(datam)) + geom_violin(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free"))
     # boxplot for now
-    print(ggplot(na.omit(datam)) + geom_boxplot(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free"))
+    variablesPlot <- ggplot(na.omit(datam)) + geom_boxplot(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free")
+    print(variablesPlot)
 
     # Image map
     dev.new()
@@ -271,6 +272,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         clusterMap <- polar.ggplot(data.raw, geom="point", aes(colour=cluster)) + scale_colour_manual(values=cmap)
         ## TODO fix error when longitudes of [-180,180] are used: gap in plot at lon==180
     }
+    print(clusterMap)
 
     # Output data
     if (!is.null(output.dir)) {
