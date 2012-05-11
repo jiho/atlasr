@@ -265,12 +265,10 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     dev.new()
     if (quality=="low") {
         clusterMap <- ggplot(data.raw, aes(x=lon, y=lat)) + geom_raster(aes(fill=cluster)) + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) + scale_fill_manual(values=c(cmap))
+        # TODO use polat.ggplot with subsampling and geom_tile instead?
 
     } else {
-        print(polar.ggplot(data.raw, geom="tile", aes(colour=cluster,fill=cluster), lat.precision=1, lon.precision=2) + scale_colour_manual(values=cmap) + scale_fill_manual(values=cmap))
-        ## TODO subsample the plot for speed. need to find a workaround or have an option in the function + GUI
-        ## BR: may not need subsampling: this will only be run now for "high" quality, so speed is not quite so much of an issue. Final plots should not be subsampled anyway: we lose too much detail
-        ## BR: have switched to geom=tile, which is slower, but looks much nicer (for "high" quality). If you prefer point geometry that's fine by me
+        clusterMap <- polar.ggplot(data.raw, geom="point", aes(colour=cluster)) + scale_colour_manual(values=cmap)
         ## TODO fix error when longitudes of [-180,180] are used: gap in plot at lon==180
     }
 
