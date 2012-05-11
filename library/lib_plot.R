@@ -114,7 +114,19 @@ discrete.colourmap <- function(n=10) {
     return(cmap)
 }
 
+continuous.colourmap <- function(n=10) {
+  #
+  # Define a sequence of colours on a gradient
+  #
 
+  # get nice colours
+  suppressPackageStartupMessages(require("RColorBrewer", quietly=TRUE))
+  colours <- brewer.pal(n=6, name="Spectral")
+
+  # interpolate them
+  colorRampPalette(colors=colours, space="Lab")(n)
+
+}
 
 plot.pred <- function(x, ...) {
   #
