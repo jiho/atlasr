@@ -50,7 +50,7 @@ check.get.env.data <- function(path="env_data") {
 }
 
 
-list.env.data <- function(variables="", path="env_data", full=FALSE, ...) {
+list.env.data <- function(variables="", path="env_data", full=FALSE, match.names=TRUE, ...) {
   #
   # List available environment variables
   #
@@ -69,10 +69,15 @@ list.env.data <- function(variables="", path="env_data", full=FALSE, ...) {
   ncFiles <- list.files(path, pattern=glob2rx("*.nc"), full.names=TRUE)
 
   ncVariables <- str_replace(ncFiles, paste(path, "/", sep=""), "")
-  ncVariables <- str_replace(ncVariables, "_0.1_0.1.nc", "")
+  ncVariables <- str_replace(ncVariables, "_0.1_0.1", "") ## this string does not appear in most recent version of env filenames, but keep for backwards compatibility
+  ncVariables <- str_replace(ncVariables, ".nc", "")
 
   # possibly match and expand variable names
-  ncVariablesMatched <- match.vars(variables, ncVariables, ...)
+  if (match.names) {
+      ncVariablesMatched <- match.vars(variables, ncVariables, ...)
+  } else {
+      ncVariablesMatched <- variables
+  }
   #ncFilesMatched <- ncFiles[ncVariables %in% ncVariablesMatched]   ## this does not maintain consistent ordering between ncVariablesMatched and ncFilesMatched, which causes problems later
   ncFilesMatched=c()
   for (i in 1:length(ncVariablesMatched)) {
@@ -107,8 +112,8 @@ read.env.data <- function(variables="", path="env_data", ...) {
   message("-> Read environment data")
 
   # select which netCDF files to read
-  ncFiles = list.env.data(variables, path, full=T, quiet=FALSE)
-  ncVariables = list.env.data(variables, path, quiet=TRUE)
+  ncFiles = list.env.data(variables, path, full=T, quiet=FALSE, ...)
+  ncVariables = list.env.data(variables, path, quiet=TRUE, ...)
   # NB: inform about variable names expansion only for the first pass
 
   # read data inside each file
