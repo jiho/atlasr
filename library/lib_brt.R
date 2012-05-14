@@ -1142,7 +1142,7 @@ do.brt <- function(...) {
 
     # build environment variables list
     allVariables <- list.env.data()
-    rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables",  rows=nRows, pos=c(2*w/3, h, w/3, hSel-h), action=function(win) {
+    rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables",  rows=nRows, cols=22, pos=c(2*w/3, h, w/3, hSel-h), action=function(win) {
       if (all(win$variables == "")) {
         rp.messagebox("At least one variable must be selected", title="Warning")
       }
