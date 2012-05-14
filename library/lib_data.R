@@ -78,11 +78,9 @@ list.env.data <- function(variables="", path="env_data", full=FALSE, match.names
   } else {
       ncVariablesMatched <- variables
   }
-  #ncFilesMatched <- ncFiles[ncVariables %in% ncVariablesMatched]   ## this does not maintain consistent ordering between ncVariablesMatched and ncFilesMatched, which causes problems later
-  ncFilesMatched=c()
-  for (i in 1:length(ncVariablesMatched)) {
-      ncFilesMatched[i] <- ncFiles[ncVariables == ncVariablesMatched[[i]]]
-  }
+
+  # get corresponding file names (in the same order!)
+  ncFilesMatched <- ncFiles[match(ncVariablesMatched, ncVariables)]
 
   if (full) {
     return(ncFilesMatched)
