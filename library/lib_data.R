@@ -68,9 +68,10 @@ list.env.data <- function(variables="", path="env_data", full=FALSE, ...) {
   # list all files and transform file names into variable names
   ncFiles <- list.files(path, pattern=glob2rx("*.nc"), full.names=TRUE)
 
-  ncVariables <- str_replace(ncFiles, paste(path, "/", sep=""), "")
-  ncVariables <- str_replace(ncVariables, "_0.1_0.1", "") ## this string does not appear in most recent version of env filenames, but keep for backwards compatibility
-  ncVariables <- str_replace(ncVariables, ".nc", "")
+  ncVariables <- str_replace(ncFiles, str_c(path, "/"), "")
+  ncVariables <- str_replace(ncVariables, fixed("_0.1_0.1"), "")
+  # NB: this string does not appear in most recent version of env filenames, but keep for backwards compatibility
+  ncVariables <- str_replace(ncVariables, fixed(".nc"), "")
 
   # possibly match and expand variable names
   ncVariablesMatched <- match.vars(variables, ncVariables, ...)
