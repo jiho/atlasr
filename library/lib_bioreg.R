@@ -385,7 +385,6 @@ plot.pred.bioreg <- function(x, quick=FALSE, path="env_data", ...) {
     clusterMap <- polar.ggplot(x, aes(colour=cluster)) +
       # nice colours
       scale_colour_manual(values=cmap)
-    ## TODO fix error when longitudes of [-180,180] are used: gap in plot at lon==180
 
   }
 
