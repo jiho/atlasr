@@ -235,7 +235,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     cmap <- discrete.colourmap(n.groups)
 
     # Dendrogram
-    dev.new()
+    devAskNewPage(TRUE)
     # dendrogram
     plot(hcl, labels=F, hang=-1)
     # cutting level
@@ -245,12 +245,12 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     points(1:200, rep(-0.02, num.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
 
     # plot of variables distributions within each cluster
-    dev.new()
+    devAskNewPage(TRUE)
     variablesPlot <- plot.bioreg(data.raw)
     print(variablesPlot)
 
     # Image map
-    dev.new()
+    devAskNewPage(TRUE)
     if (quality=="low") {
         # read coordinates of land masses
         land <- read.csv(str_c(path, "/worldmap-below_30-rough-no_countries.csv"))
