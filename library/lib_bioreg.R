@@ -396,51 +396,69 @@ plot.pred.bioreg <- function(x, quick=FALSE, path="env_data", ...) {
 #-----------------------------------------------------------------------------
 
 do.bioreg <- function(...) {
-    ##
-    ## Open a GUI to select the arguments of the bioreg() function
-    ##
-    ## ...   passed to bioreg()
-    ##
-    ## Ben Raymond
-    ## Last-Modified: <2012-05-10 10:22:33>
+  #
+  # Open a GUI to select the arguments of the bioreg() function
+  #
+  # ...   passed to bioreg()
+  #
+  # Ben Raymond
+  # Last-Modified: <2012-05-10 10:22:33>
 
   suppressPackageStartupMessages(require("rpanel"))
 
+  # First window: selection of variables
 
-  # default dimensions (in px)
-  w <- 600      # width of the window
-  h <- 50       # height of elements
-  spacer <- 10  # height of spacer
-  main.height=700
-
-  # main window
-  win <- rp.control(title="Regionalisation", size=c(w,main.height),aschar=F)
-
-
-  nRows <- 30
-  nBoxes <- 20
-  hSel <- 380
+  # available variables
   allVariables <- list.env.data()
 
-  rp.text(win,txt="Choose the variables to use in the regionalisation analysis",pos=c(spacer,spacer,w-2*spacer,40))
+  # dimensions (in px)
 
-  blah=rp.listbox.mult(win, var=availableVariables, vals=allVariables, title="Available variables",  rows=nRows, cols=min(50,max(sapply(allVariables,nchar))), initval="", pos=c(spacer, 40+spacer, w-2*spacer, main.height-40-h-2*spacer), aschar=F, action=function(win) {
-      if (all(win$availableVariables == "")) {
-          rp.messagebox("At least two variables must be selected", title="Warning")
-      }
-      return(win)
+  # heights
+  # height of the list of variables
+  l.h <- 380
+  # this is roughly equivalent to 20 rows in the selection list
+  nRows <- 24
+  # default height of elements
+  h <- 50
+  # the window has a button in addition to the list
+  w.h <- l.h + h
+
+  # widths
+  # widths of variables names and selection list
+  widthVariables <- max(sapply(allVariables, nchar))
+  # in fact, because this is not a fixed width font, the number of columns to accomodate the text is often smaller.
+  # we use a 20% reduction
+  widthList <- round(widthVariables * 0.8)
+  # the width of the list determines the width of the window
+  # a column is ~ 8.5 pixels
+  w <- round(8.5 * widthList + 5)
+
+
+  # main window
+  win <- rp.control(title="Run regionalisation analysis", size=c(w, w.h), aschar=F)
+
+  # NB: positions are x, y, width, eight
+  #     x, y are the coordinates of the top-left hand corner
+
+  # variable list
+  blah <- rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables to use in the regionalisation", rows=nRows, cols=widthList, initval="", pos=c(0, 0, w, l.h), aschar=F, action=function(win) {
+    if (all(win$variables == "")) {
+      rp.messagebox("At least two variables must be selected", title="Warning")
+    }
+    return(win)
   })
 
-  ## destination directory for output files and then proceed to second GUI panel
-  rp.button(win, title="Choose directory for output files", pos=c(spacer,main.height-h-spacer,w-2*spacer,h), action=function(win) {
-      if (length(win$availableVariables)<2) {
-          rp.messagebox("At least two variables must be selected first", title="Warning")
-      } else {
-          outputDir=tk_choose.dir(getwd(), "Choose a suitable folder for the output files")
-          tkdestroy(win$window)
-          bioreg.secondpanel(win$availableVariables,output.dir=outputDir,...)
-      }
-      return(win) })
+  # destination directory for output files and then proceed to second GUI panel
+  rp.button(win, title="Choose directory for output files", pos=c(0,l.h,w,h), action=function(win) {
+    if (length(win$variables)<2) {
+        rp.messagebox("At least two variables must be selected first", title="Warning")
+    } else {
+        outputDir <- tk_choose.dir(getwd(), "Choose a suitable folder for the output files")
+        tkdestroy(win$window)
+        do.bioreg.secondpanel(win$variables, output.dir=outputDir, ...)
+    }
+    return(win)
+  })
 }
 
 bioreg.secondpanel <- function(selectedVariables,varweights=rep(1,length(selectedVariables)),vartransforms=rep("",length(selectedVariables)),output.dir=getwd(),lon.min=30,lon.max=60,lat.min=-62,lat.max=-45) {
