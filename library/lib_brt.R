@@ -521,7 +521,7 @@ require(gbm)
 }
 
 
-## Run BRT analysis 
+## Run BRT analysis
 #-----------------------------------------------------------------------------
 
 brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "poisson"), tree.complexity = 2, n.boot.effects=0, plot.layout = c(2,2), predict=FALSE, newdata=data, extrapolate.env=FALSE, n.boot.pred=0, quick=TRUE, quiet=FALSE, ...) {
@@ -600,7 +600,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     # initial values before entering the while loop
     lr = 0.05
     no.trees = 0
-    
+
     # NB: gbm.plot uses eval() in the global environment to find the dataset which was used to fit the model
     #     to avoid conflicts, we use a funky name
     myFunkyDatasetNameForGbmPlot <- data
@@ -671,7 +671,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
     # Plot effects
     #-------------------------------------------------------------------------
-    
+
     if (n.boot.effects != 0) {
 
         # perform bootstrap
@@ -776,7 +776,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
 
   # read dataset
   if (file.exists(file)) {
-    observed_data <- read.data(file)    
+    observed_data <- read.data(file)
     file <- normalizePath(file, winslash="/")
   } else {
     stop("Cannot find file : ", file)
@@ -789,21 +789,21 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   # filter-out unwanted locations
   observed_data <- observed_data[observed_data$lat >= lat.min & observed_data$lat <= lat.max &
                                  observed_data$lon >= lon.min & observed_data$lon <= lon.max,]
-                                 
+
   # bin observation data
   if (bin) {
     observed_data <- rasterize(observed_data, c("lat", "lon"), precisions=c(lat.step, lon.step), fun=mean, na.rm=T)
     # NB: when the initial data is abundance, if makes sense to compute the average abundance per bin
     #     when the initial data is presence, we compute the average number of presence per bin while we want a boolean response (0 or 1)
     #     but it is actually OK, because the family should then be `bernoulli` and the data is reconverted to presence/absence only in the brt() function
-    
+
   }
-  
+
   # read selected variables from the database
   database <- read.env.data(variables, path=path, quiet=FALSE)
   # remove information on land
   database <- mask.env.data(database, path=path)
-  
+
   # get full, expanded names of selected environment variables
   variables <- names(database)
 
@@ -967,7 +967,7 @@ summary.brt.list <- function(x) {
   #
   # x   an object of class brt.list
   #
-  
+
   lapply(x, summary.brt)
   return(invisible(x))
 }
@@ -980,7 +980,7 @@ plot.brt <- function(x, plot.layout=c(2,2), ...) {
   # x             object of class brt
   # plot.layout   dimensions of the matrix of plots
   #
-  
+
   # NB: gbm.plot uses eval() in the global environment to find the dataset which was used to fit the model
   #     this is highly flawed and only works when used interactively directly from the command prompt
   #     to ensure this works, we write the dataset to the global environment with the name it had when running the model fit
@@ -1049,10 +1049,10 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
         }
       }
     }
-    
+
     # add a title
     p = p + opts(title=paste(x$obj$gbm.call$response.name, "- BRT"))
-        
+
     return(p)
   }
 }
