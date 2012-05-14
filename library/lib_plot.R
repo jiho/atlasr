@@ -139,6 +139,33 @@ plot.pred <- function(x, ...) {
 ## Plotting functions
 #-----------------------------------------------------------------------------
 
+layer_land <- function(x, expand=1, path="env_data", ...) {
+  #
+  # Produce a ggplot layer with coastlines corresponding to a dataset
+  #
+  # x       dataset of interest, with columns lon and lat at least
+  #         the boundaries of the land layer are taken from this
+  # expand  how much to expand the land layer around the data (in lon/lat units)
+  # path    path to environmental database
+  #
+
+  # read coordinates of land masses
+  land <- read.csv(str_c(path, "/worldmap-below_30-rough-no_countries.csv"))
+
+  # get data range
+  lats <- range(x$lat, na.rm=TRUE) + c(-expand, +expand)
+  lons <- range(x$lon, na.rm=TRUE) + c(-expand, +expand)
+
+  # select portions of land which fit this data
+  land <- land[land$lat >= lats[1] & land$lat <= lats[2] & land$lon >= lons[1] & land$lon <= lons[2],]
+  # TODO use cut polygon in one of the mapping libraries
+
+  landLayer <- geom_path(aes(x=lon, y=lat), size=0.3, data=land, na.rm=T)
+
+  return(landLayer)
+}
+
+
 polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.precision=NULL, lon.precision=NULL, coast=NULL, ...) {
   #
   # data          data frame with columns lat, lon, and variables to plot
@@ -348,3 +375,4 @@ plot.env.data <- function(variables="", path="env_data", ...) {
 
   return(invisible(NULL))
 }
+

@@ -226,55 +226,15 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     data.raw <- rename(data.raw, c(hclust.num="cluster"))
     data.raw$cluster <- factor(data.raw$cluster)
 
-    message("-> Produce plots")
-
-    # get a nice colour map
-    cmap <- discrete.colourmap(n.groups)
-
-    # Dendrogram
-    devAskNewPage(TRUE)
-    # dendrogram
-    plot(hcl, labels=F, hang=-1)
-    # cutting level
-    lines(c(1,num.groups.intermediate), c(temph,temph), lty=2, col="red")
-    # markers for group labels
-    colours <- cmap[hclust.num][hcl$order]
-    points(1:200, rep(-0.02, num.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
-
-    # plot of variables distributions within each cluster
-    devAskNewPage(TRUE)
-    variablesPlot <- plot.bioreg(data.raw)
-    print(variablesPlot)
-
-    # Image map
-    devAskNewPage(TRUE)
-    if (quality=="low") {
-        # read coordinates of land masses
-        land <- read.csv(str_c(path, "/worldmap-below_30-rough-no_countries.csv"))
-        if (F) {
-            ## ggplot-based version: this has problems - the land layer does not line up with the raster, and the colours in the raster don't match the clustering results quite right
-            landLayer <- geom_polygon(aes(x=lon, y=lat), alpha=0.5, data=land)
-            clusterMap <- ggplot(data.raw, aes(x=lon, y=lat)) + geom_raster(aes(fill=cluster)) + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) + scale_fill_manual(values=c(cmap)) + landLayer + theme_bw() # use theme_bw() otherwise missing data (grey) looks very similar to the grey cluster
-            # TODO use polar.ggplot with subsampling and geom_tile instead? # BR- would prefer not, it will lose too much detail
-            print(clusterMap)
-        } else {
-            temp <- join(prediction_grid, data.raw[,c("lon","lat","cluster")], by=c("lon","lat"))
-            nrow=attr(prediction_grid,'out.attrs')$dim[1]
-            temp$cluster=as.numeric(temp$cluster)
-            mcolor(matrix(temp$lon,nrow=nrow),matrix(temp$lat,nrow=nrow),matrix(temp$cluster,nrow=nrow),col=cmap)
-            lines(land$lon,land$lat)
-        }
-    } else {
-        clusterMap <- polar.ggplot(data.raw, geom="point", aes(colour=cluster)) + scale_colour_manual(values=cmap)
-        ## TODO fix error when longitudes of [-180,180] are used: gap in plot at lon==180
-        print(clusterMap)
-    }
 
     # Output data
     # define the output to be of class "bioreg"
     class(data.raw) <- c("bioreg", class(data.raw))
 
-    if (!is.null(output.dir)) {
+    # should we save some data on disk ?
+    output <- !is.null(output.dir)
+
+    if (output) {
       message("-> Write output to ", output.dir)
 
       # use a date/time based suffix to differenciate between runs
@@ -296,7 +256,55 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
       cat("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]\n", file=str_c(baseName, ".prj"))
 
     }
-    invisible(data.raw) # invisible() so that it doesn't get printed to console if not assigned to a variable
+
+    message("-> Produce plots")
+
+    if (output) {
+      # plot in a PDF file
+      pdfFile <- str_c(baseName, ".pdf")
+      pdf(pdfFile, width=11.7, height=8.3)
+    }
+
+    # get a nice colour map
+    cmap <- discrete.colourmap(n.groups)
+
+    # Dendrogram
+    # dendrogram
+    plot(hcl, labels=F, hang=-1)
+    # cutting level
+    lines(c(1,num.groups.intermediate), c(temph,temph), lty=2, col="red")
+    # markers for group labels
+    colours <- cmap[hclust.num][hcl$order]
+    points(1:200, rep(-0.02, num.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
+
+    # ask for further plots
+    ask <- devAskNewPage()
+    if (!output) devAskNewPage(TRUE)
+
+    # plot of variables distributions within each cluster
+    variablesPlot <- plot.bioreg(data.raw)
+    # TODO plot both violin and boxplots
+    print(variablesPlot)
+
+    # Image map
+    if (quality=="low") {
+      quick=TRUE
+    } else {
+      quick=FALSE
+    }
+    clusterPlot <- plot.pred.bioreg(data.raw, quick=quick)
+    print(clusterPlot)
+
+    # switch back to old setting
+    devAskNewPage(ask)
+
+    if (output) {
+      # close the PDF file
+      dev.off()
+    }
+
+    invisible(data.raw)
+    # NB: invisible() so that it doesn't get printed to console if not assigned to a variable
 }
 
 ## Plots
@@ -352,6 +360,47 @@ plot.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
 
   return(p)
 }
+
+plot.pred.bioreg <- function(x, quick=FALSE, path="env_data", ...) {
+  #
+  # Plot a map of bioregionalisation clusters
+  #
+  # x     data.frame of class "bioreg" resulting from a bioreg() call
+  # quick when TRUE, use a raster plot with no projection; when FALSE, use a vector plot with polar stereographic projection
+  #
+
+  suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+
+  # get colours
+  cmap <- discrete.colourmap(n=nlevels(x$cluster))
+
+  if (quick) {
+    # raster based plot
+
+    clusterMap <- ggplot(x, aes(x=lon, y=lat)) +
+      geom_raster(aes(fill=cluster)) +
+      # no extra space
+      scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) +
+      # nice colours
+      scale_fill_manual(values=c(cmap)) +
+      # super-impose land
+      layer_land(x) +
+      # use theme_bw() otherwise holes (missing data) look very similar to the grey cluster
+      theme_bw()
+
+  } else {
+    # polar projected plot
+
+    clusterMap <- polar.ggplot(x, aes(colour=cluster)) +
+      # nice colours
+      scale_colour_manual(values=cmap)
+    ## TODO fix error when longitudes of [-180,180] are used: gap in plot at lon==180
+
+  }
+
+  return(clusterMap)
+}
+
 
 ## GUI
 #-----------------------------------------------------------------------------
