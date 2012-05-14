@@ -50,7 +50,7 @@ check.get.env.data <- function(path="env_data") {
 }
 
 
-list.env.data <- function(variables="", path="env_data", full=FALSE, match.names=TRUE, ...) {
+list.env.data <- function(variables="", path="env_data", full=FALSE, ...) {
   #
   # List available environment variables
   #
@@ -73,11 +73,7 @@ list.env.data <- function(variables="", path="env_data", full=FALSE, match.names
   ncVariables <- str_replace(ncVariables, ".nc", "")
 
   # possibly match and expand variable names
-  if (match.names) {
-      ncVariablesMatched <- match.vars(variables, ncVariables, ...)
-  } else {
-      ncVariablesMatched <- variables
-  }
+  ncVariablesMatched <- match.vars(variables, ncVariables, ...)
 
   # get corresponding file names (in the same order!)
   ncFilesMatched <- ncFiles[match(ncVariablesMatched, ncVariables)]

@@ -88,6 +88,15 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
 
     # Check input arguments
+    # possibly expand variable names
+    allVariables <- list.env.data(variables, quiet=FALSE)
+    # when expansion occurs, stop/warn that transformations and weights might be problematic
+    if ((length(allVariables) != length(variables)) &&
+        (! is.null(transformations) || ! is.null(weights)) ) {
+      warning("Environment variables names were expanded; there are now ", length(allVariables), ". Please check that the number and order of transformations and weights matches.", immediate.=TRUE)
+    }
+    variables <- allVariables
+
     # variables
     if (length(variables) < 2) {
         stop("You must specify at least two input variables")
@@ -131,7 +140,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
     # Get and transform data
     # get database
-    database <- read.env.data(variables=variables, path=path, match.names=F)
+    database <- read.env.data(variables=variables, path=path)
     # remove information on land
     database <- mask.env.data(database, path=path)
     # build region of interest
