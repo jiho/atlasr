@@ -279,9 +279,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     if (!output) devAskNewPage(TRUE)
 
     # plot of variables distributions within each cluster
-    variablesPlot <- plot.bioreg(data.raw)
-    # TODO plot both violin and boxplots
-    print(variablesPlot)
+    print(boxplotPlot <- plot.bioreg(data.raw, geom="boxplot"))
+    print(violinPlot <- plot.bioreg(data.raw, geom="violin"))
 
     # Image map
     clusterPlot <- plot.pred.bioreg(data.raw, quick=quick)
