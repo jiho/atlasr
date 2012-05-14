@@ -2,12 +2,37 @@
 #     Perform abiotic regionalisation
 #
 # (c) Copyright 2012 Ben Raymond, ben dot raymond at aad dot gov dot au
-#     Last-Modified: <2012-05-07 12:59:45>
+#     Last-Modified: <2012-05-14 11:37:33>
 #
 #-----------------------------------------------------------------------------
 
 ## Toolbox functions
 #-----------------------------------------------------------------------------
+
+flipud <- function(A) A[nrow(A):1,]
+
+mcolor=function(x,y=NULL,z=NULL,interp=F,col=topo.colors(100),clim=NULL) {
+    ## uses rasterImage() as a faster alternative to image()
+    if (is.null(y) & is.null(z)) {
+        z=x
+        x=1:dim(z)[1]
+        y=1:dim(z)[2]
+    }
+    ncolours=length(col)
+    tempz=z
+    if (!is.null(clim)) {
+       tempz[tempz<clim[1]]=clim[1]
+       tempz[tempz>clim[2]]=clim[2]
+    }
+    temp=round((flipud(t(tempz))-min(tempz,na.rm=T))*(ncolours-1)/(max(tempz,na.rm=T)-min(tempz,na.rm=T)))+1
+    tempa=as.raster(col[temp],nrow=dim(temp)[1])
+
+    ## show on figure
+    xbin=mean(abs(diff(x)))
+    ybin=mean(abs(diff(y)))
+    plot(c(min(x,na.rm=T)-xbin/2,max(x,na.rm=T)+xbin/2),c(min(y,na.rm=T)-ybin/2,max(y,na.rm=T)+ybin/2),type="n",xlab="",ylab="",xlim=c(min(x,na.rm=T)-xbin/2-0.05,max(x,na.rm=T)+xbin/2+0.05),ylim=c(min(y,na.rm=T)-ybin/2-0.05,max(y,na.rm=T)+ybin/2+0.05),yaxs='i', xaxs='i')
+    rasterImage(tempa,min(x,na.rm=T)-xbin/2,min(y,na.rm=T),max(x,na.rm=T)+xbin/2,max(y,na.rm=T),interp=F)
+}
 
 function.maker <- function(str) {
     #
@@ -64,8 +89,6 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
     # Check input arguments
     # variables
-    # expand variable names
-    variables <- list.env.data(variables, quiet=FALSE)
     if (length(variables) < 2) {
         stop("You must specify at least two input variables")
     }
@@ -105,12 +128,10 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         }
         transformations <- tfuncs
     }
-    # cat(deparse(transformations[[1]]))
-
 
     # Get and transform data
     # get database
-    database <- read.env.data(variables=variables, path=path)
+    database <- read.env.data(variables=variables, path=path, match.names=F)
     # remove information on land
     database <- mask.env.data(database, path=path)
     # build region of interest
@@ -224,14 +245,26 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     # Image map
     dev.new()
     if (quality=="low") {
-        clusterMap <- ggplot(data.raw, aes(x=lon, y=lat)) + geom_raster(aes(fill=cluster)) + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) + scale_fill_manual(values=c(cmap))
-        # TODO use polat.ggplot with subsampling and geom_tile instead?
-
+        # read coordinates of land masses
+        land <- read.csv(str_c(path, "/worldmap-below_30-rough-no_countries.csv"))
+        if (F) {
+            ## ggplot-based version: this has problems - the land layer does not line up with the raster, and the colours in the raster don't match the clustering results quite right
+            landLayer <- geom_polygon(aes(x=lon, y=lat), alpha=0.5, data=land)
+            clusterMap <- ggplot(data.raw, aes(x=lon, y=lat)) + geom_raster(aes(fill=cluster)) + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) + scale_fill_manual(values=c(cmap)) + landLayer + theme_bw()
+                                        # TODO use polar.ggplot with subsampling and geom_tile instead?
+            print(clusterMap)
+        } else {
+            temp <- join(prediction_grid, data.raw[,c("lon","lat","cluster")], by=c("lon","lat"))
+            nrow=attr(prediction_grid,'out.attrs')$dim[1]
+            temp$cluster=as.numeric(temp$cluster)
+            mcolor(matrix(temp$lon,nrow=nrow),matrix(temp$lat,nrow=nrow),matrix(temp$cluster,nrow=nrow),col=cmap)
+            lines(land$lon,land$lat)
+        }
     } else {
         clusterMap <- polar.ggplot(data.raw, geom="point", aes(colour=cluster)) + scale_colour_manual(values=cmap)
         ## TODO fix error when longitudes of [-180,180] are used: gap in plot at lon==180
+        print(clusterMap)
     }
-    print(clusterMap)
 
     # Output data
     if (!is.null(output.dir)) {
