@@ -333,8 +333,10 @@ plot.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
     p <- ggplot() + geom_boxplot(aes(x=cluster, y=value, fill=cluster), data=xmB, outlier.size=1)
   }
 
-  # plot points for small clusters
-  p <- p + geom_point(aes(cluster, y=value, fill=cluster), data=xmS, shape=21, size=1.5)
+  # plot points for small clusters, if any
+  if (nrow(xmS) > 0) {
+    p <- p + geom_point(aes(cluster, y=value, fill=cluster), data=xmS, shape=21, size=1.5)
+  }
 
   # get colour map
   cmap <- discrete.colourmap(n=nlevels(x$cluster))
