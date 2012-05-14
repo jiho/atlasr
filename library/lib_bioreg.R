@@ -62,7 +62,7 @@ function.maker <- function(str) {
 ## Run bioregionalisation
 #-----------------------------------------------------------------------------
 
-bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quality=c("low","high"), path="env_data", output.dir=NULL)
+bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quick=TRUE, path="env_data", output.dir=NULL)
 {
     #
     # Perform bioregionalisation based on clustering
@@ -74,7 +74,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     # l**.step      definition of the grid on which the clustering will be done
     # transformations   list giving transformation function for each variable, or NULL for no transformations
     # weights       vector giving the weight for each variable
-    # quality       "low" or "high"; low quality is faster, suitable for exploratory runs; high quality for final analyses
+    # quick         TRUE produces less precise clustering and fast plots, suitable for exploratory runs; FALSE is for high quality final analyses
     # path          path where the environmental data is to be found
     # output.dir    destination for output files; if NULL, no output files will be saved
 
@@ -100,9 +100,6 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     if (length(variables) < 2) {
         stop("You must specify at least two input variables")
     }
-
-    # quality
-    quality <- match.arg(quality)
 
     # weights
     if (is.null(weights)) {
@@ -181,7 +178,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     num.groups.intermediate <- 200
 
     # number of samples according to the quality argument (smaller numbers speed-up computation)
-    samples <- switch(quality, low=5, high=50)
+    samples <- switch(quick, 5, 50)
 
     # perform clustering
     cl <- clara(data.trans.noNA, k=num.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
@@ -287,11 +284,6 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     print(variablesPlot)
 
     # Image map
-    if (quality=="low") {
-      quick=TRUE
-    } else {
-      quick=FALSE
-    }
     clusterPlot <- plot.pred.bioreg(data.raw, quick=quick)
     print(clusterPlot)
 
@@ -498,7 +490,7 @@ bioreg.secondpanel <- function(selectedVariables,varweights=rep(1,length(selecte
   ## to add
 
   ## quality of run? better quality is slower, which can be painful at the exploratory stage
-  rp.radiogroup(win, quality, values=c('Exploratory run (faster)','Final run (better quality)'), title="Analysis type", pos=c(spacer,main.height/2+spacer, w/4-spacer, main.height/4-spacer))
+  rp.radiogroup(win, quick, values=c('Exploratory run (faster)','Final run (better quality)'), title="Analysis type", pos=c(spacer,main.height/2+spacer, w/4-spacer, main.height/4-spacer))
 
   ## location
   rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=lat.max , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer,w/8-spacer,h))
@@ -515,15 +507,15 @@ bioreg.secondpanel <- function(selectedVariables,varweights=rep(1,length(selecte
 
       lat.step=0.1
       lon.step=0.1
-      quality="low"
-      if (grepl('^Final',win$quality)) {
-          quality="high"
+      quick=TRUE
+      if (grepl('^Final',win$quick)) {
+          quick=FALSE
       }
       weights=lapply(win$weightbox,as.numeric)
 #      cat(sprintf('gui weights:\n'))
 #      cat(str(weights))
 
-      b=bioreg(variables=selectedVariables,n.groups=win$n.groups,weights=weights, transformations=win$transformbox,lat.min=win$lat.min,lat.max=win$lat.max,lat.step=lat.step,lon.min=win$lon.min,lon.max=win$lon.max,lon.step=lon.step,quality=quality,output.dir=output.dir,...)
+      b=bioreg(variables=selectedVariables,n.groups=win$n.groups,weights=weights, transformations=win$transformbox,lat.min=win$lat.min,lat.max=win$lat.max,lat.step=lat.step,lon.min=win$lon.min,lon.max=win$lon.max,lon.step=lon.step,quick=quick,output.dir=output.dir,...)
       return(win) })
 
 
