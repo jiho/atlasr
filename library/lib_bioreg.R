@@ -197,6 +197,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     data.raw <- rename(data.raw, c(hclust.num="cluster"))
     data.raw$cluster <- factor(data.raw$cluster)
 
+    # define the output to be of class "bioreg"
+    class(data.raw) <- c("bioreg", class(data.raw))
 
     message("-> Produce plots")
 
@@ -213,12 +215,9 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     colours <- cmap[hclust.num][hcl$order]
     points(1:200, rep(-0.02, num.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
 
-    # Violin plot
+    # plot of variables distributions within each cluster
     dev.new()
-    datam <- melt(data.raw[,c(variables, "cluster")], id.vars="cluster")
-    # print(ggplot(na.omit(datam)) + geom_violin(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free"))
-    # boxplot for now
-    variablesPlot <- ggplot(na.omit(datam)) + geom_boxplot(aes(x=cluster, y=value, fill=cluster), colour="black") + scale_fill_manual(values=cmap, guide="none") + coord_flip() + facet_wrap(~variable, scales="free")
+    variablesPlot <- plot.bioreg(data.raw)
     print(variablesPlot)
 
     # Image map
@@ -241,6 +240,57 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     invisible(data.raw) # invisible() so that it doesn't get printed to console if not assigned to a variable
 }
 
+## Plots
+#-----------------------------------------------------------------------------
+
+plot.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
+  #
+  # Plot the effects in a bioregionalisation study:
+  # the values of the variables in each cluster
+  #
+  # x     data.frame of class "bioreg" resulting from a bioreg() call
+  # geom  type of plot: violin plot or boxplot
+  #
+
+  geom <- match.arg(geom)
+
+  # reformat data
+  cols <- setdiff(names(x), c("lon", "lat", "clara.num"))
+  xm <- melt(x[,cols], id.vars="cluster")
+  xm <- na.omit(xm)
+
+  # remove plotting box/violin plots for clusters with a very small number of points
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+  counts <- count(x, "cluster")
+  smallClusters <- na.omit(counts$cluster[which(counts$freq < 3)])
+
+  xmB <- xm[!xm$cluster %in% smallClusters,]
+  xmS <- xm[xm$cluster %in% smallClusters,]
+
+  suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+  if (geom == "violin") {
+    p <- ggplot() + geom_violin(aes(x=cluster, y=value, fill=cluster), data=xmB)
+  } else  {
+    p <- ggplot() + geom_boxplot(aes(x=cluster, y=value, fill=cluster), data=xmB)
+  }
+
+  # plot points for small clusters
+  p <- p + geom_point(aes(cluster, y=value, fill=cluster), data=xmS, shape=21, size=1.5)
+
+  # get colour map
+  cmap <- discrete.colourmap(n=nlevels(x$cluster))
+  p <- p +
+        # modify scales to use nice colours and *not* drop empty clusters
+        scale_fill_manual(values=cmap, drop=FALSE) +
+        scale_colour_manual(values=cmap, drop=FALSE) +
+        scale_x_discrete(drop=FALSE) +
+        # split in facets
+        facet_wrap(~variable, scales="free") +
+        # orient horizontally
+        coord_flip()
+
+  return(p)
+}
 
 ## GUI
 #-----------------------------------------------------------------------------
