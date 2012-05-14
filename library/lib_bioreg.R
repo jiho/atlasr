@@ -2,7 +2,7 @@
 #     Perform abiotic regionalisation
 #
 # (c) Copyright 2012 Ben Raymond, ben dot raymond at aad dot gov dot au
-#     Last-Modified: <2012-05-14 11:37:33>
+#     Last-Modified: <2012-05-14 14:16:34>
 #
 #-----------------------------------------------------------------------------
 
@@ -250,8 +250,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         if (F) {
             ## ggplot-based version: this has problems - the land layer does not line up with the raster, and the colours in the raster don't match the clustering results quite right
             landLayer <- geom_polygon(aes(x=lon, y=lat), alpha=0.5, data=land)
-            clusterMap <- ggplot(data.raw, aes(x=lon, y=lat)) + geom_raster(aes(fill=cluster)) + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) + scale_fill_manual(values=c(cmap)) + landLayer + theme_bw()
-                                        # TODO use polar.ggplot with subsampling and geom_tile instead?
+            clusterMap <- ggplot(data.raw, aes(x=lon, y=lat)) + geom_raster(aes(fill=cluster)) + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) + scale_fill_manual(values=c(cmap)) + landLayer + theme_bw() # use theme_bw() otherwise missing data (grey) looks very similar to the grey cluster
+            # TODO use polar.ggplot with subsampling and geom_tile instead? # BR- would prefer not, it will lose too much detail
             print(clusterMap)
         } else {
             temp <- join(prediction_grid, data.raw[,c("lon","lat","cluster")], by=c("lon","lat"))
