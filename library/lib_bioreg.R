@@ -330,7 +330,7 @@ plot.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
   if (geom == "violin") {
     p <- ggplot() + geom_violin(aes(x=cluster, y=value, fill=cluster), data=xmB)
   } else  {
-    p <- ggplot() + geom_boxplot(aes(x=cluster, y=value, fill=cluster), data=xmB)
+    p <- ggplot() + geom_boxplot(aes(x=cluster, y=value, fill=cluster), data=xmB, outlier.size=1)
   }
 
   # plot points for small clusters
