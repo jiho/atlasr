@@ -226,9 +226,6 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     data.raw <- rename(data.raw, c(hclust.num="cluster"))
     data.raw$cluster <- factor(data.raw$cluster)
 
-    # define the output to be of class "bioreg"
-    class(data.raw) <- c("bioreg", class(data.raw))
-
     message("-> Produce plots")
 
     # get a nice colour map
@@ -274,9 +271,30 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     }
 
     # Output data
+    # define the output to be of class "bioreg"
+    class(data.raw) <- c("bioreg", class(data.raw))
+
     if (!is.null(output.dir)) {
-        output.file <- normalizePath(str_c(output.dir,"/bioreg.Rdata"), winslash="/", mustWork=F)
-        save(data.raw, data.transformed, file=output.file)
+      message("-> Write output to ", output.dir)
+
+      # use a date/time based suffix to differenciate between runs
+      suffix <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
+      baseName <- normalizePath(str_c(output.dir,"/bioreg-", suffix), winslash="/", mustWork=F)
+
+      # Rdata
+      rdataFile <- str_c(baseName, ".Rdata")
+      save(data.raw, data.transformed, file=rdataFile)
+
+      # Shapefiles
+      suppressPackageStartupMessages(require("maptools", quietly=TRUE))
+      x <- as.data.frame(data.raw)
+      # NB: SpatialPointsDataFrame only accepts pure data.frame objects
+      xSp <- SpatialPointsDataFrame(x[c("lon", "lat")], x[c("cluster")], proj4string=CRS("+proj=longlat +datum=WGS84"))
+      writeSpatialShape(xSp, baseName)
+
+      # add the .prj file
+      cat("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]\n", file=str_c(baseName, ".prj"))
+
     }
     invisible(data.raw) # invisible() so that it doesn't get printed to console if not assigned to a variable
 }
