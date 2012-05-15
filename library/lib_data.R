@@ -114,6 +114,7 @@ check.get.env.data <- function(path="env_data") {
   # path  where to store the netCDF files of the database
   #
 
+  # TODO compare the list of files online and locally and update the missing ones + remove the local ones which are not on the server
   if (! file.exists(path)) {
     warning("No environment database", call.=FALSE, immediate.=TRUE)
     dl.env.data(path=path)
