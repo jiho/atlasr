@@ -182,10 +182,12 @@ require(gbm)
 # first get the original analysis details..
 
   gbm.call <- gbm.object$gbm.call
-  train.data <- gbm.object$x
+  dd <- matrix(gbm.object$data$x, nrow=nrow(gbm.object$data$x.order))
+  train.data <- data.frame(gbm.object$data$y, dd)
+  names(train.data) <- c(gbm.call$response.name, gbm.call$predictor.names)
   n.obs <- nrow(train.data)
-  gbm.x <- gbm.call$gbm.x
-  gbm.y <- gbm.call$gbm.y
+  gbm.y <- 1
+  gbm.x <- 2:ncol(train.data)
   family <- gbm.call$family
   lr <- gbm.call$learning.rate
   tc <- gbm.call$tree.complexity
