@@ -262,14 +262,14 @@ require(gbm)
 
   }
 
-  cat("gbm.pred.bootstrap - version 2.9","\n\n")
-  cat("bootstrap resampling gbm.step model for ",response.name,"\n",sep="")
-  cat("with ",n.trees," trees and ",n.obs," observations\n\n",sep="")
-  if (bootstrap.predictions) {
-    cat("prediction dataset has ",n.pred.obs," rows\n\n",sep="")
-  } else {
-    cat("no prediction dataset provided...\n\n")
-  }
+  # cat("gbm.pred.bootstrap - version 2.9","\n\n")
+  # cat("bootstrap resampling gbm.step model for ",response.name,"\n",sep="")
+  # cat("with ",n.trees," trees and ",n.obs," observations\n\n",sep="")
+  # if (bootstrap.predictions) {
+  #   cat("prediction dataset has ",n.pred.obs," rows\n\n",sep="")
+  # } else {
+  #   cat("no prediction dataset provided...\n\n")
+  # }
 
 # initiate timing call
 
@@ -285,15 +285,15 @@ require(gbm)
 
   for (i in 1:n.reps) {
 
-    if (i == 6 & verbose) {
-
-      z2 <- unclass(Sys.time())
-      est.time <- (z2 - z1)/60  # time for five reps
-      est.time <- est.time * (n.reps/5) * 2  # multiply by two as sorting takes time
-      cat("five bootstrap samples processed \n"," estimated time for completion is ", round(est.time,1)," minutes \n",sep="")
-    } else {
-      if (verbose) cat(i,"\n")
-    }
+    # if (i == 6 & verbose) {
+    # 
+    #   z2 <- unclass(Sys.time())
+    #   est.time <- (z2 - z1)/60  # time for five reps
+    #   est.time <- est.time * (n.reps/5) * 2  # multiply by two as sorting takes time
+    #   cat("five bootstrap samples processed \n"," estimated time for completion is ", round(est.time,1)," minutes \n",sep="")
+    # } else {
+    #   if (verbose) cat(i,"\n")
+    # }
 
 # create a vector with which to select the bootstrap sample
 
@@ -354,7 +354,7 @@ require(gbm)
 
 # now caclulate the mean fitted and predicted values within the training data
 
-  cat("calculating final values \n")
+  # cat("calculating final values \n")
 
   if (bootstrap.model) {
 
@@ -495,7 +495,7 @@ require(gbm)
 
   elapsed.time <- round((z2 - z1)/60,2)
 
-  cat("analysis took ",round(elapsed.time,1)," minutes \n\n")
+  # cat("analysis took ",round(elapsed.time,1)," minutes \n\n")
 
   gbm.call$n.bootstrap.reps <- n.reps
   gbm.call$bootstrap.CI <- CI
