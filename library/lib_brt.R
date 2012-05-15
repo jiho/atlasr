@@ -993,7 +993,7 @@ plot.brt <- function(x, plot.layout=c(2,2), ...) {
   if (is.null(x$boot)) {
     gbm.plot(x$obj, plot.layout = plot.layout)
   } else {
-    gbm.plot.boot(x$obj, boot, plot.layout = plot.layout)
+    gbm.plot.boot(x$obj, x$boot, plot.layout = plot.layout)
   }
 
   rm(list=dataName, pos=.GlobalEnv)
