@@ -679,7 +679,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
         # perform bootstrap
         if ( ! quiet ) cat("    running bootstrap on BRT model\n")
         boot = NULL
-        try( boot = gbm.bootstrap(obj, n.reps=n.boot.effects, verbose=FALSE) )
+        boot <- tryCatch( gbm.bootstrap(obj, n.reps=n.boot.effects, verbose=FALSE), error=function(e) stop(e))
         if ( ! is.null(boot) ) {
             # when it runs correctly
             # store the output in the result object
