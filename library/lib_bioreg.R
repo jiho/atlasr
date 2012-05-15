@@ -178,7 +178,11 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     num.groups.intermediate <- 200
 
     # number of samples according to the quality argument (smaller numbers speed-up computation)
-    samples <- switch(quick, 5, 50)
+    if (quick) {
+      samples <- 5
+    } else {
+      samples <- 50
+    }
 
     # perform clustering
     cl <- clara(data.trans.noNA, k=num.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
