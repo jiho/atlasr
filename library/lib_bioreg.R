@@ -401,9 +401,10 @@ plot.pred.bioreg <- function(x, quick=FALSE, path="env_data", ...) {
 ## GUI
 #-----------------------------------------------------------------------------
 
-do.bioreg <- function(...) {
+do.bioreg <- function(lon.min=30, lon.max=60, lat.min=-62, lat.max=-45, ...) {
   #
   # Open a GUI to select the arguments of the bioreg() function
+  # First window: select variables and set all options
   #
   # ...   passed to bioreg()
   #
@@ -412,140 +413,225 @@ do.bioreg <- function(...) {
 
   suppressPackageStartupMessages(require("rpanel"))
 
-  # First window: selection of variables
-
-  # available variables
-  allVariables <- list.env.data()
-
-  # dimensions (in px)
-
-  # heights
-  # height of the list of variables
-  l.h <- 380
-  # this is roughly equivalent to 20 rows in the selection list
-  nRows <- 24
-  # default height of elements
-  h <- 50
-  # the window has a button in addition to the list
-  w.h <- l.h + h
-
-  # widths
-  # widths of variables names and selection list
-  widthVariables <- max(sapply(allVariables, nchar))
-  # in fact, because this is not a fixed width font, the number of columns to accomodate the text is often smaller.
-  # we use a 20% reduction
-  widthList <- round(widthVariables * 0.8)
-  # the width of the list determines the width of the window
-  # a column is ~ 8.5 pixels
-  w <- round(8.5 * widthList + 5)
-
+  # default window dimensions
+  w <- 600          # width of the window
+  windowH <- 700    # height of the window
+  h <- 50           # height of elements
+  spacer <- 10      # height of spacer
 
   # main window
-  win <- rp.control(title="Run regionalisation analysis", size=c(w, w.h), aschar=F)
+  win <- rp.control(title="Run regionalisation analysis", size=c(w, windowH), aschar=F)
 
   # NB: positions are x, y, width, eight
   #     x, y are the coordinates of the top-left hand corner
 
+  # destination directory for output files and then proceed to second GUI panel
+  win$output.dir <- NULL
+  rp.button(win, title="Choose output\ndirectory", pos=c(0, 0, w/4, h), action=function(win) {
+
+    # choose the data file
+    win$output.dir <- tk_choose.dir(getwd(), "Choose a suitable folder for the output files")
+    # tkdestroy(win$window)
+
+    # write the filename, for information
+    rp.text(win, txt=win$output.dir, initval=win$output.dir, pos=c(w/4, 0, 3*w/4, h))
+
+    return(win)
+  })
+
   # variable list
-  blah <- rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables to use in the regionalisation", rows=nRows, cols=widthList, initval="", pos=c(0, 0, w, l.h), aschar=F, action=function(win) {
-    if (all(win$variables == "")) {
+  # available variables
+  allVariables <- list.env.data()
+  # dimensions
+  listWcols <- 72   # compatible with 600px window
+  listH <- 380
+  listHrows <- 24   # fits in 380px height
+
+  rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables to use in the regionalisation", rows=listHrows, cols=listWcols, initval="", pos=c(0, h, w, listH), aschar=F, action=function(win) {
+    return(win)
+  })
+
+  # current vertical dimension
+  mid <- listH + h + spacer
+
+  # options
+  optionsFile <- tempfile()
+
+  # variables transformation
+  win <- rp.button(win, "Variables transformation", pos=c(0, mid, w/2, h) , action=function(win) {
+    if (length(win$variables) < 2) {
       rp.messagebox("At least two variables must be selected", title="Warning")
+    } else {
+      do.bioreg.variables(variables=win$variables, file=optionsFile)
     }
     return(win)
   })
 
-  # destination directory for output files and then proceed to second GUI panel
-  rp.button(win, title="Choose directory for output files", pos=c(0,l.h,w,h), action=function(win) {
-    if (length(win$variables)<2) {
-        rp.messagebox("At least two variables must be selected first", title="Warning")
-    } else {
-        outputDir <- tk_choose.dir(getwd(), "Choose a suitable folder for the output files")
-        tkdestroy(win$window)
-        do.bioreg.secondpanel(win$variables, output.dir=outputDir, ...)
-    }
+
+  # quality of run
+  # better quality is slower, which can be painful at the exploratory stage
+  rp.radiogroup(win, quick, values=c('Exploratory run (faster)','Final run (better quality)'), title="Analysis type", pos=c(0, mid+h, w/2, h*2))
+
+  # number of clusters
+  rp.slider(win, n.groups,  from=2, to=40,  resolution=1,   title="Number of clusters", initval=12 , showvalue=TRUE, pos=c(0, mid+3*h, w/2, h))
+
+  # location
+  rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=lat.max , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
+  rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=lon.min,  showvalue=TRUE, pos=c(w/2, mid+h*1, w/4, h))
+  rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=lon.max , showvalue=TRUE, pos=c(3*w/4, mid+h*1, w/4, h))
+  rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=lat.min , showvalue=TRUE, pos=c(w/2+w/8, mid+h*2, w/4, h))
+  rp.slider(win, lon.step, from=0.1, to=4,    resolution=0.1, title="Step lon", initval=0.1 ,     showvalue=TRUE, pos=c(w/2, mid+h*3, w/4, h))
+  rp.slider(win, lat.step, from=0.1, to=4,    resolution=0.1, title="Step lat", initval=0.1 ,     showvalue=TRUE, pos=c(3*w/4, mid+h*3, w/4, h))
+
+  # action buttons
+  rowY <- mid+h*4+spacer
+  rp.button(win, "Help", pos=c(0, rowY, w/4, h), action=function(win) {
+    rp.messagebox("Someday... Maybe", title="Help")
     return(win)
   })
+  rp.button(win, "Cancel", quitbutton=TRUE, pos=c(w/2, rowY, w/4, h) , action=function(win) {
+    message("Aborting");
+    return(win)
+  })
+  rp.button(win, "Run", pos=c(3*w/4, rowY, w/4, h), action=function(win, ...) {
+
+    # variables
+    # print(win$variables)
+    if (length(win$variables) < 2) {
+      rp.messagebox("At least two variables must be selected", title="Warning")
+    } else {
+
+      # variables transformations
+      if (file.exists(optionsFile)) {
+        # read the options in the file
+        load(optionsFile)
+        transformations <- opts$transformations
+        weights <- opts$weights
+      } else {
+        transformations <- NULL
+        weights <- NULL
+      }
+      # print(transformations)
+      # print(weights)
+
+
+      # options
+      quick <- TRUE
+      if (grepl('^Final',win$quick)) {
+        quick <- FALSE
+      }
+      # print(quick)
+
+      # print other option values
+      # print(win$output.dir)
+      # print(win$lat.min)
+      # print(win$lat.max)
+      # print(win$lat.step)
+      # print(win$lon.min)
+      # print(win$lon.max)
+      # print(win$lon.step)
+
+      b <- bioreg(
+        variables=win$variables,
+        n.groups=win$n.groups,
+        weights=weights,
+        transformations=transformations,
+        lat.min=win$lat.min, lat.max=win$lat.max, lat.step=win$lat.step,
+        lon.min=win$lon.min, lon.max=win$lon.max, lon.step=win$lon.step,
+        quick=quick,
+        output.dir=win$output.dir,
+        ...
+      )
+
+    }
+
+    return(win)
+  })
+
 }
 
-bioreg.secondpanel <- function(selectedVariables,varweights=rep(1,length(selectedVariables)),vartransforms=rep("",length(selectedVariables)),output.dir=getwd(),lon.min=30,lon.max=60,lat.min=-62,lat.max=-45) {
-    ##
-    ## Second part of the GUI. Called from do.bioreg()
-    ##
-    ## Ben Raymond
-    ## Last-Modified: <2012-05-02 12:34:54>
+do.bioreg.variables <- function(variables, file) {
+  #
+  # Second part of the GUI. Called from do.bioreg()
+  # Select variable weights and transformations
+  #
+  # Ben Raymond
+  # Last-Modified: <2012-05-02 12:34:54>
 
   suppressPackageStartupMessages(require("rpanel"))
 
+  # defaults
+  weights <- rep(1,length(variables))
+  names(weights) <- variables
+  transformations <- rep("",length(variables))
+  names(transformations) <- variables
+
+  # if the options file exists, read it to use the previously saved weights and transformations
+  # TODO avoid using a file storage, we should be able to pass everything through functions and operate in memory
+  if (file.exists(file)) {
+    load(file)
+
+    # transformations and weights are stored as lists in the options file
+    # transform them back to vectors
+    opts <- lapply(opts, function(x) {
+      y <- as.character(x)
+      names(y) <- names(x)
+      return(y)
+    })
+
+    # the selected variables may have changed, use what we can from the options file and use defaults for the rest
+    transformations[na.omit(match(names(opts$transformations), names(transformations)))] <- opts$transformations
+    weights[na.omit(match(names(opts$weights), names(weights)))] <- opts$weights
+  }
 
   # default dimensions (in px)
-  w <- 1200      # width of the window
-  h <- 50       # height of elements
-  spacer <- 10  # height of spacer
-  main.height=700
+  w <- 1000         # width of the window
+  windowH <- 300    # height of the window
+  # TODO adapt it to the number of variables
+  h <- 50           # height of elements
+  spacer <- 10      # height of spacer
 
   # main window
-  win <- rp.control(title="Regionalisation", size=c(w,main.height),aschar=F)
+  win <- rp.control(title="Variables", size=c(w, windowH), aschar=F)
 
+  # transformations
+  # TODO look into why with rp.textentry.immediate, the results are not all carried to the stage of the close button
+  rp.textentry(win, var=transformsBox, labels=variables, title="Transformations", initval=transformations, pos=c(0,0,w/2,windowH/2), action=function(win) {
+    return(win)
+  })
 
-  nRows <- 20
-  nBoxes <- 20
-  hSel <- 380
+  # provide example transformations
+  example.transforms.labels=c("log10(x+1)","Square root","log10(-1*negative values only)")
+  example.transforms.functions=list('"log10(x+1)"', '"sqrt(x)"', '"x[x>=0]=NA; log10(-x)"')
+  rp.textentry(win, var=exampletransformBox, labels=example.transforms.labels, title="Example transformations", initval=example.transforms.functions, pos=c(0,windowH/2,w/2,windowH/2), action=function(win) {
+    return(win)
+  })
 
+  # selection for weights associated with each variable
+  rp.textentry(win, var=weightsBox, labels=variables, title="Weighting", initval=weights,pos=c(w/2, 0, w/2, windowH/2), action=function(win) {
+    return(win)
+  })
 
-  ## selection for weights associated with each variable
-  rp.textentry.immediate(win, var=weightbox, labels=selectedVariables, title="Weighting", initval=varweights,pos=c(spacer,spacer,w/3-spacer,main.height/2-spacer),
-               action=function(win) {
-                   return(win) })
+  # close button
+  rp.button(win, title="Close", quitbutton=TRUE, pos=c(3/4*w, windowH-h, w/4, h), action=function(win) {
+    # print("Transformations")
+    # print(win$transformsBox)
+    # print("Weights")
+    # print(win$weightsBox)
 
-  rp.textentry.immediate(win, var=transformbox, labels=selectedVariables, title="Transformations", initval=vartransforms,pos=c(w/3+spacer,spacer,w/3-spacer,main.height/2-spacer),
-               action=function(win) {
-                   return(win) })
+    # extract transformations and weights and store them in named lists
+    transformations <- as.list(win$transformsBox)
+    weights <- as.list(win$weightsBox)
+    weights <- lapply(weights, as.numeric)
 
-  ## provide example transformations
-  example.transforms.labels=c('log10(-1*negative values only)','log10(x+1)','Square root')
-  example.transforms.functions=list('"x[x>=0]=NA; log10(-x)"','"log10(x+1)"','"sqrt(x)"')
-  rp.textentry(win, var=exampletransformbox, labels=example.transforms.labels, title="Example transformations",initval=example.transforms.functions,pos=c(2*w/3+spacer,spacer,w/3-spacer,main.height/2-spacer),
-               action=function(win) {
-                   return(win) })
+    # store them in a single object
+    opts <- list(transformations=transformations, weights=weights)
 
-  ## number of groups in final result
-  ## to add
+    # save this object to the options file
+    save(opts, file=file)
 
-  ## quality of run? better quality is slower, which can be painful at the exploratory stage
-  rp.radiogroup(win, quick, values=c('Exploratory run (faster)','Final run (better quality)'), title="Analysis type", pos=c(spacer,main.height/2+spacer, w/4-spacer, main.height/4-spacer))
+    return(win)
+  })
 
-  ## location
-  rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=lat.max , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer,w/8-spacer,h))
-  rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=lon.min, showvalue=TRUE, pos=c(w/4+spacer,main.height/2+spacer+h,w/8-spacer,h))
-  rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=lon.max , showvalue=TRUE, pos=c(w/4+5*w/32+spacer,main.height/2+spacer+h,w/8-spacer,h))
-  rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=lat.min , showvalue=TRUE, pos=c(w/4+w/12+spacer,main.height/2+spacer+2*h,w/8-spacer,h))
-
-  rp.slider(win, n.groups,  from=2, to=40,  resolution=1,   title="Number of clusters"   , initval=12 , showvalue=TRUE, pos=c(3*w/4+spacer,main.height/2+spacer,w/4-spacer,h))
-
-  ## hide output directory for now, since we aren't using it
-  rp.text(win,txt=paste("Output directory:",output.dir),pos=c(spacer,main.height-2*h-2*spacer,w-spacer*2,h))
-
-  rp.button(win,title="Run", pos=c(w-100,main.height-h-spacer,80,h), action=function(win, ...) {
-
-      lat.step=0.1
-      lon.step=0.1
-      quick=TRUE
-      if (grepl('^Final',win$quick)) {
-          quick=FALSE
-      }
-      weights=lapply(win$weightbox,as.numeric)
-#      cat(sprintf('gui weights:\n'))
-#      cat(str(weights))
-
-      b=bioreg(variables=selectedVariables,n.groups=win$n.groups,weights=weights, transformations=win$transformbox,lat.min=win$lat.min,lat.max=win$lat.max,lat.step=lat.step,lon.min=win$lon.min,lon.max=win$lon.max,lon.step=lon.step,quick=quick,output.dir=output.dir,...)
-      return(win) })
-
-
-  rp.button(win,title="Start again", pos=c(spacer,main.height-h-spacer,80,h), action=function(win) {
-      tkdestroy(win$window)
-      do.bioreg()
-      return(win) })
-
-  return(win)
-
+  return(invisible(win))
 }
