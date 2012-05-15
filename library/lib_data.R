@@ -180,8 +180,8 @@ read.env.data <- function(variables="", path="env_data", ...) {
   message("-> Read environment data")
 
   # select which netCDF files to read
-  ncFiles = list.env.data(variables, path, full=T, quiet=FALSE, ...)
-  ncVariables = list.env.data(variables, path, quiet=TRUE, ...)
+  ncFiles = list.env.data(variables, path, full=T, quiet=FALSE)
+  ncVariables = list.env.data(variables, path, quiet=TRUE)
   # NB: inform about variable names expansion only for the first pass
 
   # read data inside each file
