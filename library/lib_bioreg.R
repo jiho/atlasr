@@ -298,7 +298,9 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
       dev.off()
     }
 
-    invisible(data.raw)
+    message("Done")
+
+    return(invisible(data.raw))
     # NB: invisible() so that it doesn't get printed to console if not assigned to a variable
 }
 
