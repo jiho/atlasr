@@ -677,7 +677,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     if (n.boot.effects != 0) {
 
         # perform bootstrap
-        if ( ! quiet ) cat("    running bootstrap on BRT model\n")
+        if ( ! quiet ) cat("   bootstrap model and effect\n")
         boot = NULL
         boot <- tryCatch( gbm.bootstrap(obj, n.reps=n.boot.effects, verbose=FALSE), error=function(e) stop(e))
         if ( ! is.null(boot) ) {
@@ -699,9 +699,9 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     #-------------------------------------------------------------------------
 
     if (predict) {
-        if ( ! quiet ) cat("   make predictions\n")
 
         if (n.boot.pred > 1) {
+            if ( ! quiet ) cat("   bootstrap predictions\n")
 
             # bootstrap predictions
             temp = gbm.bootstrap(obj, pred.data = newdata, return.pred.matrix = T, n.reps=n.boot.pred, verbose=F)
@@ -712,6 +712,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
             CVpred = apply(temp,1,cv)
 
         } else {
+            if ( ! quiet ) cat("   make predictions\n")
 
             # do a simple prediction
             pred = predict(obj, newdata = newdata, n.trees = obj$n.trees, type="response")
