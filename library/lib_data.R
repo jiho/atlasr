@@ -17,7 +17,7 @@
 ## Environment database
 #-----------------------------------------------------------------------------
 
-dl.env.data <- function(url="http://dl.dropbox.com/u/1047321/antarctic_data_archive.zip", path="env_data", ...) {
+dl.env.data <- function(url="ftp://ftp.aad.gov.au/aadc/derived/antarctic", path="env_data", ...) {
   # Download the environmental database
   # = get an archive of all netCDF files and decompress it
   #
@@ -25,12 +25,84 @@ dl.env.data <- function(url="http://dl.dropbox.com/u/1047321/antarctic_data_arch
   # path  where to store the netCDF files of the database
   #
 
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+  suppressPackageStartupMessages(require("RCurl", quietly=TRUE))
+
   message("-> Download environment database")
 
-  temp <- tempfile() # download the zip as a temporary file
-  download.file(url, destfile=temp)
-  unzip(temp, exdir=path)
+  dir.create(path, showWarnings=FALSE)
+
+  # NetCDF files
+  message("   data layers")
+  ncUrl <- str_c(url, "/netcdf/")
+
+  # base url()
+  # page <- url(ncUrl, open="rt")
+  # html <- scan(page, what="character")
+  # close(page)
+  # does not work
+
+  # RCurl
+  html <- getURL(ncUrl, ftp.use.epsv=FALSE)
+  # NB: ftp.use.epsv=FALSE activates passive mode
+
+  # download.file
+  # temp <- tempfile()
+  # download.file(ncUrl, destfile=temp)
+  # download.file(ncUrl, destfile=temp, method="wget")
+  # download.file(ncUrl, destfile=temp, method="curl")
+  # html <- scan(temp, "character")
+
+  # extract file names
+  ncList <- unlist(str_extract_all(html, "\\w*\\.nc\\.zip"))
+
+  # download files
+  temp <- tempfile()
+  a_ply(ncList, .margins=1, .fun=function(x, url, tempfile, path) {
+    url <- str_c(url, x)
+    # download zip to a temporary file
+    download.file(url, destfile=tempfile, quiet=TRUE)
+    # unzip to the data folder
+    unzip(tempfile, exdir=path)
+  }, url=ncUrl, tempfile=temp, path=path, .progress="text")
   unlink(temp)
+
+
+  # images of layers
+  message("   images")
+
+  # get list of images from the server
+  imgUrl <- str_c(url, "/images/")
+  html <- getURL(imgUrl, ftp.use.epsv=FALSE)
+
+  # extract file names
+  imgList <- unlist(str_extract_all(html, "\\w*\\.png"))
+
+  # download files
+  a_ply(imgList, .margins=1, .fun=function(x, url, path) {
+    url <- str_c(url, x)
+    dest <- str_c(path, x, sep="/")
+    download.file(url, destfile=dest, quiet=TRUE)
+  }, url=imgUrl, path=path, .progress="text")
+
+
+  # coastlines
+  message("   coastlines")
+
+  # get list of files from the server
+  coastUrl <- str_c(url, "/coastline/")
+  html <- getURL(coastUrl, ftp.use.epsv=FALSE)
+
+  # extract file names
+  coastList <- unlist(str_extract_all(html, "[[:alnum:]_-]*\\.csv"))
+
+  # download files
+  a_ply(coastList, .margins=1, .fun=function(x, url, path) {
+    url <- str_c(url, x)
+    dest <- str_c(path, x, sep="/")
+    download.file(url, destfile=dest, quiet=TRUE)
+  }, url=coastUrl, path=path, .progress="text")
 
   return(invisible(path))
 }

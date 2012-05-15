@@ -33,6 +33,11 @@ installedPackages = row.names(installed.packages())
 missingPackages = setdiff(requiredPackages, installedPackages)
 if (length(missingPackages) > 0) {
     install.packages(missingPackages, repos="http://cran.at.r-project.org")
+
+    # Install RCurl from the dedicated repository on windows
+    if (Sys.info()["sysname"] == "Windows") {
+      install.packages("RCurl", repos="http://www.stats.ox.ac.uk/pub/RWin/")
+    }
 }
 
 # for (pack in requiredPackages) {
