@@ -166,13 +166,14 @@ layer_land <- function(x, expand=1, path="env_data", ...) {
 }
 
 
-polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.precision=NULL, lon.precision=NULL, coast=NULL, ...) {
+polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), lat.precision=NULL, lon.precision=NULL, coast=NULL, ...) {
   #
   # data          data frame with columns lat, lon, and variables to plot
   # mapping       a call to `aes()` which maps a variable to a plotting
   #               aesthetic characteristic (fill, colour, size, alpha, etc.)
   # geom          the type of plot ("geometry" in ggplot parlance) to produce
-  #               = points (the default) or tiles (possibly better looking, longer)
+  #               = points or tiles (possibly better looking, longer to plot)
+  #               auto chooses points or tiles depending on the size of the data
   # lat.precision
   # lon.precision the precision at which lat and lon are considered
   #               (in degrees). If they are larger than the original
@@ -225,6 +226,14 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
       data <- data[round(data$lon,5) %in% round(lons,5),]
     }
   }
+
+  # define the geom depending on the size of the data when geom="auto"
+  if (geom == "auto") {
+    if (nrow(data) <= 2000) {
+      geom <- "tile"
+    } else {
+      geom <- "point"
+    }
   }
 
   # Get and re-cut coastline if none is provided
