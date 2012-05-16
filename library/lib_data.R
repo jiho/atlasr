@@ -17,7 +17,9 @@
 ## Environment database
 #-----------------------------------------------------------------------------
 
-dl.env.data <- function(url="ftp://ftp.aad.gov.au/aadc/derived/antarctic", path="env_data", ...) {
+# "ftp://ftp.aad.gov.au/aadc/derived/antarctic"
+
+dl.env.data <- function(url="ftp://192.168.1.8/env_data_repository/", path="env_data", user="delcano", password="delcano", ...) {
   # Download the environmental database
   # = get an archive of all netCDF files and decompress it
   #
@@ -28,6 +30,22 @@ dl.env.data <- function(url="ftp://ftp.aad.gov.au/aadc/derived/antarctic", path=
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
   suppressPackageStartupMessages(require("RCurl", quietly=TRUE))
+
+  # prepare user and password
+  if ( !is.null(user) || !is.null(password) ) {
+    if ( is.null(user) || is.null(password) ) {
+      stop("Both user and password are needed")
+    } else {
+      pieces <- str_split(url, fixed("//"))[[1]]
+      protocol <- pieces[1]
+      address <- pieces[2]
+      if (protocol == "ftp:") {
+        url <- str_c(protocol, "//", user, ":", password, "@", address)
+      } else {
+        warning("Authentication only works with ftp servers")
+      }
+    }
+  }
 
   message("-> Download environment database")
 
