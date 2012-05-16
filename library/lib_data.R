@@ -60,9 +60,9 @@ dl.env.data <- function(url="ftp://ftp.aad.gov.au/aadc/derived/antarctic", path=
   # download files
   temp <- tempfile()
   a_ply(ncList, .margins=1, .fun=function(x, url, tempfile, path) {
-    url <- str_c(url, x)
+    fileUrl <- str_c(url, x)
     # download zip to a temporary file
-    download.file(url, destfile=tempfile, quiet=TRUE)
+    download.file(fileUrl, destfile=tempfile, quiet=TRUE)
     # unzip to the data folder
     unzip(tempfile, exdir=path)
   }, url=ncUrl, tempfile=temp, path=path, .progress="text")
