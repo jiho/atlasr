@@ -268,8 +268,14 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     # add mapping of size to better cover the space (smaller points near the center)
     mapping = c(aes(size=lat), mapping)
     class(mapping) = "uneval"
+
+    # try to guess the size of points based on how many data there is
+    # (the more data, the smaller the points)
+    nLats <- length(unique(data$lat))
+    baseSize <- 85 / nLats
+
     # plot
-    p <- p + geom_point(mapping=mapping, ...) + scale_size(range=c(0.5, 1.5), guide=FALSE)
+    p <- p + geom_point(mapping=mapping, ...) + scale_size(range=c(baseSize, baseSize*2), guide=FALSE)
   } else if (geom == "tile"){
     p <- p + geom_tile(mapping=mapping, ...)
   }
