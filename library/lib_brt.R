@@ -1038,9 +1038,11 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
 
     # main plot
     if (quick) {
+      # subsample the plot
       lat.precision <- 1
       lon.precision <- 2
     } else {
+      # do not subsample and use the default geom
       lat.precision <- NULL
       lon.precision <- NULL
     }
@@ -1053,8 +1055,12 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
       } else {
         # make the plot
         if (is.numeric(x$data[,x$resp.var])) {
+          # numerical values (abundances)
+          # = use coloured points with white outline
           p <- p + geom_point(aes_string(x="lon", y="lat", fill=x$resp.var), data=x$data, shape=21, size=1.5, colour="white", alpha=0.5) + scale_fill_continuous(low="black", high="red")
         } else {
+          # presence-absence values
+          # = use points (presence) and crosses (absence)
           p <- p + geom_point(aes_string(x="lon", y="lat", shape=x$resp.var), data=x$data, size=1, alpha=0.7) + scale_shape_manual(values=c(4, 16))
         }
       }
