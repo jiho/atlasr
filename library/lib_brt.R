@@ -583,8 +583,15 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     #-------------------------------------------------------------------------
     if ( ! quiet ) cat("   setup data\n")
 
-    # remove observations where the current species information is Non-Available
-    data <- data[!is.na(data[,resp.var]),]
+    # remove observations where either
+    # - the current species information
+    # - one of the explanatory variables
+    # is Non-Available
+    hasNA <- aaply(is.na(data[,c("lat", "lon", resp.var,pred.vars)]), 1, any, .expand=FALSE)
+    data <- data[!hasNA,]
+
+    # remove NAs in the prediction dataset
+    newdata <- na.omit(newdata)
 
     # make the data binomial if it needs to be
     if (family == "bernoulli") { data[,resp.var] = data[,resp.var] > 0 }
