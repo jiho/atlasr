@@ -854,7 +854,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
     rdataFile <- str_c(baseName, ".Rdata", sep="")
 
     # open the PDF
-    pdf(pdfFile, paper="a4r")
+    pdf(pdfFile, width=11.7, height=8.3)
 
     # b <- brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, ...)
 
