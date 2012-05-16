@@ -202,17 +202,29 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("point", "tile"), lat.preci
   # if new precisions are specified for lat or lon, subsample the data
   if (!is.null(lat.precision)) {
     # compute the vector of latitudes
-    lats <- unique(data$lat)
-    # regrid latitudes
-    lats <- unique(round_any(lats, lat.precision))
-    # NB: when the precision in the original data is coarser, nothing changes
-    # select points at those latitudes only
-    data <- data[data$lat %in% lats,]
+    lats <- sort(unique(data$lat))
+    # recompute the precision to be the closest multiple of the current step
+    step <- unique(round(diff(lats),5))
+    # NB: use round to solve floating point precision issues
+    if (lat.precision > step) {
+      # proceed only if the given precision is actually larger than the current step (otherwise there is nothing to resample)
+      lat.precision <- round(lat.precision/step)*step
+      # reduce to the given precision
+      lats <- seq(from=min(lats), to=max(lats), by=lat.precision)
+      # select points at those latitudes only
+      data <- data[round(data$lat,5) %in% round(lats,5),]
+      # NB: use round to solve floating point precision issues
+    }
   }
   if (!is.null(lon.precision)) {
-    lons <- unique(data$lon)
-    lons <- unique(round_any(lons, lon.precision))
-    data <- data[data$lon %in% lons,]
+    lons <- sort(unique(data$lon))
+    step <- unique(round(diff(lons),5))
+    if (lon.precision > step) {
+      lon.precision <- round(lon.precision/step)*step
+      lons <- seq(from=min(lons), to=max(lons), by=lon.precision)
+      data <- data[round(data$lon,5) %in% round(lons,5),]
+    }
+  }
   }
 
   # Get and re-cut coastline if none is provided
