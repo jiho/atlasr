@@ -17,8 +17,6 @@
 names(lookup.names.variables)<-c("day.no","towpath","towconfig","no.turns","lat","long","netdepth","botdepth","sst","sst.anom","unk.sex","day.no","dist.col","DN","towcat","towbot","towline","towturn","fyear","dayn","d.col","proctype","d.shore","gear.checked","fdayn","fract.fdayn","targ.g","pres.12h","fyr","fday","name.hill","tow.dur","longs","mth","vessel.name","pres.10d","pres.2d","depth.bin","depth.bin2","catch_weight","long_s","RegNO.hill","lat_s","target.gp","hook.code","hook.size","bait.species","soak.time","vlscc","lscc","lCPUE.Toothfish","temp","wind.dir","wind.sp","gear_s","max_gdepth","time_s","lat_s_dec","long_s_dec","bot_gs","ctd_mint","ctd_maxt", "TSG_Sal", "W_Temp_Hi", "bathymetry_gebco_depth", "bathymetry_gebco_slope", "sea_ice_fraction_time_lt_15_percent_ice_long_term_mean",  "chla_seawifs_annual_maximum_long_term_mean", "sst_oiv2_summer_long_term_sd", "nutrient_Si0_mean", "sea_ice_fraction_time_lt_15_percent_ice_long_term_sd","chla_seawifs_annual_maximum_long_term_sd","sst_oiv2_summer_long_term_mean" ,"nutrient_Ph0_mean","bathymetry_depth_smith_sandwell","bathymetry_slope_smith_sandwell","seaice_gt85_long_term_mean","chl_modis_summer_climatology_mean","sst_modis_summer_climatology_mean","sst_modis_summer_climatology_gradient","distance_polar_front","chl_seawifs_mean_bymonth","sst_oidaily_mean_bymonth","sst_oidaily_gradient_bymonth" ,"normalised_time_of_day","seaice_smmrssmi_mean_bymonth","seaice_smmrssmi_days_since_melt_bymonth","gebco8_modified" ,"chla_summer",     "speed_bottom",    "rugosity2" ,"T_HIGEM_bottom" , "S_HIGEM_bottom","gebco8_mid", "bathymetry_slope", "chl_summer_climatology", "distance_max_ice_edge" ,"distance_shelf", "floor_temperature", "mixed_layer_depth_summer_climatology", "oxygen_500_summer_climatology", "salinity_500_summer_climatology", "si_500_summer_climatology", "seaice_gt85" ,"distance_antarctica"    )
 
 
-# library(MASS)
-require(cluster)
 
 # source("gdmfuncs.1.1.R")
 
@@ -27,6 +25,9 @@ require(cluster)
 # result <- do.gdm(dat=fam,resp.vars=resp.vars,predvar=predvar,samp=15000,pred.data=env.Ant)
 
   do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plot.name = "GDM",pred.data,  do.indicator.species=F,n.clust=NA,...) {
+
+    # library(MASS)
+    require(cluster)
 
     ## Base case GDM running
     ## dat has your dataset of responses
