@@ -238,6 +238,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     if (output) {
       message("-> Write output to ", output.dir)
 
+      dir.create(output.dir, recursive=TRUE, showWarnings=FALSE)
+
       # use a date/time based suffix to differenciate between runs
       suffix <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
       baseName <- normalizePath(str_c(output.dir,"/bioreg-", suffix), winslash="/", mustWork=F)
