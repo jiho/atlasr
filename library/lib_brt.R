@@ -1091,7 +1091,7 @@ do.brt <- function(...) {
     # choose the data file
     file <- file.choose()
     # file <- "../data/Austropallene.csv"
-    file <- win2unix(file, ...)
+    win$file <- win2unix(file, ...)
 
 
     # write the filename, for information
