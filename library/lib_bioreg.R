@@ -270,7 +270,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     lines(c(1,num.groups.intermediate), c(temph,temph), lty=2, col="red")
     # markers for group labels
     colours <- cmap[hclust.num][hcl$order]
-    points(1:200, rep(-0.02, num.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
+    points(1:num.groups.intermediate, rep(-0.02, num.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
 
     # ask for further plots
     ask <- devAskNewPage()
