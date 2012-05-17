@@ -587,7 +587,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     # - the current species information
     # - one of the explanatory variables
     # is Non-Available
-    hasNA <- aaply(is.na(data[,c("lat", "lon", resp.var,pred.vars)]), 1, any, .expand=FALSE)
+    hasNA <- aaply(is.na(data[,c("lat", "lon", resp.var, pred.vars)]), 1, any, .expand=FALSE)
     data <- data[!hasNA,]
 
     # remove NAs in the prediction dataset
