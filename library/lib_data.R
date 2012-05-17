@@ -30,6 +30,7 @@ dl.env.data <- function(url="ftp://192.168.1.8/env_data_repository/", path="env_
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
   suppressPackageStartupMessages(require("RCurl", quietly=TRUE))
+  suppressPackageStartupMessages(require("bitops", quietly=TRUE))
 
   # prepare user and password
   if ( !is.null(user) || !is.null(password) ) {
