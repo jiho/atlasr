@@ -198,7 +198,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     xc <- ddply(data.trans.noNA, ~clara.num, colMeans, na.rm=TRUE)
 
     # dissimilarities of these clusters
-    D <- vegdist(xc[!names(xc) %in% "cluster.num"], method="gower")
+    D <- vegdist(xc[!names(xc) %in% "clara.num"], method="gower")
 
     # hierarchical clustering
     hcl <- hclust(D, method="ave")
