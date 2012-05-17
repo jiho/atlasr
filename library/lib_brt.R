@@ -781,8 +781,6 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, predict=FALSE, bin=FALSE, path="env_data", ...) {
 
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
-  suppressPackageStartupMessages(require("maptools", quietly=TRUE))
-
 
   # read dataset
   if (file.exists(file)) {
@@ -890,11 +888,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
         write.table(brtObj$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
 
         # Shapefiles
-        xSp <- SpatialPointsDataFrame(brtObj$prediction[,c("lon", "lat")], brtObj$prediction[,c("pred", "CVpred")], proj4string=CRS("+proj=longlat +datum=WGS84"))
-        writeSpatialShape(xSp, baseName)
-
-        # add the .prj file
-        cat("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]\n", file=str_c(baseName, ".prj"))
+        write.shapefile(brtObj$prediction, baseName, c("pred", "CVpred"))
       }
     }
 

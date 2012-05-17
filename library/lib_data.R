@@ -489,3 +489,36 @@ win2unix <- function(file, ...) {
   }
   return(file)
 }
+
+
+write.shapefile <- function(x, name, variables=NULL) {
+  #
+  # Write shapefiles from a data.frame
+  #
+  # x           data.frame or object coercible as such
+  #             should contain columns lat and lon + variables of interest
+  # name        base name of the shapefile
+  # variables   names or column numbers of the variables of interest
+  #             when NULL, use all columns but lon and lat
+  #
+
+  suppressPackageStartupMessages(require("maptools", quietly=TRUE))
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+
+  # make sure x is a data.frame
+  x <- as.data.frame(x)
+  # NB: SpatialPointsDataFrame only accepts pure data.frame objects
+
+  # determine variables
+  if (is.null(variables)) {
+    variables <- setdiff(names(x), c("lon", "lat"))
+  }
+
+  # convert to spatial object and write shapefile
+  xSp <- SpatialPointsDataFrame(x[c("lon", "lat")], x[variables], proj4string=CRS("+proj=longlat +datum=WGS84"))
+  writeSpatialShape(xSp, name)
+
+  # add the .prj file
+  cat("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]\n", file=str_c(name, ".prj"))
+
+}

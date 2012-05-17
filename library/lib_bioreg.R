@@ -249,15 +249,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
       save(data.raw, data.transformed, file=rdataFile)
 
       # Shapefiles
-      suppressPackageStartupMessages(require("maptools", quietly=TRUE))
-      x <- as.data.frame(data.raw)
-      # NB: SpatialPointsDataFrame only accepts pure data.frame objects
-      xSp <- SpatialPointsDataFrame(x[c("lon", "lat")], x[c("cluster")], proj4string=CRS("+proj=longlat +datum=WGS84"))
-      writeSpatialShape(xSp, baseName)
-
-      # add the .prj file
-      cat("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]\n", file=str_c(baseName, ".prj"))
-
+      write.shapefile(data.raw, baseName, "cluster")
     }
 
     message("-> Produce plots")
