@@ -1077,11 +1077,9 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
 ## GUI
 #-----------------------------------------------------------------------------
 
-do.brt <- function(...) {
+do.brt <- function() {
   #
   # Open a GUI to select the arguments of the brts() function
-  #
-  # ...   passed to brts()
   #
 
   suppressPackageStartupMessages(require("rpanel"))
@@ -1256,23 +1254,30 @@ do.brt <- function(...) {
       # print(win$bin)
 
 
-      b <- brts(
-                  file=win$file,
-                  taxa=taxa, variables=variables,
-                  lat.min=win$lat.min, lat.max=win$lat.max, lat.step=win$lat.step,
-                  lon.min=win$lon.min, lon.max=win$lon.max, lon.step=win$lon.step,
-                  predict=predict,
-                  bin=win$bin,
-                  #
-                  family=win$family,
-                  n.boot.effects=n.boot.effects,
-                  n.boot.pred=n.boot.pred,
-                  quick=win$quick.plot,
-                  extrapolate.env=win$extrapolate.env,
-                  overlay.station=win$overlay.stations,
-                  ...
-              )
+      # build the function call
+      message("Command:")
+      call <- str_c("brts(",
+        "file=", deparse(win$file),
+        ", taxa=", deparse(taxa), ", variables=", deparse(variables),
+        ", lat.min=", win$lat.min, ", lat.max=", win$lat.max, ", lat.step=", win$lat.step,
+        ", lon.min=", win$lon.min, ", lon.max=", win$lon.max, ", lon.step=", win$lon.step,
+        ", predict=", predict,
+        ", bin=", win$bin,
+        ", family=", deparse(win$family),
+        ", n.boot.effects=", n.boot.effects,
+        ", n.boot.pred=", n.boot.pred,
+        ", quick=", win$quick.plot,
+        ", extrapolate.env=", win$extrapolate.env,
+        ", overlay.station=", win$overlay.stations,
+        ")"
+      )
+      cat(call, "\n")
+
+      # execute call
+      b <- eval(parse(text=call))
+
       return(win)
+
     }, ...)
 
 
