@@ -286,7 +286,7 @@ require(gbm)
   for (i in 1:n.reps) {
 
     # if (i == 6 & verbose) {
-    # 
+    #
     #   z2 <- unclass(Sys.time())
     #   est.time <- (z2 - z1)/60  # time for five reps
     #   est.time <- est.time * (n.reps/5) * 2  # multiply by two as sorting takes time
