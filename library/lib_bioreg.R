@@ -131,7 +131,6 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
                 stop("Supplied transformation is neither a string nor a function")
             }
         }
-        transformations <- tfuncs
     }
 
     # Get and transform data
@@ -152,8 +151,8 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         # apply user supplied transformations
         # TODO this is fragile : dependent on ordering of weights and transformations and data columns being the same: need to code it better
         # TODO: suggestion JO: use named lists/vectors for transformation and weights with names matching data columns? i.e. list(bathymetry="log(x)", floor_temperature=ceiling). But it's much more cumbersome to write then
-        if (!is.null(transformations[[i]])) {
-            data.transformed[,i] <- transformations[[i]](data.transformed[,i])
+        if (!is.null(tfuncs[[i]])) {
+            data.transformed[,i] <- tfuncs[[i]](data.transformed[,i])
         }
 
         # clean up any Inf values
@@ -250,6 +249,15 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
       # Shapefiles
       write.shapefile(data.raw, baseName, "cluster")
+
+      # # CSV
+      # csvFile <- str_c(baseName, ".csv")
+      # write.table(data.raw, file=csvFile, sep=",", row.names=FALSE)
+
+      # variables
+      csvVarFile <- str_c(baseName, "-variables.csv")
+      variablesFrame <- data.frame(variables, transformations, weights)
+      write.table(variablesFrame, file=csvVarFile, sep=",", row.names=FALSE)
     }
 
     message("-> Produce plots")
