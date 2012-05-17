@@ -1247,8 +1247,9 @@ do.brt <- function() {
       # build the function call
       message("Command:")
       call <- str_c("brts(",
-        "file=", deparse(win$file),
-        ", taxa=", deparse(taxa), ", variables=", deparse(variables),
+        "file=", str_c(deparse(win$file, width=500), collapse=""),
+        ", taxa=", str_c(deparse(taxa, width=500), collapse=""),
+        ", variables=", str_c(deparse(variables, width=500), collapse=""),
         ", lat.min=", win$lat.min, ", lat.max=", win$lat.max, ", lat.step=", win$lat.step,
         ", lon.min=", win$lon.min, ", lon.max=", win$lon.max, ", lon.step=", win$lon.step,
         ", predict=", predict,
