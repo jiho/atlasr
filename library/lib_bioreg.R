@@ -153,7 +153,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
         # TODO this is fragile : dependent on ordering of weights and transformations and data columns being the same: need to code it better
         # TODO: suggestion JO: use named lists/vectors for transformation and weights with names matching data columns? i.e. list(bathymetry="log(x)", floor_temperature=ceiling). But it's much more cumbersome to write then
         if (!is.null(transformations[[i]])) {
-            data.transformed[,i] <- transformations[[i]](data.raw[,c(names(data.transformed)[i])]) # can't use i to index data.raw, because it has lon and lat cols and data.transformed does not!
+            data.transformed[,i] <- transformations[[i]](data.transformed[,i])
         }
 
         # clean up any Inf values
