@@ -319,7 +319,7 @@ plot.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
 
   # remove plotting box/violin plots for clusters with a very small number of points
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
-  counts <- count(x, "cluster")
+  counts <- plyr::count(x, "cluster")
   smallClusters <- na.omit(counts$cluster[which(counts$freq < 3)])
 
   xmB <- xm[!xm$cluster %in% smallClusters,]
