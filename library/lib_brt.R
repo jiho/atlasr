@@ -1092,7 +1092,7 @@ do.brt <- function() {
     # choose the data file
     file <- file.choose()
     # file <- "../data/Austropallene.csv"
-    win$file <- win2unix(file, ...)
+    win$file <- win2unix(file)
 
 
     # write the filename, for information
@@ -1192,7 +1192,7 @@ do.brt <- function() {
       message("Aborting");
       return(win)
     })
-    rp.button(win, "Run", pos=c(3*w/4, rowY, w/4, h), action=function(win, ...) {
+    rp.button(win, "Run", pos=c(3*w/4, rowY, w/4, h), action=function(win) {
       # print(win$file)
 
       if (nTaxa <= nBoxes) {
@@ -1268,7 +1268,7 @@ do.brt <- function() {
 
       return(win)
 
-    }, ...)
+    })
 
 
     return(win)
