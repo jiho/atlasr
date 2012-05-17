@@ -794,10 +794,6 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   taxa <- match.vars(taxa, allTaxa, quiet=FALSE)
   observed_data <- observed_data[, c("lat", "lon", taxa)]
 
-  # filter-out unwanted locations
-  observed_data <- observed_data[observed_data$lat >= lat.min & observed_data$lat <= lat.max &
-                                 observed_data$lon >= lon.min & observed_data$lon <= lon.max,]
-
   # bin observation data
   if (bin) {
     observed_data <- rasterize(observed_data, c("lat", "lon"), precisions=c(lat.step, lon.step), fun=mean, na.rm=T)

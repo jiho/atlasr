@@ -51,7 +51,7 @@ The options (lists and checkboxes) map to the following arguments of the command
 
 *	Overlay stations : `overlay=TRUE` when checked
 
-The geographic range determines both which original data points are used and where the prediction is to be made. They map to the arguments `lat/lon.min` and `lat/lon.max`. The steps in lon and lat define the precision of the prediction grid and the bin size when binning the original data (when `bin=TRUE`). They map to the arguments `lat/lon.step`.
+The geographic range determines where the prediction is to be made. Options map to the arguments `lat/lon.min` and `lat/lon.max`. The steps in lon and lat define the precision of the prediction grid and the bin size when binning the original data (when `bin=TRUE`). They map to the arguments `lat/lon.step`.
 
 The `Help` button currently does not do much. The `Cancel` button closes the interface (but does not stop the analysis if one was started). The `Run` button runs the analysis with the currently selected argument values.
 
@@ -72,7 +72,7 @@ The function `brts()` is the direct equivalent of the GUI. It accepts the follow
 
 *	`n.boot.effects=0`	number of bootstraps in the estimation of the effects of environmental data on the targeted taxa. This allows to judge the robustness and "significativity" of the predicted effect. Less than 50-100 will probably fail. Beware, these are long to run.
 
-*	`bin=FALSE`	wether to bin the original observations spatially, on the prediction grid. Some locations might be sampled more often than others for practical reasons. They will be associated with the same values of the environmental data when those will be extracted from the environmental database, and those values will therefore have increased weight in the definition of the environmental niche for the taxa. This is likely to be purely a bias of the sampling. Binning the data summarizes information per grid cell: with several presence/absence observations, a presence is recorded for the cell when at least one of the observation records a presence; with several abundance observations, the mean abundance is used. 
+*	`bin=FALSE`	wether to bin the original observations spatially, with the same precision has the prediction grid. Some locations might be sampled more often than others for practical reasons. They will be associated with the same values of the environmental data when those will be extracted from the environmental database, and those values will therefore have increased weight in the definition of the environmental niche for the taxa. This is likely to be purely a bias of the sampling. Binning the data summarizes information per grid cell: with several presence/absence observations, a presence is recorded for the cell when at least one of the observation records a presence; with several abundance observations, the mean abundance is used. 
 
 *	`predict=FALSE`	whether to predict the probability of presence / abundance of the species on the prediction grid. When this is `FALSE`, only the effects of environmental parameters are estimated.
 
