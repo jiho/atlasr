@@ -26,8 +26,7 @@ names(lookup.names.variables)<-c("day.no","towpath","towconfig","no.turns","lat"
 
   do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plot.name = "GDM",pred.data,  do.indicator.species=F,n.clust=NA,...) {
 
-    # library(MASS)
-    require(cluster)
+    suppressPackageStartupMessages(require("cluster", quietly=TRUE))
 
     ## Base case GDM running
     ## dat has your dataset of responses
@@ -136,7 +135,7 @@ names(lookup.names.variables)<-c("day.no","towpath","towconfig","no.turns","lat"
     # add a title
     p = p + opts(title="GDM")
     # display the plot
-    suppressWarnings(print(p))
+    print(p)
     # NB: suppress warnings about missing values: they are necessary to split the coastline in several bits
 
     ## calculate indicator species using dufrene-legendre method
@@ -160,7 +159,7 @@ names(lookup.names.variables)<-c("day.no","towpath","towconfig","no.turns","lat"
     }
 
     pred.data$cluster<-factor(pred.data$cluster)
-    dat$cluster <- factor(dat$cluster)
+    # dat$cluster <- factor(dat$cluster)
 
 
   # close the PDF file
@@ -169,11 +168,12 @@ names(lookup.names.variables)<-c("day.no","towpath","towconfig","no.turns","lat"
   }
 
     if (do.indicator.species) {
-      return(list('predicted'=pred.data,'model'=no.gdm,'plot.obj'=p,'dat.cluster'=dat$cluster,'indval'=frodo.baggins))
+      res=list('predicted'=pred.data,'model'=no.gdm,'plot.obj'=p,'dat.cluster'=dat$cluster,'indval'=frodo.baggins)
     } else {
-      return(list('predicted'=pred.data,'model'=no.gdm,'plot.obj'=p))
+      res=list('predicted'=pred.data,'model'=no.gdm,'plot.obj'=p)
       }
 
+      return(invisible(res))
 }
 
 
