@@ -18,13 +18,35 @@ names(lookup.names.variables)<-c("day.no","towpath","towconfig","no.turns","lat"
 
 
 
-# source("gdmfuncs.1.1.R")
+gdm <- function(file, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, path="env_data", ...) {
+
+  env <- read.env.data(variables=variables, path=path)
+
+  CPR <- read.data(file)
+
+  # only 10 most abundant
+  # resp.vars <- names(sort(colSums(CPR[,!names(CPR) %in% c("lat", "lon")]), decreasing=T)[1:10])
+  resp.vars <- names(CPR[,!names(CPR) %in% c("lat", "lon")])
+
+  dat <- associate.env.data(CPR,env)
+
+  pred.data <- build.grid(lat.min=lat.min, lat.max=lat.max, lat.step=lat.step, lon.min=lon.min, lon.max=lon.max, lon.step=lon.step)
+
+  pred.data <- associate.env.data(pred.data, env)
+
+  predvar <- names(env)
+
+  CPR.gdm.all <- compute.gdm(dat=dat, resp.vars=resp.vars, predvar=predvar, samp=1000, pred.data=pred.data, ...)
+
+  return(invisible(CPR.gdm.all))
+}
+
 
 
 # example of use
 # result <- do.gdm(dat=fam,resp.vars=resp.vars,predvar=predvar,samp=15000,pred.data=env.Ant)
 
-  do.gdm <- function (dat, resp.vars, predvar, samp = 10000, plot.name = "GDM",pred.data,  do.indicator.species=F,n.clust=NA,...) {
+compute.gdm <- function(dat, resp.vars, predvar, samp = 10000, plot.name = "GDM", pred.data, do.indicator.species=F, n.clust=NA,...) {
 
     suppressPackageStartupMessages(require("cluster", quietly=TRUE))
 
