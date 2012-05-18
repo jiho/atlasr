@@ -881,7 +881,7 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
       save(brtObj, file=rdataFile)
       if (predict) {
         # CSV file
-        write.table(brtObj$prediction, file=csvFile, sep=",", append=(i!=1), col.names=(i==1), row.names=FALSE)
+        write.table(brtObj$prediction, file=csvFile, sep=",", row.names=FALSE)
 
         # Shapefiles
         write.shapefile(brtObj$prediction, baseName, c("pred", "CVpred"))
