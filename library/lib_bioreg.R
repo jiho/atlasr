@@ -62,13 +62,15 @@ function.maker <- function(str) {
 ## Run bioregionalisation
 #-----------------------------------------------------------------------------
 
-bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quick=TRUE, path="env_data", output.dir=NULL)
+bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quick=TRUE, path="env_data", output.dir=NULL)
 {
     #
     # Perform bioregionalisation based on clustering
     #
     # variables     vector of names of environmental variables used in the bioregionalisation
     # n.groups      either an integer number of groups, or the height at which to cut the dendrogram (e.g. 0.13)
+    # n.groups.intermediate   an integer number of groups in the intermediate, non-hierachical clustering step
+    #                         increasing this increases computational time significantly
     # l**.min
     # l**.max
     # l**.step      definition of the grid on which the clustering will be done
@@ -173,8 +175,6 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
 
     message("-> Perform non-hierarchical clustering first")
     # For the later hierarchical clustering we will need to compte a distance matrix between all data points. This is obviously impossible on the full data set, so we reduce the information to a smaller number of similar clusters through non-hierarchical clustering
-    # number of clusters
-    num.groups.intermediate <- 200
 
     # number of samples according to the quality argument (smaller numbers speed-up computation)
     if (quick) {
@@ -184,7 +184,7 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     }
 
     # perform clustering
-    cl <- clara(data.trans.noNA, k=num.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
+    cl <- clara(data.trans.noNA, k=n.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
 
     # extract cluster numbers
     data.trans.noNA$clara.num <- cl$clustering
@@ -275,10 +275,10 @@ bioreg <- function(variables, n.groups=12, lat.min=-80, lat.max=-30, lat.step=0.
     # dendrogram
     plot(hcl, labels=F, hang=-1)
     # cutting level
-    lines(c(1,num.groups.intermediate), c(temph,temph), lty=2, col="red")
+    lines(c(1,n.groups.intermediate), c(temph,temph), lty=2, col="red")
     # markers for group labels
     colours <- cmap[hclust.num][hcl$order]
-    points(1:num.groups.intermediate, rep(-0.02, num.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
+    points(1:n.groups.intermediate, rep(-0.02, n.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
 
     # ask for further plots
     ask <- devAskNewPage()
