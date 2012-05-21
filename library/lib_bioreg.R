@@ -133,6 +133,8 @@ bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-8
                 stop("Supplied transformation is neither a string nor a function")
             }
         }
+    } else {
+      tfuncs <- NULL
     }
 
     # Get and transform data
