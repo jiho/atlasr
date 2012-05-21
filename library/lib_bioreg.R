@@ -588,9 +588,10 @@ do.bioreg.variables <- function(variables, file) {
       return(y)
     })
 
-    # the selected variables may have changed, use what we can from the options file and use defaults for the rest
-    transformations[na.omit(match(names(opts$transformations), names(transformations)))] <- opts$transformations
-    weights[na.omit(match(names(opts$weights), names(weights)))] <- opts$weights
+    # the selected variables may have changed, use what we can from the options file (opts$***) and use defaults for the rest (***)
+    commonNames <- intersect(names(transformations), names(opts$transformations))
+    transformations[match(commonNames, names(transformations))] <- opts$transformations[match(commonNames, names(opts$transformations))]
+    weights[match(commonNames, names(weights))] <- opts$weights[match(commonNames, names(opts$weights))]
   }
 
   # default dimensions (in px)
