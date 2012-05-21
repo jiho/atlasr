@@ -403,15 +403,13 @@ plot.pred.bioreg <- function(x, quick=FALSE, path="env_data", ...) {
 ## GUI
 #-----------------------------------------------------------------------------
 
-do.bioreg <- function(lon.min=30, lon.max=60, lat.min=-62, lat.max=-45, ...) {
+do.bioreg <- function(lon.min=30, lon.max=60, lat.min=-62, lat.max=-45) {
   #
   # Open a GUI to select the arguments of the bioreg() function
   # First window: select variables and set all options
   #
-  # ...   passed to bioreg()
-  #
   # Ben Raymond
-  # Last-Modified: <2012-05-10 10:22:33>
+  # Last-Modified: <2012-May-21 18:11>
 
   suppressPackageStartupMessages(require("rpanel"))
 
@@ -495,7 +493,7 @@ do.bioreg <- function(lon.min=30, lon.max=60, lat.min=-62, lat.max=-45, ...) {
     message("Aborting");
     return(win)
   })
-  rp.button(win, "Run", pos=c(3*w/4, rowY, w/4, h), action=function(win, ...) {
+  rp.button(win, "Run", pos=c(3*w/4, rowY, w/4, h), action=function(win) {
 
     # variables
     # print(win$variables)
@@ -533,17 +531,24 @@ do.bioreg <- function(lon.min=30, lon.max=60, lat.min=-62, lat.max=-45, ...) {
       # print(win$lon.max)
       # print(win$lon.step)
 
-      b <- bioreg(
-        variables=win$variables,
-        n.groups=win$n.groups,
-        weights=weights,
-        transformations=transformations,
-        lat.min=win$lat.min, lat.max=win$lat.max, lat.step=win$lat.step,
-        lon.min=win$lon.min, lon.max=win$lon.max, lon.step=win$lon.step,
-        quick=quick,
-        output.dir=win$output.dir,
-        ...
+      # build the function call
+      message("Command:")
+      call <- str_c("bioreg(",
+        "variables=", str_c(deparse(win$variables, width=500), collapse=""),
+        ", n.groups=", win$n.groups,
+        ", weights=", str_c("c(",str_c(names(weights), unlist(weights), sep="=", collapse=", "), ")"),
+        ", transformations=", str_c("c(",str_c(names(transformations), str_c("\"", unlist(transformations),"\"") , sep="=", collapse=", "), ")"),
+        ", lat.min=", win$lat.min, ", lat.max=", win$lat.max, ", lat.step=", win$lat.step,
+        ", lon.min=", win$lon.min, ", lon.max=", win$lon.max, ", lon.step=", win$lon.step,
+        ", quick=", quick,
+        ", output.dir=", deparse(win$output.dir),
+        ")"
       )
+
+      cat(call, "\n")
+
+      # execute call
+      b <- eval(parse(text=call))
 
     }
 
