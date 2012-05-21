@@ -74,7 +74,7 @@ bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-8
     # l**.min
     # l**.max
     # l**.step      definition of the grid on which the clustering will be done
-    # transformations   list giving transformation function for each variable, or NULL for no transformations
+    # transformations   list giving transformation function for each variable, or NULL for no transformation
     # weights       vector giving the weight for each variable
     # quick         TRUE produces less precise clustering and fast plots, suitable for exploratory runs; FALSE is for high quality final analyses
     # path          path where the environmental data is to be found
