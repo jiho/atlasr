@@ -331,7 +331,7 @@ read.data <- function(file, ...) {
     stop("Read only one file at a time")
   }
 
-  file <- win2unix(file, ...)
+  file <- clean.path(file, ...)
 
   fileName <- basename(file)
   message("-> Read input data in ", file)
@@ -479,14 +479,14 @@ rasterize <- function(x, vars, n=10, precisions=NULL, fun=sum, ...) {
 
 rasterise <- rasterize
 
-win2unix <- function(file, ...) {
+clean.path <- function(file, ...) {
   #
-  # Convert between windows and unix file paths
+  # Clean file paths
   #
   # file    file path to convert
-  if (grepl("\\", file, fixed=T)) {
-    file <- gsub("\\", "/", file, fixed=T)
-  }
+
+  file <- normalizePath(file, winslash="/", mustwork=FALSE)
+
   return(file)
 }
 

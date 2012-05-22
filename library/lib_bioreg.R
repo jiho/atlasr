@@ -237,13 +237,14 @@ bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-8
     output <- !is.null(output.dir)
 
     if (output) {
+      output.dir <- clean.path(output.dir)
       message("-> Write output to ", output.dir)
 
       dir.create(output.dir, recursive=TRUE, showWarnings=FALSE)
 
       # use a date/time based suffix to differenciate between runs
       suffix <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
-      baseName <- normalizePath(str_c(output.dir,"/bioreg-", suffix), winslash="/", mustWork=F)
+      baseName <- str_c(output.dir,"/bioreg-", suffix)
 
       # Rdata
       rdataFile <- str_c(baseName, ".Rdata")

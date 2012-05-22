@@ -783,9 +783,9 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
 
   # read dataset
+  file <- clean.path(file)
   if (file.exists(file)) {
     observed_data <- read.data(file)
-    file <- normalizePath(file, winslash="/")
   } else {
     stop("Cannot find file : ", file)
   }
@@ -1092,7 +1092,7 @@ do.brt <- function() {
     # choose the data file
     file <- file.choose()
     # file <- "../data/Austropallene.csv"
-    win$file <- win2unix(file)
+    win$file <- clean.path(file)
 
 
     # write the filename, for information
