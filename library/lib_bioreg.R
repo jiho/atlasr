@@ -2,7 +2,7 @@
 #     Perform abiotic regionalisation
 #
 # (c) Copyright 2012 Ben Raymond, ben dot raymond at aad dot gov dot au
-#     Last-Modified: <2012-05-14 14:16:34>
+#     Last-Modified: <2012-05-22 08:54:50>
 #
 #-----------------------------------------------------------------------------
 
@@ -93,8 +93,10 @@ bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-8
     # possibly expand variable names
     allVariables <- list.env.data(variables, quiet=FALSE)
     # when expansion occurs, stop/warn that transformations and weights might be problematic
-    if ((length(allVariables) != length(variables)) && (! is.null(transformations) || ! is.null(weights)) ) {
+    if ((length(allVariables) > length(variables)) && (! is.null(transformations) || ! is.null(weights)) ) {
       warning("Environment variables names were expanded; there are now ", length(allVariables), ". Please check that the number and order of transformations and weights matches.", immediate.=TRUE)
+    } else if (length(allVariables) < length(variables)) {
+      stop("One or more environment variable names could not be matched to a corresponding data file. Please check the variable names you have supplied and that your environmental data directory is up to date.")
     }
     variables <- allVariables
 
