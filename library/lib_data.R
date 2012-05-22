@@ -397,6 +397,11 @@ match.vars <- function(vars, choices, quiet=TRUE) {
     if (length(matches) == 0) {
       # then try partial matches if needed
       matches = grep(vars[i], choices, value=TRUE)
+
+      # if nothing can be matched, issue a warning
+      if (length(matches) == 0) {
+        warning("No variable matching \"", vars[i], "\" could be found. Please check the variable names you have supplied and that your environmental data directory is up to date.")
+      }
     }
     # store all matches for all variables
     res = c(res, matches)
@@ -411,6 +416,7 @@ match.vars <- function(vars, choices, quiet=TRUE) {
     }
   }
 
+  # if no variable could be matched at all, error out
   if (length(res) == 0) {
     stop("Variables should be in ", paste(dQuote(choices), collapse=", "))
   }
