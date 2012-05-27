@@ -486,7 +486,7 @@ clean.path <- function(file, ...) {
   #
   # file    file path to convert
 
-  file <- normalizePath(file, winslash="/", mustwork=FALSE)
+  file <- normalizePath(file, winslash="/", mustWork=FALSE)
 
   return(file)
 }
