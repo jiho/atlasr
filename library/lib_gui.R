@@ -285,6 +285,9 @@ rp.textentry.immediate <- function (panel, var, action = I, labels = NA, names =
       tkgrid(label, entry)
       tkgrid.configure(label, sticky = "w")
       tkgrid.configure(entry, sticky = "e")
+      # initial value in rp.textentry
+      # tkbind(entry, "<Key-Return>", f)
+      # make the entry immediate
       tkbind(entry, "<Enter>", f)
     }
   }
