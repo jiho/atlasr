@@ -30,16 +30,11 @@ Unzipping the file should create an `atlasr` directory with all the scripts.
 
 ## Running an analysis
 
-### Start R and tell it where to work
+### Start R and get all supporting functions
 
-In the just-created `atlasr` directory, open `get_functions.R` with RStudio (right-click and `Open With...` if necessary). You should get a four panes window with the script on the top-left, the R console on the bottom-left and some stuff we don't care about yet on the right. Use the menu `Tools > Set Working Directory > To Source File Location`. This should print something starting with `setwd(` in the console. It tells R where to find the functions. Your data can be anywhere though.
+In the just-created `atlasr` directory, open `get_functions.R` with RStudio (right-click and `Open With...` if necessary). You should get a four panes window with the script on the top-left, the R console on the bottom-left and some stuff we don't care about yet on the right. 
 
-Other interfaces of R, such as the default R GUI on Windows or Mac, also provide similar functionality to set the working directory. Alternatively you can use the `setwd()` command directly. You should set it to where `get_functions.R` is.
-
-
-### Get all supporting functions
-
-In RStudio, click on the `Source` button at the top of the file pane. This should write something starting with `source(` in the console. This command executes `get_functions.R` which loads all functions stored in the `library` folder and installs all the R "packages" that they use. This is long the first time you run it because it needs to download all packages, but it should be instantaneous afterwards.
+Then, click on the `Source` button at the top of the file pane. This should write something starting with `source(` in the console. This command executes `get_functions.R` which loads all functions stored in the `library` folder and installs all the R "packages" that they use. This is long the first time you run it because it needs to download all packages, but it should be instantaneous afterwards.
 
 With any kind of R interface (not just RStudio), you could just write
 
@@ -47,8 +42,12 @@ With any kind of R interface (not just RStudio), you could just write
 
 in the console to achieve this.
 
-You can now close the `get_functions.R` file.
 
+By default, R works in your home directory (`Documents and Settings/bla bla/something` on Windows, `/Users/yourself` on Mac OS X, `/home/yourself` on Linux). If you would rather work somewhere else, you can use the menu `Tools > Set Working Directory > Choose Directory` in RStudio to tell it where to work. It should print something starting with `setwd(` in the console. You have to do this every time you open R.
+
+If you want to work in the `atlasr` directory directly, keeping the code and the data together, you can even use the shortcut `Tools > Set Working Directory >  To Source File Location` in RStudio, which saves you from having to browse through your computer.
+
+You can now close the `get_functions.R` file.
 
 ### Run an analysis
 

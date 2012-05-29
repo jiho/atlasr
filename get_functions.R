@@ -6,8 +6,15 @@
 #
 #-----------------------------------------------------------------------------
 
+# Functions are in the folder "library", which is next to the current file; so we need to detect where we are
+# This does it, for reasons I don't fully understand
+# source: http://stackoverflow.com/questions/1815606/rscript-determine-path-of-the-executing-script
+frame_files <- lapply(sys.frames(), function(x) x$ofile)
+frame_files <- Filter(Negate(is.null), frame_files)
+path <- dirname(frame_files[[length(frame_files)]])
+
 # Detect names of source files
-sourceFiles = list.files("library", pattern="\\.(R|r)$", full=TRUE)
+sourceFiles = list.files(paste(path, "/library", sep=""), pattern="\\.(R|r)$", full=TRUE)
 
 # Detect which packages are used in those source files
 requiredPackages = c()
