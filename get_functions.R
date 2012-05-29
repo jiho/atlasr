@@ -56,5 +56,5 @@ for (file in sourceFiles) {
     source(file)
 }
 
+# Cleanup the environment
 rm(file, content, installedPackages, m, matched, missingPackages, pack, requiredPackages, sourceFiles)
-
