@@ -12,11 +12,11 @@ Go to the [R download site](http://cran.at.r-project.org/) and download R for yo
 
 *	Mac OS X users, you should get the `R-2.**.pkg` as well as `tcltk-**.pkg` in the `tools` subdirectory further down the page. Installing is just a matter of double-clicking and saying `OK` to everything.
 
-*	Windows users, you should select the `base` subdirectory and then the main `Download R 2.** for Windows` link. Install with the default choices  everywhere.
+*	Windows users, you should select the `base` subdirectory and then the main `Download R 2.** for Windows` link. Install with the default choices everywhere.
 
-*   Linux users, you should get it from your package management system rather than on the above site.
+*   Linux users, you should get it from your package management system rather than from the above site.
 
-Optionally (but this is recommended as it makes things easier in the following), you can install a Graphical User Interface on top of R. We recommend [RStudio](http://rstudio.org/). On the download page, select `RStudio Desktop` and it should detect your operating system and present the recommended file for you on the next page. If you already use RStudio, **ensure that you have the latest version installed**.
+Optionally (but this is recommended as it makes things easier in the following), you can install a specialized editor on top of R, which can become your only interface to R. We recommend [RStudio](http://rstudio.org/). On the download page, select `RStudio Desktop` and it should detect your operating system and present the recommended file for you on the next page. If you already use RStudio, **ensure that you have the latest version installed**.
 
 
 ### Download the latest version of the scripts
