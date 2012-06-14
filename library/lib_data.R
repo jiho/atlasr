@@ -17,9 +17,13 @@
 ## Environment database
 #-----------------------------------------------------------------------------
 
-# "ftp://ftp.aad.gov.au/aadc/derived/antarctic"
+# Ben
+# "ftp://ftp.aad.gov.au/aadc/derived/antarctic" <- slower
+# "http://webdav.data.aad.gov.au/data/environmental/derived/antarctic"
+# Bruno
+# "http://share.biodiversity.aq/GIS/Antarctic/"
 
-dl.env.data <- function(url="ftp://192.168.1.8/env_data_repository/", path=getOption("atlasr.env.data"), user="delcano", password="delcano", ...) {
+dl.env.data <- function(url="http://webdav.data.aad.gov.au/data/environmental/derived/antarctic", path=getOption("atlasr.env.data"), user=NULL, password=NULL, ...) {
   # Download the environmental database
   # = get an archive of all netCDF files and decompress it
   #
@@ -74,7 +78,7 @@ dl.env.data <- function(url="ftp://192.168.1.8/env_data_repository/", path=getOp
   # html <- scan(temp, "character")
 
   # extract file names
-  ncList <- unlist(str_extract_all(html, "\\w*\\.nc\\.zip"))
+  ncList <- unique(unlist(str_extract_all(html, "\\w*\\.nc\\.zip")))
 
   # download files
   temp <- tempfile()
@@ -96,7 +100,7 @@ dl.env.data <- function(url="ftp://192.168.1.8/env_data_repository/", path=getOp
   html <- getURL(imgUrl, ftp.use.epsv=FALSE)
 
   # extract file names
-  imgList <- unlist(str_extract_all(html, "\\w*\\.png"))
+  imgList <- unique(unlist(str_extract_all(html, "\\w*\\.png")))
 
   # download files
   a_ply(imgList, .margins=1, .fun=function(x, url, path) {
@@ -114,7 +118,7 @@ dl.env.data <- function(url="ftp://192.168.1.8/env_data_repository/", path=getOp
   html <- getURL(coastUrl, ftp.use.epsv=FALSE)
 
   # extract file names
-  coastList <- unlist(str_extract_all(html, "[[:alnum:]_-]*\\.csv"))
+  coastList <- unique(unlist(str_extract_all(html, "[[:alnum:]_-]*\\.csv")))
 
   # download files
   a_ply(coastList, .margins=1, .fun=function(x, url, path) {
