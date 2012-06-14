@@ -1,10 +1,11 @@
 suppressPackageStartupMessages(require("testthat", quietly=TRUE))
 
+
 context("Access to environment data")
 
 test_that("error when matching non existent variables", {
   expect_that(
-    match.vars(vars="foo", choices=c("bar", "bob"), quiet=TRUE), 
+    match.vars(vars="foo", choices=c("bar", "bob"), quiet=TRUE),
     throws_error("No variable matching")
   )
 })
@@ -54,12 +55,11 @@ test_that("latitude and longitude names are flexible", {
 })
 
 
-
 context("Data processing")
 
 test_that("writing shapefile to a directory with accents in the name works", {
   temp <- tempfile("test_accent_éü")
-  
+
   d <- data.frame(lon=180, lat=-30, x=1)
 
   write.shapefile(d, temp, variables="x")
@@ -71,7 +71,7 @@ test_that("writing shapefile to a directory with accents in the name works", {
 
 test_that("writing shapefile to a directory with spaces in the name works", {
   temp <- tempfile("test_space_ _")
-  
+
   d <- data.frame(lon=180, lat=-30, x=1)
 
   write.shapefile(d, temp, variables="x")
