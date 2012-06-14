@@ -17,20 +17,19 @@ test_that("variable name expansion issues a message when asked for", {
   expect_that( match.vars("foo", "foobar", quiet=FALSE), shows_message("foobar") )
 })
 
-# test_that("listing environment returns a non-empty character vector", {
-#   x <- list.env.data()
-#   
-#   expect_that( x, is_a("character") )
-#   expect_that( length(x) > 1, is_true() )
-# })
-# 
-# test_that("masking land works", {
-#   x <- read.env.data("bathymetry")
-#   x <- mask.env.data(x)
-# 
-#   expect_that( all(na.omit(x[[1]]$z) < 0), is_true() )
-# })
+test_that("listing environment returns a non-empty character vector", {
+  x <- list.env.data()
 
+  expect_that( x, is_a("character") )
+  expect_that( length(x) > 1, is_true() )
+})
+
+test_that("masking land works", {
+  x <- read.env.data("bathymetry")
+  x <- mask.env.data(x)
+
+  expect_that( all(na.omit(x[[1]]$z) < 0), is_true() )
+})
 
 
 context("Access to species data files")
