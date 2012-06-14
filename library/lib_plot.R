@@ -139,7 +139,7 @@ plot.pred <- function(x, ...) {
 ## Plotting functions
 #-----------------------------------------------------------------------------
 
-layer_land <- function(x, expand=1, path="env_data", ...) {
+layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
   #
   # Produce a ggplot layer with coastlines corresponding to a dataset
   #
@@ -323,7 +323,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
 }
 
 
-plot.env.data <- function(variables="", path="env_data", ...) {
+plot.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) {
   #
   # Plot all environmental data to PNG files
   #

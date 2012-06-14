@@ -18,7 +18,7 @@ names(lookup.names.variables)<-c("day.no","towpath","towconfig","no.turns","lat"
 
 
 
-gdm <- function(file, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, path="env_data", ...) {
+gdm <- function(file, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, path=getOption("atlasr.env.data"), ...) {
 
   env <- read.env.data(variables=variables, path=path)
 

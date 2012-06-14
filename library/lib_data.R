@@ -19,7 +19,7 @@
 
 # "ftp://ftp.aad.gov.au/aadc/derived/antarctic"
 
-dl.env.data <- function(url="ftp://192.168.1.8/env_data_repository/", path="env_data", user="delcano", password="delcano", ...) {
+dl.env.data <- function(url="ftp://192.168.1.8/env_data_repository/", path=getOption("atlasr.env.data"), user="delcano", password="delcano", ...) {
   # Download the environmental database
   # = get an archive of all netCDF files and decompress it
   #
@@ -127,7 +127,7 @@ dl.env.data <- function(url="ftp://192.168.1.8/env_data_repository/", path="env_
 }
 
 
-check.get.env.data <- function(path="env_data") {
+check.get.env.data <- function(path=getOption("atlasr.env.data")) {
   # Check if the database of environmental data is present; if not, download it
   #
   # path  where to store the netCDF files of the database
@@ -142,7 +142,7 @@ check.get.env.data <- function(path="env_data") {
 }
 
 
-list.env.data <- function(variables="", path="env_data", full=FALSE, ...) {
+list.env.data <- function(variables="", path=getOption("atlasr.env.data"), full=FALSE, ...) {
   #
   # List available environment variables
   #
@@ -179,7 +179,7 @@ list.env.data <- function(variables="", path="env_data", full=FALSE, ...) {
 }
 
 
-read.env.data <- function(variables="", path="env_data", ...) {
+read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) {
   # Read data from the netCDF files
   #
   # variables   only output variables matching this (matches all when "")

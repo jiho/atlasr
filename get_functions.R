@@ -56,5 +56,12 @@ for (file in sourceFiles) {
     source(file)
 }
 
+# Set up options
+# location of environmental data
+if (is.null(getOption("atlasr.env.data"))) {
+  options(atlasr.env.data=paste(path, "/env_data", sep=""))
+}
+# NB: it can be set by the user in a script or in the .Rprofile config file
+
 # Cleanup the environment
 rm(file, content, installedPackages, m, matched, missingPackages, pack, requiredPackages, sourceFiles)

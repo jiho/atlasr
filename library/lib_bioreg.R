@@ -62,7 +62,7 @@ function.maker <- function(str) {
 ## Run bioregionalisation
 #-----------------------------------------------------------------------------
 
-bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quick=TRUE, path="env_data", output.dir=NULL)
+bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quick=TRUE, path=getOption("atlasr.env.data"), output.dir=NULL)
 {
     #
     # Perform bioregionalisation based on clustering
@@ -363,7 +363,7 @@ plot.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
   return(p)
 }
 
-plot.pred.bioreg <- function(x, quick=FALSE, path="env_data", ...) {
+plot.pred.bioreg <- function(x, quick=FALSE, path=getOption("atlasr.env.data"), ...) {
   #
   # Plot a map of bioregionalisation clusters
   #
