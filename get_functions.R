@@ -15,7 +15,11 @@
 # source: http://stackoverflow.com/questions/1815606/rscript-determine-path-of-the-executing-script
 frame_files <- lapply(sys.frames(), function(x) x$ofile)
 frame_files <- Filter(Negate(is.null), frame_files)
-path <- dirname(frame_files[[length(frame_files)]])
+if (length(frame_files) == 0) {
+	path <- getwd()
+} else {
+	path <- dirname(frame_files[[length(frame_files)]])
+}
 
 # Detect names of source files
 sourceFiles = list.files(paste(path, "/library", sep=""), pattern="\\.(R|r)$", full=TRUE)
