@@ -166,7 +166,7 @@ layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
 }
 
 
-polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), lat.precision=NULL, lon.precision=NULL, coast=NULL, ...) {
+polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), lat.precision=NULL, lon.precision=NULL, draw.coast=TRUE, scale=1, ...) {
   #
   # data          data frame with columns lat, lon, and variables to plot
   # mapping       a call to `aes()` which maps a variable to a plotting
@@ -180,7 +180,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
   #               precision, the data is *subsampled* to those locations
   #               i.e. some data is actually dropped. If you want to average or sum
   #               the data per cell, use rasterize() in lib_data.R
-  # coast         coastline geom, if none is provided, a basic coastline is drawn
+  # draw.coast    wether to draw a basic coastline
   # scale         scale of the points plotted
   # ...           passed to the appropriate geom
   #
@@ -237,27 +237,6 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     }
   }
 
-  # Get and re-cut coastline if none is provided
-  if (is.null(coast)) {
-    # extract the whole world
-    suppressPackageStartupMessages(require("maps", quietly=TRUE))
-    coast <- map("world", interior=FALSE, plot=FALSE)
-    coast <- data.frame(lon=coast$x, lat=coast$y)
-    # restrict the coastline info to what we need given the data
-    expand <- 2       # add a little wiggle room
-    # compute extent of data
-    lats <- range(data$lat) + c(-expand, +expand)
-    lons <- range(data$lon) + c(-expand, +expand)
-    # re-cut the coastline
-    # coast <- coast[coast$lat >= lats[1] & coast$lat <= lats[2] & coast$lon >= lons[1] & coast$lon <= lons[2],]
-    coast <- coast[coast$lat <= lats[2] & coast$lon >= lons[1] & coast$lon <= lons[2],]
-
-    # prepare the geom
-    coast <- geom_path(data=coast, na.rm=TRUE, colour="grey50")
-    # NB: silently remove missing values which are inherent to coastline data
-  }
-
-
   # Plot
   # prepare plot
   p <- ggplot(data, aes(x=lon, y=lat)) +
@@ -285,8 +264,25 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     p <- p + geom_tile(mapping=mapping, ...)
   }
 
-  # plot the coastline
-  p <- p + coast
+  # Get and re-cut coastline if need be
+  if (draw.coast) {
+    # extract the whole world
+    suppressPackageStartupMessages(require("maps", quietly=TRUE))
+    coast <- map("world", interior=FALSE, plot=FALSE)
+    coast <- data.frame(lon=coast$x, lat=coast$y)
+    # restrict the coastline info to what we need given the data
+    expand <- 2       # add a little wiggle room
+    # compute extent of data
+    lats <- range(data$lat) + c(-expand, +expand)
+    lons <- range(data$lon) + c(-expand, +expand)
+    # re-cut the coastline
+    # coast <- coast[coast$lat >= lats[1] & coast$lat <= lats[2] & coast$lon >= lons[1] & coast$lon <= lons[2],]
+    coast <- coast[coast$lat <= lats[2] & coast$lon >= lons[1] & coast$lon <= lons[2],]
+
+    # add the geom
+    p <- p + geom_path(data=coast, na.rm=TRUE, colour="grey50")
+    # NB: silently remove missing values which are inherent to coastline data
+  }
 
   # use nice ColorBrewer colours
   if ("fill" %in% names(mapping)) {
