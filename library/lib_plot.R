@@ -237,6 +237,9 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     }
   }
 
+  # remove colour mapping (one must use fill because we only use filled shapes)
+  mapping <- mapping[names(mapping) != "colour",]
+
   # Plot
   # prepare plot
   p <- ggplot(data, aes(x=lon, y=lat)) +
@@ -253,9 +256,6 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     # (the more data, the smaller the points)
     nLats <- length(unique(data$lat))
     baseSize <- scale * 90 / nLats
-
-    # remove colour mapping (one must use fill because we used filled shapes)
-    mapping <- mapping[names(mapping) != "colour",]
 
     # plot
     # NB: shape: 21 = filled point, 22 = filled square, 23 = filled losange
@@ -296,17 +296,6 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
         p <- p + scale_fill_brewer(palette="Set3")
       }
       # otherwise just use the default colours of ggplot
-    }
-  }
-  # same for coulour
-  if ("colour" %in% names(mapping)) {
-    colour.data <- data[,as.character(mapping$colour)]
-    if (is.numeric(colour.data)) {
-      p <- p + scale_colour_distiller(palette="Spectral", guide="colorbar")
-    } else if (is.factor(colour.data)) {
-      if (nlevels(colour.data)<=12) {
-        p <- p + scale_colour_brewer(palette="Set3")
-      }
     }
   }
 
