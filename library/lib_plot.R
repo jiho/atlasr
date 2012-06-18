@@ -170,7 +170,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
   #
   # data          data frame with columns lat, lon, and variables to plot
   # mapping       a call to `aes()` which maps a variable to a plotting
-  #               aesthetic characteristic (fill, colour, size, alpha, etc.)
+  #               aesthetic characteristic (fill, size, alpha, etc.)
   # geom          the type of plot ("geometry" in ggplot parlance) to produce
   #               = points or tiles (possibly better looking, longer to plot)
   #               auto chooses points or tiles depending on the size of the data
