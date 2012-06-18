@@ -274,8 +274,12 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     nLats <- length(unique(data$lat))
     baseSize <- 90 / nLats
 
+    # remove colour mapping (one must use fill because we used filled shapes)
+    mapping <- mapping[names(mapping) != "colour",]
+
     # plot
-    p <- p + geom_point(mapping=mapping, ...) + scale_size(range=c(baseSize, baseSize*2.2), guide=FALSE)
+    # NB: shape: 21 = filled point, 22 = filled square, 23 = filled losange
+    p <- p + geom_point(mapping=mapping, shape=21, colour=NA, ...) + scale_size(range=c(baseSize, baseSize*2.2), guide=FALSE)
   } else if (geom == "tile"){
     p <- p + geom_tile(mapping=mapping, ...)
   }

@@ -1020,10 +1020,10 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
     # check wether CV error is computed
     if (all(is.na(x$prediction$CVpred))) {
       # map only prediction
-      mapping <- aes(colour=pred)
+      mapping <- aes(fill=pred)
     } else {
       # map prediction as colour and error as transparency
-      mapping <- aes(colour=pred, alpha=CVpred)
+      mapping <- aes(fill=pred, alpha=CVpred)
     }
 
     # main plot
@@ -1047,7 +1047,7 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
         if (is.numeric(x$data[,x$resp.var])) {
           # numerical values (abundances)
           # = use coloured points with white outline
-          p <- p + geom_point(aes_string(x="lon", y="lat", fill=x$resp.var), data=x$data, shape=21, size=1.5, colour="white", alpha=0.5) + scale_fill_continuous(low="black", high="red")
+          p <- p + geom_point(aes_string(x="lon", y="lat", size=x$resp.var), data=x$data, alpha=0.5) + scale_size_continuous(range=0.5, 4)
         } else {
           # presence-absence values
           # = use points (presence) and crosses (absence)

@@ -393,7 +393,7 @@ plot.pred.bioreg <- function(x, quick=FALSE, path=getOption("atlasr.env.data"), 
   } else {
     # polar projected plot
 
-    clusterMap <- polar.ggplot(x, aes(colour=cluster)) +
+    clusterMap <- polar.ggplot(x, aes(fill=cluster)) +
       # nice colours
       scale_colour_manual(values=cmap)
 
