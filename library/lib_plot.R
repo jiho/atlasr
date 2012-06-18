@@ -93,6 +93,85 @@ plot.pred <- function(x, ...) {
   UseMethod("plot.pred")
 }
 
+clip.polygon <- function(x, lon.min=-180, lon.max=180, lat.min=-90, lat.max=90) {
+  #
+  # Clip a polygon within given limits
+  #
+  # x       a data.frame with coordinates (as the first two columns, in the order lon then lat) defining a polygon, or several polygons separated by NAs
+  # lon.*
+  # lat.*   limits within which the polygon is cut
+  #
+
+  suppressPackageStartupMessages(require("gpclib", quietly=TRUE))
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+
+  # reformat the data.frame x to be converted into polygons
+  x <- x[,1:2]
+  names(x) <- c("x", "y")
+
+  # cut all polygons
+  x$id <- cumsum(is.na(x$x))
+  x <- na.omit(x)
+  xL <- split(x[,1:2], f=x$id)
+
+  # remove completely out of range polygons
+  # this accelerates the next steps
+  inRange <- laply(xL, function(x) {
+    any(x$x >= lon.min & x$x <= lon.max & x$y >= lat.min & x$y <= lat.max)
+  })
+  xL <- xL[inRange]
+
+  # convert each piece into a polygon object for gpclib
+  xP <- as(xL[[1]], "gpc.poly")
+  if (length(xL) > 1) {
+    for (i in 2:length(xL)) {
+      tempP <- as(na.omit(xL[[i]]), "gpc.poly")
+      xP <- append.poly(xP, tempP)
+    }
+  }
+
+  # prepare the mask
+  mask <- data.frame(x=c(lon.min, lon.min, lon.max, lon.max), y=c(lat.min, lat.max, lat.max, lat.min))
+  maskP <- as(mask, "gpc.poly")
+
+  # compute clipping
+  clippedP <- intersect(xP, maskP)
+
+  # convert into a data.frame
+  clipped <- clippedP@pts
+  clipped <- ldply(clipped, function(x) {
+    # extract elements
+    X <- data.frame(lon=x$x, lat=x$y, hole=x$hole)
+    # close polygon
+    X <- rbind(X, X[1,])
+    # separate from next polygon
+    X <- rbind(X, NA)
+    return(X)
+  })
+
+  return(clipped)
+}
+
+clip.to.data <- function(x, data, expand=1) {
+  #
+  # Clip a polygon within limits of the data argument
+  #
+  # x       a data.frame with coordinates (lon and lat) defining a polygon, or several polygons separated by NAs
+  #         typically, a coastline
+  # data    a data.frame with coordinates (lon and lat) where the data points are and to which the
+  # expand  how much to expand x layer around the data (in lon/lat units)
+  #
+
+  # get data range
+  lons <- range(data$lon, na.rm=TRUE) + c(-expand, +expand)
+  lats <- range(data$lat, na.rm=TRUE) + c(-expand, +expand)
+
+  # select portions of land which fit this data
+  clipped <- clip.polygon(x[,c("lon", "lat")], lons[1], lons[2], lats[1], lats[2])
+
+  return(clipped)
+}
+
 
 ## Plotting functions
 #-----------------------------------------------------------------------------
