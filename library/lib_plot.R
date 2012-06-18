@@ -43,7 +43,7 @@ discrete.colourmap <- function(n=10) {
 
     cmapSat <- cmapHSV
     # saturate
-    cmapSat["s",] <- cmapSat["s",] + 0.2
+    cmapSat["s",] <- cmapSat["s",] + 0.3
     # ensure saturation is less than 1
     cmapSat["s",][cmapSat["s",] > 1] <- 1
     # convert to colors
@@ -51,7 +51,7 @@ discrete.colourmap <- function(n=10) {
 
     cmapUndersat <- cmapHSV
     # de-saturate
-    cmapUndersat["s",] <- cmapUndersat["s",] - 0.3
+    cmapUndersat["s",] <- cmapUndersat["s",] - 0.15
     # ensure saturation is less than 1
     cmapUndersat["s",][cmapUndersat["s",] < 0] <- 0
     # convert to colors
