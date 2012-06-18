@@ -778,7 +778,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     return(result)
 }
 
-brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, predict=FALSE, bin=FALSE, path="env_data", ...) {
+brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, predict=FALSE, bin=FALSE, path=getOption("atlasr.env.data"), ...) {
 
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
 
