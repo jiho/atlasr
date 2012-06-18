@@ -318,7 +318,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     fill.data <- data[,as.character(mapping$fill)]
     if (is.numeric(fill.data)) {
       # if the data is numeric, use a continuous, jet-like colour scale
-      p <- p + scale_fill_gradientn(colours=continuous.colourmap())
+      p <- p + scale_fill_gradientn(colours=continuous.colourmap(), guide="colourbar")
     } else if (is.factor(fill.data)) {
       # if the data is a factor, use a discrete colour scape
       p <- p + scale_fill_manual(values=discrete.colourmap(n=nlevels(fill.data)))
