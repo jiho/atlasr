@@ -186,18 +186,28 @@ layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
   # path    path to environmental database
   #
 
-  # read coordinates of land masses
-  land <- read.csv(str_c(path, "/worldmap-below_30-rough-no_countries.csv"))
+  # compute data range
+  lonRange <- diff(range(x$lon, na.rm=T))
+  latRange <- diff(range(x$lat, na.rm=T))
+  range <- min(lonRange, latRange) + expand * 2
 
-  # get data range
-  lats <- range(x$lat, na.rm=TRUE) + c(-expand, +expand)
-  lons <- range(x$lon, na.rm=TRUE) + c(-expand, +expand)
+  # choose the resolution based on the range of the data
+  if (range < 20) {
+    resolution <- 0.01
+  } else if (range < 35){
+    resolution <- 0.05
+  } else {
+    resolution <- 0.1
+  }
 
-  # select portions of land which fit this data
-  land <- land[land$lat >= lats[1] & land$lat <= lats[2] & land$lon >= lons[1] & land$lon <= lons[2],]
-  # TODO use cut polygon in one of the mapping libraries
+  # read coordinates of land masses at the appropriate resolution
+  land <- read.csv(str_c(path, "/worldmap-", resolution, ".csv"))
 
-  landLayer <- geom_path(aes(x=lon, y=lat), size=0.3, data=land, na.rm=T)
+  # clip land masses to data range
+  land <- clip.to.data(land, x, expand=expand)
+
+  # draw the layer
+  landLayer <- geom_polygon(aes(x=lon, y=lat), data=land, na.rm=T, ...)
 
   return(landLayer)
 }
@@ -215,11 +225,10 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
   # lon.precision the precision at which lat and lon are considered
   #               (in degrees). If they are larger than the original
   #               precision, the data is *subsampled* to those locations
-  #               i.e. some data is actually dropped. If you want to average or sum
-  #               the data per cell, use rasterize() in lib_data.R
-  # draw.coast    wether to draw a basic coastline
+  #               i.e. some data is actually dropped. If you want to average or
+  #               sum the data per cell, use rasterize() in lib_data.R
   # scale         scale of the points plotted
-  # ...           passed to the appropriate geom
+  # ...           passed to the selected geom
   #
 
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
@@ -301,25 +310,8 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     p <- p + geom_tile(mapping=mapping, ...)
   }
 
-  # Get and re-cut coastline if need be
-  if (draw.coast) {
-    # extract the whole world
-    suppressPackageStartupMessages(require("maps", quietly=TRUE))
-    coast <- map("world", interior=FALSE, plot=FALSE)
-    coast <- data.frame(lon=coast$x, lat=coast$y)
-    # restrict the coastline info to what we need given the data
-    expand <- 2       # add a little wiggle room
-    # compute extent of data
-    lats <- range(data$lat) + c(-expand, +expand)
-    lons <- range(data$lon) + c(-expand, +expand)
-    # re-cut the coastline
-    # coast <- coast[coast$lat >= lats[1] & coast$lat <= lats[2] & coast$lon >= lons[1] & coast$lon <= lons[2],]
-    coast <- coast[coast$lat <= lats[2] & coast$lon >= lons[1] & coast$lon <= lons[2],]
-
-    # add the geom
-    p <- p + geom_path(data=coast, na.rm=TRUE, colour="grey50")
-    # NB: silently remove missing values which are inherent to coastline data
-  }
+  # add the coastline
+  p <- p + layer_land(data, expand=3, alpha=0.9)
 
   # use nice colours
   if ("fill" %in% names(mapping)) {
