@@ -311,7 +311,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
   }
 
   # add the coastline
-  p <- p + layer_land(data, expand=3, alpha=0.9)
+  p <- p + layer_land(data, alpha=0.9)
 
   # use nice colours
   if ("fill" %in% names(mapping)) {
