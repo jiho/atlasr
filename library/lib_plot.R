@@ -25,7 +25,7 @@ polar_proj <- function(projection="stereographic", orientation=c(-90,0,0)) {
 }
 
 
-scale_brewerc <- function(aesthetic=c("fill", "colour"), type=c("div", "seq"), palette=1, ...) {
+scale_distiller <- function(aesthetic=c("fill", "colour"), type=c("div", "seq"), palette=1, ...) {
   #
   # Continuous colour scales based on ColorBrewer palettes
   # http://colorbrewer2.org/
@@ -68,9 +68,9 @@ scale_brewerc <- function(aesthetic=c("fill", "colour"), type=c("div", "seq"), p
   return(s)
 }
 
-scale_fill_brewerc <- function(...) { scale_brewerc(..., aesthetic="fill") }
-scale_colour_brewerc <- function(...) { scale_brewerc(..., aesthetic="colour") }
-scale_color_brewerc <- scale_colour_brewerc
+scale_fill_distiller <- function(...) { scale_distiller(..., aesthetic="fill") }
+scale_colour_distiller <- function(...) { scale_distiller(..., aesthetic="colour") }
+scale_color_distiller <- scale_colour_distiller
 
 discrete.colourmap <- function(n=10) {
     #
@@ -289,7 +289,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     fill.data <- data[,as.character(mapping$fill)]
     if (is.numeric(fill.data)) {
       # if the data is numeric, use a continuous, diverging scale
-      p <- p + scale_fill_brewerc(palette="Spectral", guide="colorbar")
+      p <- p + scale_fill_distiller(palette="Spectral", guide="colorbar")
     } else if (is.factor(fill.data)) {
       # if the data is discrete, use a ColorBrewer scale only when possible (less than 12 colours)
       if (nlevels(fill.data)<=12) {
@@ -302,7 +302,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
   if ("colour" %in% names(mapping)) {
     colour.data <- data[,as.character(mapping$colour)]
     if (is.numeric(colour.data)) {
-      p <- p + scale_colour_brewerc(palette="Spectral", guide="colorbar")
+      p <- p + scale_colour_distiller(palette="Spectral", guide="colorbar")
     } else if (is.factor(colour.data)) {
       if (nlevels(colour.data)<=12) {
         p <- p + scale_colour_brewer(palette="Set3")
@@ -377,7 +377,7 @@ plot.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) 
       # plot land
       landLayer +
       # nice colour gradient
-      scale_colour_brewerc(name=variable, palette="Spectral", guide="colourbar") +
+      scale_colour_distiller(name=variable, palette="Spectral", guide="colourbar") +
       # blank theme
       opts(panel.background=theme_blank(),
            panel.grid.major=theme_blank(),
