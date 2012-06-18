@@ -181,6 +181,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
   #               i.e. some data is actually dropped. If you want to average or sum
   #               the data per cell, use rasterize() in lib_data.R
   # coast         coastline geom, if none is provided, a basic coastline is drawn
+  # scale         scale of the points plotted
   # ...           passed to the appropriate geom
   #
 
@@ -272,7 +273,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     # try to guess the size of points based on how many data there is
     # (the more data, the smaller the points)
     nLats <- length(unique(data$lat))
-    baseSize <- 90 / nLats
+    baseSize <- scale * 90 / nLats
 
     # remove colour mapping (one must use fill because we used filled shapes)
     mapping <- mapping[names(mapping) != "colour",]
