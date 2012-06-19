@@ -66,6 +66,8 @@ test_that("latitude and longitude names are flexible", {
   write.csv(data.frame(LAT=1, LONG=1), temp)
   d <- read.data(temp)
   expect_that( all(c("lat", "lon") %in% names(d)), is_true() )
+
+  unlink(temp)
 })
 
 
@@ -81,6 +83,8 @@ test_that("writing shapefile to a directory with accents in the name works", {
   expect_that( file.exists(paste(temp, ".shp", sep="")), is_true() )
   expect_that( file.exists(paste(temp, ".shx", sep="")), is_true() )
   expect_that( file.exists(paste(temp, ".dbf", sep="")), is_true() )
+
+  unlink(temp)
 })
 
 test_that("writing shapefile to a directory with spaces in the name works", {
@@ -93,6 +97,8 @@ test_that("writing shapefile to a directory with spaces in the name works", {
   expect_that( file.exists(paste(temp, ".shp", sep="")), is_true() )
   expect_that( file.exists(paste(temp, ".shx", sep="")), is_true() )
   expect_that( file.exists(paste(temp, ".dbf", sep="")), is_true() )
+
+  unlink(temp)
 })
 
 
