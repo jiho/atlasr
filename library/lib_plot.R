@@ -97,7 +97,7 @@ clip.polygon <- function(x, lon.min=-180, lon.max=180, lat.min=-90, lat.max=90) 
   #
   # Clip a polygon within given limits
   #
-  # x       a data.frame with coordinates (as the first two columns, in the order lon then lat) defining a polygon, or several polygons separated by NAs
+  # x       a data.frame with coordinates (lon and lat) defining a polygon, or several polygons separated by NAs
   # lon.*
   # lat.*   limits within which the polygon is cut
   #
@@ -106,7 +106,7 @@ clip.polygon <- function(x, lon.min=-180, lon.max=180, lat.min=-90, lat.max=90) 
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
 
   # reformat the data.frame x to be converted into polygons
-  x <- x[,1:2]
+  x <- x[,c("lon", "lat")]
   names(x) <- c("x", "y")
 
   # cut all polygons
