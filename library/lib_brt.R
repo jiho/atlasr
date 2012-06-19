@@ -557,13 +557,13 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
     # arguments checks
     if (!(resp.var %in% names(data))) {
-        stop("Response variables not found in the original dataset")
+        stop("Response variable not found in the original dataset")
     }
     if (!all(pred.vars %in% names(data))) {
-        stop("Not all response variables are in the original dataset")
+        stop("Not all explanatory variables are in the original dataset")
     }
     if (predict & !all(pred.vars %in% names(newdata))) {
-        stop("Not all response variables are in the new dataset")
+        stop("Not all explanatory variables are in the prediction dataset")
     }
 
     if ((n.boot.effects > 0 & n.boot.effects < 100)) {
