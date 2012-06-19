@@ -15,6 +15,8 @@ if (substr(path, 1, 1) != "/") {
  path <- paste("../", path, sep="")
 }
 
+context("BRT computation")
+
 # prepare fake data
 set.seed(123)
 n <- 100
@@ -23,10 +25,10 @@ temp <- tempfile(fileext=".csv")
 write.table(data, file=temp, row.names=FALSE, sep=",")
 
 # run a BRT model
-b <- brts(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), path=path, quiet=T, predict=TRUE, lat.step=2, lon.step=4)
+capture.output(suppressMessages(
+  b <- brts(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), path=path, quiet=T, predict=TRUE, lat.step=2, lon.step=4)
+), file=tempfile())
 
-
-context("BRT functions checks")
 
 test_that("contributions are replicable", {
   expect_that(
