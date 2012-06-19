@@ -122,18 +122,61 @@ It returns a named list with one element per taxa studied. Each element is an ob
 *   `prediction`  `data.frame` with the prediction grid (`lat`, `lon`), the predicted probability of presence / abundance (`pred`) at the grid points and possibly the cross validated error (`CVpred`).
 
 
-## Analysis routine
-
-do not predict with many parameters
-trim down parameters
-do not predict and boot strap effects
-trim down parameters
-predict with quick plot
-check
-predict with bootstrap and full plot
-
-
 ## Viewing and interpreting results
+
+Results for each taxon are saved in a folder hierachy, next to your data. Let us say you have a file named `data_fish.csv` with presence data for species `Electrona_antarctica`. The file is on your `Desktop`. Running the a BRT model on this species will result in this hierachy
+
+    Desktop/
+        data_fish.csv
+        data_fish/
+            Electrona_antarctica-BRT/
+                Electrona_antarctica-BRT.csv
+                Electrona_antarctica-BRT.dbf
+                Electrona_antarctica-BRT.pdf
+                Electrona_antarctica-BRT.prj
+                Electrona_antarctica-BRT.Rdata
+                Electrona_antarctica-BRT.shp
+                Electrona_antarctica-BRT.shx
+
+The PDF file contains the plots of the effect of each variable on the probability of presence/abundance of *Electrona antarctica* and possibly the map of the prediction of its probablity of presence/abundance (if `predict=TRUE`).
+
+The effects plots are ordered according to their contribution to the model. The curve is interpretable as a measure of the probablity of presence of the species according to the value of the variable (its ecological niche). So, when the curve is flat, the variable has little to no influence. Bootstrapping effects adds confidence intervals around theses curves, allowing to better assess which variables really have a significant effect.
+
+The prediction probability is mapped to a colour scale. When bootstrapping predictions, the confidence in the prediction is mapped to transparency (the less confident, the more transparent). Every point of the grid would be represented unless:
+
+*   `quick=TRUE`, in which case the data is subsampled to a 1ºx2º latxlon grid
+*   `extrapolate.env=FALSE` or `NA`, in which case, points where the values of the environment are outside the environmental range of the original data are dropped or represented in grey (respectively).
+
+The other files contain the data represented in this PDF file.
+
+The `Rdata` file contains the R object returned by the analysis. It is called `brtObj` and loading the `Rdata` file in R (Right-click, Open With > RStudio for example) should put you in a R workspace where this object exists (check in the "Workspace" tab, on the right hand side).
+
+The `csv` file and the shape files (`dbf`, `prj`, `shp`, `shx`) contain the predicted probability of presence at every point of the prediction grid.
+
+
+## Analysis steps
+
+A suggested analysis routine is:
+
+1. run an initial model with no prediction, quick computation and many variables
+2. remove variables which have little to no influence in the model
+3. run a new model with the selected variables, full computation (quick unchecked) and bootstrapping of effects, but still with no prediction
+4. with the new, bootstrapped, effects plots, trim further fown the explanatory variables
+5. run a new model with the final set of variables, with prediction and, possibly, bootstrapping of the prediction
 
 
 ## Inspecting the results again
+
+As explained above, every element of the analysis is saved in the `Rdata` file. This file can be loaded in an R session with the `load()` command, the `Load` button in the workspace tab of RStudio or by double clicking the `Rdata` file itself, thus opening it in your R interface of choice (RStudio for example).
+
+This gives you a `brtObj` object, which can be inspected with the usual R functions:
+
+*   `print(brtObj)` (or simply `brtObj`) gives a few facts about the model
+
+*   `summary(brtObj)` gives information about deviance, contributions and predictions, when available
+
+*   `plot(brtObj)` produces the effects plot
+
+*   `plot.pred(brtObj)` produces the prediction map
+
+The object itself is simply a list, can be inspected using `str(brtObj)` and elements can be extracted from it with the usual `$` operator (Cf. above for the constituting elements of this object).
