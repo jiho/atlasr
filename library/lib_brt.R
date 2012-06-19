@@ -799,8 +799,26 @@ compute.brt <- function(
     return(result)
 }
 
-brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, predict=FALSE, bin=FALSE, path=getOption("atlasr.env.data"), ...) {
-
+brt <- function(
+  #
+  # User-friendly interface to BRT modelling
+  #
+  file,                   # name of the file where the presence/abundance data is
+  taxa,                   # names (or abbreviations) of the taxa of interest
+  variables,              # names (or abbreviations) of the variables to use for the prediction
+  lat.min=-80, lat.max=-30, lat.step=0.1,   # definition of the prediction grid
+  lon.min=-180, lon.max=180, lon.step=0.5,
+  bin=FALSE,              # whether to bin the observation data on the prediction grid
+  plot.layout=c(2,2),     # dimension of the matrix of effects plots
+  quick=TRUE,             # when TRUE, a fixed number of trees is used in the fit and the prediction plot is subsampled, to increase speed
+  path=getOption("atlasr.env.data"),  # path to the environmental database
+  # compute.brt() arguments
+  predict=FALSE,          # whether to perform the prediction or only fit the model
+  quiet=FALSE,            # do not print messages when TRUE
+  n.trees.fixed=ifelse(quick, 1000, 0), # if > 0, specifies the fixed number of trees to use in the BRT model. Otherwise, the number of trees is estimated by a stepwise procedure
+  ...                     # passed to compute.brt()
+)
+{
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
 
   # read dataset
@@ -853,35 +871,8 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
   for (i in seq(along=taxa)) {
     message("-> Run BRT for ", taxa[i])
 
-    # prepare names of the files where the results will be written
-    # taxon name
-    cTaxon <- taxa[i]
-    # data file without extension
-    fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
-    # replace "." by "_" because shapefile writing does not support "."
-    # fileName <- str_replace_all(fileName, fixed("."), "_")
-    cTaxon <- str_replace_all(cTaxon, fixed("."), "_")
-    # prepare directory
-    dirName <- str_c(fileName, "/", cTaxon, "-BRT")
-    dir.create(dirName, showWarnings=FALSE, recursive=TRUE)
-    if (!file.exists(dirName)) {
-      stop("Could not produce output directory : ", dirName)
-    }
-    # prepare a basic name from this
-    baseName <- str_c(dirName, "/", cTaxon, "-BRT")
-
-    # prepare specific filenames
-    pdfFile <- str_c(baseName, ".pdf", sep="")
-    csvFile <- str_c(baseName, ".csv", sep="")
-    rdataFile <- str_c(baseName, ".Rdata", sep="")
-
-    # open the PDF
-    pdf(pdfFile, width=11.7, height=8.3)
-
-    # b <- brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, ...)
-
     brtObj <- tryCatch(
-      brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, ...),
+      compute.brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, n.trees.fixed=n.trees.fixed, ...),
       # do not stop on error
       error=function(e) {
         warning(e)
@@ -889,14 +880,50 @@ brts <- function(file, taxa, variables, lat.min=-80, lat.max=-30, lat.step=0.1, 
       }
     )
 
-    # close PDF
-    dev.off()
-
     if (is.null(brtObj)) {
       # there was an error, just skip to the next species
       next
 
     } else {
+      # prepare names of the files where the results will be written
+      # taxon name
+      cTaxon <- taxa[i]
+      # data file without extension
+      fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
+      # replace "." by "_" because shapefile writing does not support "."
+      # fileName <- str_replace_all(fileName, fixed("."), "_")
+      cTaxon <- str_replace_all(cTaxon, fixed("."), "_")
+      # prepare directory
+      dirName <- str_c(fileName, "/", cTaxon, "-BRT")
+      dir.create(dirName, showWarnings=FALSE, recursive=TRUE)
+      if (!file.exists(dirName)) {
+        stop("Could not produce output directory : ", dirName)
+      }
+      # prepare a basic name from this
+      baseName <- str_c(dirName, "/", cTaxon, "-BRT")
+
+      # prepare specific filenames
+      pdfFile <- str_c(baseName, ".pdf", sep="")
+      csvFile <- str_c(baseName, ".csv", sep="")
+      rdataFile <- str_c(baseName, ".Rdata", sep="")
+
+      # open the PDF
+      pdf(pdfFile, width=11.7, height=8.3)
+
+      # plot effects
+      if ( ! quiet ) cat("   plot effects\n")
+      plot.brt(brtObj, plot.layout=plot.layout)
+
+      # plot prediction
+      if ( ! quiet ) cat("   plot predictions\n")
+      print(plot.pred.brt(brtObj, quick=quick))
+
+      # close PDF
+      dev.off()
+
+      # print info about the fit
+      summary(brtObj)
+
       # write the results in files
       message("   Write output to ", dirName)
       save(brtObj, file=rdataFile)
