@@ -570,7 +570,7 @@ compute.brt <- function(
   n.boot.pred=0,          # number of bootstraps for the prediction (allows to estimate error through cross validation)
   n.trees.fixed=0,        # if > 0, specifies the fixed number of trees to use in the BRT model. Otherwise, the number of trees is estimated by a stepwise procedure
   quiet=FALSE,            # do not print messages when TRUE
-  ...                     # passed to dismo::gbm.step or dismo::gbm.fixed depending on n.tree.fixed
+  ...                     # passed to dismo::gbm.step or dismo::gbm.fixed depending on n.trees.fixed
 )
 {
     suppressPackageStartupMessages(require("gbm", quietly=T))
