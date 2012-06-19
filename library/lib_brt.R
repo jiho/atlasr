@@ -627,14 +627,14 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
             data = myFunkyDatasetNameForGbmPlot,
             gbm.x = match(pred.vars, names(data)),
             gbm.y = match(resp.var, names(data)),
-            learning.rate = lr,
-            silent = TRUE,
-            plot.main = FALSE,
-            #
-            family = family,
             tree.complexity = tree.complexity,
+            learning.rate = lr,
+            family = family,
+            plot.main = FALSE,
+            silent = TRUE,
             ...
           ),
+          # transform errors into warnings and make obj=NULL when that happens
           error=function(e) {
             warning(e)
             NULL
@@ -663,13 +663,14 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
           data = myFunkyDatasetNameForGbmPlot,
           gbm.x = match(pred.vars, names(data)),
           gbm.y = match(resp.var, names(data)),
-          learning.rate = lr,
-          family = family,
           tree.complexity = tree.complexity,
-          n.trees = n.trees.fixed,
           verbose = FALSE,
+          learning.rate = lr,
+          n.trees = n.trees.fixed,
+          family = family,
           ...
         ),
+        # transform errors into warnings and make obj=NULL when that happens
         error=function(e) {
           warning(e)
           NULL
