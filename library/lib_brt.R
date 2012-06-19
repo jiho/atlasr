@@ -524,6 +524,33 @@ require(gbm)
 }
 
 
+gbm.fixed.etc <- function(data, gbm.x, gbm.y, tree.complexity = 1, site.weights = rep(1, nrow(data)), verbose = TRUE, learning.rate = 0.001, n.trees = 2000, bag.fraction = 0.5, family = "bernoulli", keep.data = FALSE, var.monotone = rep(0, length(gbm.x)), ...) {
+  #
+  # Fix gbm.fixed to
+  #
+  # allow the ellipsis argument (map all other arguments but ...)
+  res <- gbm.fixed(
+    data=data,
+    gbm.x=gbm.x,
+    gbm.y=gbm.y,
+    tree.complexity=tree.complexity,
+    site.weights=site.weights,
+    verbose=verbose,
+    learning.rate=learning.rate,
+    n.trees=n.trees,
+    bag.fraction=bag.fraction,
+    family=family,
+    keep.data=keep.data,
+    var.monotone=var.monotone
+  )
+
+  # return the species name
+  res$gbm.call$response.name <- names(data)[gbm.y]
+
+  return(res)
+}
+
+
 ## Run BRT analysis
 #-----------------------------------------------------------------------------
 
@@ -655,7 +682,7 @@ compute.brt <- function(
       if ( ! quiet ) cat("   fit BRT model\n")
 
       obj <- tryCatch(
-        gbm.fixed(
+        gbm.fixed.etc(
           data = myFunkyDatasetNameForGbmPlot,
           gbm.x = match(pred.vars, names(data)),
           gbm.y = match(resp.var, names(data)),
