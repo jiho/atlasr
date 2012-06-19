@@ -683,23 +683,24 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     result$obj = obj
 
 
-    ## Store additional results
+    ## Store additional diagnostics
     #-------------------------------------------------------------------------
-    if ( ! quiet ) cat("   write results\n")
+    if ( ! quiet ) cat("   compute diagnostics\n")
 
     # Deviance related information
     temp = list()
 
-    # deviance explained
     if (n.trees.fixed <= 0) {
+        # deviance explained
         temp$perc.deviance.explained = 1 - base::round( obj$cv.statistics$deviance.mean / obj$self.statistics$mean.null, 2)
         # Area Under the receiver operative Curve (AUC)
         # = quality of the prediction of presence/absence
         #   0.5 is indifferent
         temp$AUC = base::round(min(obj$cv.roc.matrix), 2)
     } else {
+        # deviance explained
         temp$perc.deviance.explained = 1 - base::round(obj$self.statistics$resid.deviance / obj$self.statistics$null.deviance, 2)
-        # this quantity is not defined if cross-validation was not used to select the number of trees (i.e. if gbm.fixed was used)
+        # AUC is not defined if cross-validation was not used to select the number of trees (i.e. if gbm.fixed was used)
         temp$AUC = NA
     }
     result$deviance = temp
@@ -720,8 +721,15 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
         # perform bootstrap
         if ( ! quiet ) cat("   bootstrap model and effect\n")
-        boot = NULL
-        boot <- tryCatch( gbm.bootstrap(obj, n.reps=n.boot.effects, verbose=FALSE), error=function(e) stop(e))
+        boot <- NULL
+        boot <- tryCatch(
+          gbm.bootstrap(obj, n.reps=n.boot.effects, verbose=FALSE),
+          # convert erros into warnings
+          error=function(e) {
+            warning(e)
+            NULL
+          }
+        )
         if ( ! is.null(boot) ) {
             # when it runs correctly
             # store the output in the result object
