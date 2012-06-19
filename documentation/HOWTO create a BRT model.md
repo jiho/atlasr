@@ -55,7 +55,7 @@ The geographic range determines where the prediction is to be made. Options map 
 
 The `Help` button currently does not do much. The `Cancel` button closes the interface (but does not stop the analysis if one was started). The `Run` button runs the analysis with the currently selected argument values.
 
-The R console should then print information along the computation of the model(s). It will write "Done" when the run is over. The GUI should still be open, so parameter values can be tweaked and another run started, if need be.
+The R console should then print information along the computation of the model(s). In particular, it shows the underlying command that is run, allowing you to copy-paste it into a file and re-run the exact same model at any time. It will write "Done" when the run is over. The GUI should still be open, so parameter values can be tweaked and another run started, if need be.
 
 
 ## Using the command line
