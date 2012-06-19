@@ -714,9 +714,8 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     rm(temp)
 
 
-    # Plot effects
+    # Bootstrap effects
     #-------------------------------------------------------------------------
-
     if (n.boot.effects != 0) {
 
         # perform bootstrap
@@ -735,19 +734,14 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
             # store the output in the result object
             result$boot = boot
         } else {
-            # when it does not (usually because of too few bootstraps), issue a warning and plot the simple object
+            # when it does not (usually because of too few bootstraps), issue a warning
             warning("Bootstrapping of effects failed, not enough information to provide a confidence interval\nTry increasing n.boot.effects")
         }
     }
 
-    # plot all effects
-    if ( ! quiet ) cat("   plot effects\n")
-    plot.brt(result, plot.layout=plot.layout)
-
 
     ## Predict presence / abundance
     #-------------------------------------------------------------------------
-
     if (predict) {
 
         if (n.boot.pred > 1) {
@@ -805,18 +799,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
         # store it in the resulting object
         result$prediction <- prediction
-
-        if ( ! quiet ) cat("   plot predictions\n")
-        p <- plot.pred.brt(result, quick=quick, ...)
-        # store the plot in the result object
-        result$plot.pred <- p
-
-        print(p)
-
     }
-
-    # print info about the fit
-    summary(result)
 
     return(result)
 }
