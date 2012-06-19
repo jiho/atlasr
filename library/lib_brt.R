@@ -640,6 +640,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
             NULL
           }
         )
+        if ( ! quiet ) { cat("\n") }
 
         # if the GBM does not converge, the return object is NULL or of size 0
         if ( ! is.null(obj) ) {
@@ -656,7 +657,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
     } else {
       # fit model with fixed number of trees using gbm.fixed
-      if ( ! quiet ) cat("   fit BRT model ")
+      if ( ! quiet ) cat("   fit BRT model\n")
 
       obj <- tryCatch(
         gbm.fixed(
@@ -677,8 +678,6 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
         }
       )
     }
-
-    if ( ! quiet ) { cat("\n") }
 
     # store the gbm object in the result object
     result$obj = obj
