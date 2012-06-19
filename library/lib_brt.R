@@ -1215,11 +1215,11 @@ do.brt <- function() {
 
     # checkboxes range
     checkH <- 4*h/5
-    rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initialval=FALSE, pos=c(w/4, mid, w/4, checkH))
+    rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initval=FALSE, pos=c(w/4, mid, w/4, checkH))
     rp.checkbox(win, bin, title="Bin original data\non prediction grid", initval=FALSE, pos=c(w/4, mid+checkH, w/4, checkH))
     rp.checkbox(win, extrapolate.env, title="Extrapolate envi-\nronmental range", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH))
-    rp.checkbox(win, quick.plot, title="Subsample predict-\nion plot (faster)", initialval=FALSE, pos=c(w/4, mid+checkH*3, w/4, h))
-    rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initialval=FALSE, pos=c(w/4, mid+checkH*4, w/4, checkH))
+    rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(w/4, mid+checkH*3, w/4, h))
+    rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initval=FALSE, pos=c(w/4, mid+checkH*4, w/4, checkH))
 
     # location
     rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
@@ -1286,7 +1286,7 @@ do.brt <- function() {
       # print(win$lon.min)
       # print(win$lon.step)
 
-      # print(win$quick.plot)
+      # print(win$quick)
       # print(win$extrapolate.env)
       # print(win$overlay.stations)
       # print(win$bin)
@@ -1305,7 +1305,7 @@ do.brt <- function() {
         ", family=", deparse(win$family),
         ", n.boot.effects=", n.boot.effects,
         ", n.boot.pred=", n.boot.pred,
-        ", quick=", win$quick.plot,
+        ", quick=", win$quick,
         ", extrapolate.env=", win$extrapolate.env,
         ", overlay.station=", win$overlay.stations,
         ")"
