@@ -4,6 +4,7 @@
 #     - bootstrapping functions (complement those in package dismo)
 #     - wrap around BRT function which does model, effects, bootstraps, predictions
 #     - fully automated function
+#     - GUI interface
 #
 # (c) Copyright 2011-2012 S Mormede, J-O Irisson
 #     GNU General Public License v3
@@ -526,7 +527,7 @@ require(gbm)
 ## Run BRT analysis
 #-----------------------------------------------------------------------------
 
-brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "poisson"), tree.complexity = 2, n.boot.effects=0, plot.layout = c(2,2), predict=FALSE, newdata=data, extrapolate.env=FALSE, n.boot.pred=0, quick=TRUE, quiet=FALSE, ...) {
+brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "poisson"), tree.complexity=2, n.boot.effects=0, plot.layout=c(2,2), predict=FALSE, newdata=data, extrapolate.env=FALSE, n.boot.pred=0, n.trees.fixed=0, quick=TRUE, quiet=FALSE, ...) {
     #
     # Fit, evaluate and predict BRT (for one species)
     #
@@ -544,6 +545,8 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     #                   FALSE removes the points, TRUE keeps them, NA replaces the values with NA
     # n.boot.effects    number of bootstraps for the prediction
     #                   (allows to estimate error through cross validation)
+    # n.trees.fixed     if > 0, specifies the fixed number of trees to use in the BRT model. Otherwise, the number
+    #                   of trees is estimated by a stepwise procedure
     # quick             subsmaple the output plot to be quicker
     # quiet             when TRUE, do not print messages when true
     # ...               passed to dismo::gbm.step, plot.pred.brt
@@ -604,35 +607,38 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
     ## Run BRT model
     #-------------------------------------------------------------------------
-    if ( ! quiet ) cat("   optimising BRT model ")
 
-    # initial values before entering the while loop
+    # initial learning rate value
     lr = 0.05
-    no.trees = 0
 
     # NB: gbm.plot uses eval() in the global environment to find the dataset which was used to fit the model
     #     to avoid conflicts, we use a funky name
     myFunkyDatasetNameForGbmPlot <- data
 
-    while ( no.trees < 1000 & lr > 0.0005 ) {
+    if (n.trees.fixed <= 0) {
+      # estimate number of trees required, using gbm.step
+      if ( ! quiet ) cat("   optimise BRT model ")
+
+      no.trees = 0
+      while ( no.trees < 1000 & lr > 0.0005 ) {
         if ( ! quiet ) { cat(".") }
         obj <- tryCatch(
-                    gbm.step(
-                    data = myFunkyDatasetNameForGbmPlot,
-                    gbm.x = match(pred.vars, names(data)),
-                    gbm.y = match(resp.var, names(data)),
-                    learning.rate = lr,
-                    silent = TRUE,
-                    plot.main = FALSE,
-                    #
-                    family = family,
-                    tree.complexity = tree.complexity,
-                    ...
-                    ),
-                    error=function(e) {
-                      warning(e)
-                      NULL
-                    }
+          gbm.step(
+            data = myFunkyDatasetNameForGbmPlot,
+            gbm.x = match(pred.vars, names(data)),
+            gbm.y = match(resp.var, names(data)),
+            learning.rate = lr,
+            silent = TRUE,
+            plot.main = FALSE,
+            #
+            family = family,
+            tree.complexity = tree.complexity,
+            ...
+          ),
+          error=function(e) {
+            warning(e)
+            NULL
+          }
         )
 
         # if the GBM does not converge, the return object is NULL or of size 0
@@ -646,7 +652,31 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
 
         # decrease the learning rate
         lr = lr / 2
+      }
+
+    } else {
+      # fit model with fixed number of trees using gbm.fixed
+      if ( ! quiet ) cat("   fit BRT model ")
+
+      obj <- tryCatch(
+        gbm.fixed(
+          data = myFunkyDatasetNameForGbmPlot,
+          gbm.x = match(pred.vars, names(data)),
+          gbm.y = match(resp.var, names(data)),
+          learning.rate = lr,
+          family = family,
+          tree.complexity = tree.complexity,
+          n.trees = n.trees.fixed,
+          verbose = FALSE,
+          ...
+        ),
+        error=function(e) {
+          warning(e)
+          NULL
+        }
+      )
     }
+
     if ( ! quiet ) { cat("\n") }
 
     # store the gbm object in the result object
@@ -661,12 +691,17 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     temp = list()
 
     # deviance explained
-    temp$perc.deviance.explained = 1 - base::round( obj$cv.statistics$deviance.mean / obj$self.statistics$mean.null, 2)
-
-    # Area Under the receiver operative Curve (AUC)
-    # = quality of the prediction of presence/absence
-    #   0.5 is indifferent
-    temp$AUC = base::round(min(obj$cv.roc.matrix), 2)
+    if (n.trees.fixed <= 0) {
+        temp$perc.deviance.explained = 1 - base::round( obj$cv.statistics$deviance.mean / obj$self.statistics$mean.null, 2)
+        # Area Under the receiver operative Curve (AUC)
+        # = quality of the prediction of presence/absence
+        #   0.5 is indifferent
+        temp$AUC = base::round(min(obj$cv.roc.matrix), 2)
+    } else {
+        temp$perc.deviance.explained = 1 - base::round(obj$self.statistics$resid.deviance / obj$self.statistics$null.deviance, 2)
+        # this quantity is not defined if cross-validation was not used to select the number of trees (i.e. if gbm.fixed was used)
+        temp$AUC = NA
+    }
     result$deviance = temp
 
     # Contributions

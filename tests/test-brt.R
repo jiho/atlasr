@@ -24,9 +24,14 @@ data <- data.frame(lon=runif(n, -180, 180), lat=runif(n, -80, -30), sp1=round(ru
 temp <- tempfile(fileext=".csv")
 write.table(data, file=temp, row.names=FALSE, sep=",")
 
-# run a BRT model
+# run BRT models
+# optimised number of trees
 capture.output(suppressMessages(
   b <- brts(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), path=path, quiet=T, predict=TRUE, lat.step=2, lon.step=4)
+), file=tempfile())
+# fixed number of trees
+capture.output(suppressMessages(
+  bf <- brts(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), path=path, quiet=T, predict=TRUE, lat.step=2, lon.step=4, n.trees.fixed=1000)
 ), file=tempfile())
 
 
@@ -34,18 +39,28 @@ test_that("contributions are replicable", {
   expect_that(
     as.numeric(b$sp1$contributions), equals(c(61.9345447875574, 38.0654552124426), tolerance=10^-13)
   )
+  expect_that(
+    as.numeric(bf$sp1$contributions), equals(c(52.7459199221002, 47.2540800778998), tolerance=10^-13)
+  )
 })
 
 test_that("deviance diagnostics are replicable", {
   expect_that(
-    as.numeric(b$sp1$deviance), equals(c(0.02, 0.25), tolerance=10^-4)
+    as.numeric(b$sp1$deviance), equals(c(0.02, 0.25), tolerance=10^-2)
+  )
+  expect_that(
+    as.numeric(bf$sp1$deviance$perc.deviance.explained), equals(0.62, tolerance=10^-2)
   )
 })
 
 test_that("predictions are replicable", {
   pred <- b$sp1$prediction$pred
   expect_that(
-    as.numeric(summary(pred)), equals(c(0.3744, 0.4597, 0.5039, 0.502, 0.5754, 0.5942), tolerance=10^-4)
+    as.numeric(summary(pred)), equals(c(0.3744, 0.4597, 0.5039, 0.502, 0.5754, 0.5942), tolerance=10^-5)
+  )
+  pred <- bf$sp1$prediction$pred
+  expect_that(
+    as.numeric(summary(pred)), equals(c(0.004359, 0.2462, 0.4592, 0.4981, 0.7714, 0.9959), tolerance=10^-5)
   )
 })
 
