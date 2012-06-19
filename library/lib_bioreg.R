@@ -78,12 +78,10 @@ compute.bioreg <- function(
   suppressPackageStartupMessages(require("vegan", quietly=TRUE))
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
 
-  # cleanup data
-  data <- na.omit(data)
+  # remove lines (i.e. locations) NAs but keep track of them
+  missing.mask <- rowSums(is.na(data)) > 0
+  data.used <- data[!missing.mask, !names(data) %in% c("lon", "lat")]
 
-  # # record which lines (i.e. locations) are masked out because of missing data (including land)
-  # missing.mask <- rowSums(is.na(data.transformed)) > 0
-  # data.trans.noNA <- na.omit(data.transformed)
 
   if ( ! quiet ) cat("   Perform non-hierarchical clustering first\n")
   # For the later hierarchical clustering we will need to compte a distance matrix between all data points. This is obviously impossible on the full data set, so we reduce the information to a smaller number of similar clusters through non-hierarchical clustering
@@ -96,20 +94,20 @@ compute.bioreg <- function(
   }
 
   # perform clustering
-  cl <- clara(data[,!names(data) %in% c("lon", "lat")], k=n.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
+  cl <- clara(data.used, k=n.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
 
   # associate non-hierachical cluster number with data
-  data$clara.num <- cl$clustering
+  data.used$clara.num <- cl$clustering
 
 
   if ( ! quiet ) cat("   Perform hierarchical clustering on the result\n")
   # Do a hierarchical clustering using the output of the nonhierarchical step. This defines the bioregions
 
   # first calculate mean properties of the non-hierarchical clusters
-  xc <- ddply(data[,!names(data) %in% c("lon", "lat")], ~clara.num, colMeans, na.rm=TRUE)
+  data.mean <- ddply(data.used, ~clara.num, colMeans, na.rm=TRUE)
 
   # dissimilarities of these clusters
-  D <- vegdist(xc[!names(xc) %in% "clara.num"], method="gower")
+  D <- vegdist(data.mean[!names(data.mean) %in% "clara.num"], method="gower")
 
   # hierarchical clustering
   hcl <- hclust(D, method="ave")
@@ -128,18 +126,22 @@ compute.bioreg <- function(
       n.groups <- length(unique(cn.new))
   }
   # associate hierachical cluster number to each non-hierarchical cluster
-  xc$hclust.num <- hclust.num
+  data.mean$hclust.num <- hclust.num
+
+
+  # Store result
+  # associate non-hierarchical cluster number to each data point
+  data$clara.num[!missing.mask] <- cl$clustering
 
   # associate hierarchical cluster number to each data point
-  data <- join(data, xc[,c("clara.num", "hclust.num")], by="clara.num", type="full")
+  data <- join(data, data.mean[,c("clara.num", "hclust.num")], by="clara.num", type="full")
   data <- rename(data, c(hclust.num="cluster"))
 
   # transform into factors
   data$clara.num <- factor(data$clara.num)
   data$cluster <- factor(data$cluster)
 
-
-  # Store result
+  # store everything in a list
   res <- list(
     cl=cl,
     hcl=hcl,
