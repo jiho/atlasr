@@ -130,6 +130,17 @@ clip.polygon <- function(x, lon.min=-180, lon.max=180, lat.min=-90, lat.max=90) 
     }
   }
 
+  # do not cut the pole when the longitude spans its full range
+  if (lon.min <= -180 & lon.max >= 180) {
+    if (lat.min < -50) {
+      lat.min <- -91
+    }
+    if (lat.max > 50) {
+      lat.max <- 91
+    }
+  }
+  # NB: this allows to get the full antarctic continent in polar view
+
   # prepare the mask
   mask <- data.frame(x=c(lon.min, lon.min, lon.max, lon.max), y=c(lat.min, lat.max, lat.max, lat.min))
   maskP <- as(mask, "gpc.poly")
@@ -298,7 +309,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     mapping = c(aes(size=lat), mapping)
     class(mapping) = "uneval"
 
-    # try to guess the size of points based on how many data there is
+    # try to guess the size of points based on how many different latitudes there are
     # (the more data, the smaller the points)
     nLats <- length(unique(data$lat))
     baseSize <- scale * 90 / nLats
