@@ -1,7 +1,7 @@
 
 # HOWTO create a BRT model
 
-Boosted Regression Trees use the [bgm](http://cran.r-project.org/web/packages/gbm/) and [dismo](http://cran.r-project.org/web/packages/dismo/index.html) R packages.
+Boosted Regression Trees use the [gbm](http://cran.r-project.org/web/packages/gbm/) and [dismo](http://cran.r-project.org/web/packages/dismo/index.html) R packages.
 
 
 ## Formatting your data
@@ -31,9 +31,9 @@ This presents a window with just one button labelled `Choose file`. Clicking on 
 
 Once the data file is chosen, the interface will present two lists (taxa on the left, environmental variables on the right), several options, a geographic grid picker, and, at the bottom, a row of buttons.
 
-Check the taxa you want to study. BRTs will be run independently and successively for all of them. Results will also be save independently for each taxon.
+Check the taxa you want to study. BRTs will be run independently and successively for all of them. Results will also be saved independently for each taxon.
 
-Select the environmental variables you want to include in the model. This list works as a file browser: press CTRL (COMMAND on Mac OS X) to select several variables, press SHIFT to select a range. Ticking the checkbox below the list does not visually change the selection (this is an unsolvable bug) but it actually does select all variables. This can be useful as a first step but beware that several variables are repeated (in raw and interpolated forms) in the default environmental list and using variables so correlated makes the interpretation of effects more difficult.
+Select the environmental variables you want to include in the model. This list works as a file browser: press CTRL (COMMAND on Mac OS X) to select several variables, press SHIFT to select a range. Ticking the checkbox below the list does not visually change the selection (this is an unsolvable bug) but it actually does select all variables. This can be useful as a first step but beware that several variables are repeated (in raw and interpolated forms) in the default environmental list and using variables as correlated as those makes the interpretation of effects more difficult.
 
 The options (lists and checkboxes) map to the following arguments of the command line functions, which are explained in the next paragraph :
 
@@ -47,9 +47,9 @@ The options (lists and checkboxes) map to the following arguments of the command
 
 *	Extrapolate environmental range : `extrapolate.env=TRUE` when checked
 
-*	Subsample prediction plot : `quick=TRUE` when checked
+*	Subsample prediction plot : `quick=TRUE` and `n.trees.fixed=1000` when checked
 
-*	Overlay stations : `overlay=TRUE` when checked
+*	Overlay stations : `overlay.stations=TRUE` when checked
 
 The geographic range determines where the prediction is to be made. Options map to the arguments `lat/lon.min` and `lat/lon.max`. The steps in lon and lat define the precision of the prediction grid and the bin size when binning the original data (when `bin=TRUE`). They map to the arguments `lat/lon.step`.
 
@@ -60,7 +60,7 @@ The R console should then print information along the computation of the model(s
 
 ## Using the command line
 
-The function `brts()` is the direct equivalent of the GUI. It accepts the following arguments and default values:
+The function `brt()` is the direct equivalent of the GUI. It formats the data, sends it to the function `compute.brt()`, collect the result and produces all plots and output. It accepts the following arguments and default values:
 
 *	`file`	the path and name of the data file.
 
@@ -68,26 +68,31 @@ The function `brts()` is the direct equivalent of the GUI. It accepts the follow
 
 *	`variables`	a vector of environment variables names as character strings. Like `taxa` they can be abbreviated and will be matched against names of variables in the the environmental dataset.
 
-*	`family=c("bernoulli", "gaussian", "poisson")`	the distribution of data for each taxon. "bernoulli" is for presence/absence, "guassian" and "poisson" are for abundances.
-
-*	`n.boot.effects=0`	number of bootstraps in the estimation of the effects of environmental data on the targeted taxa. This allows to judge the robustness and "significativity" of the predicted effect. Less than 50-100 will probably fail. Beware, these are long to run.
-
-*	`bin=FALSE`	wether to bin the original observations spatially, with the same precision has the prediction grid. Some locations might be sampled more often than others for practical reasons. They will be associated with the same values of the environmental data when those will be extracted from the environmental database, and those values will therefore have increased weight in the definition of the environmental niche for the taxa. This is likely to be purely a bias of the sampling. Binning the data summarizes information per grid cell: with several presence/absence observations, a presence is recorded for the cell when at least one of the observation records a presence; with several abundance observations, the mean abundance is used. 
+*	`family=c("bernoulli", "gaussian", "poisson")`	the distribution of data for each taxon. "bernoulli" is for presence/absence, "gaussian" and "poisson" are for abundances.
 
 *	`predict=FALSE`	whether to predict the probability of presence / abundance of the species on the prediction grid. When this is `FALSE`, only the effects of environmental parameters are estimated.
-
-*	`n.boot.pred=0`	number of bootstraps for the prediction. This allows to estimate a cross-validation error on the prediction. Less than 50-100 will fail. Beware, these are long to run.
-
-*	`extrapolate.env=FALSE`	whether to extrapolate the prediction outside of the *environmental* range of the input data. The environmental range of the input data is the range of values associated with the observed points for each environmental variable. This includes points where both presence and absence, assuming that points that were sampled could have contained the taxon, even though it was not actually detected. For example, samples might have been taken in temperatures ranging from 2 to 4ºC only. From this data alone, it might be risky to extrapolate to what should happen at 5 or 6ºC. This is whay `extrapolate.env` is `FALSE` by default.  
-    When `TRUE`, predictions are made for all points of the predictions grid. When `FALSE`, the predictions are deleted for points whose associated environmental data is outside the range observed in the input data (and not plotted). When `NA`, the predictions at such points are replaced by `NA` (and plotted as grey).
-
-*	`quick=TRUE`	wether to subsample the predicted data on a 1 x 2º lat/lon grid before plotting, to speed up plotting and reduce the size of the resulting plot file.
-
-*	`overlay.stations=FALSE`	wether to overlay stations in the input dataset on top of the prediction plot.
 
 *	`lat.min/max/step`	definition of the latitude coordinate of the prediction grid (minimum, maximum and step). By default, from -30º to -80º with a 0.1º step.
 
 *	`lon.min/max/step`	definition of the longitude coordinate of the prediction grid (minimum, maximum and step). By default, from -180º to -180º with a 0.5º step.
+
+*	`n.boot.pred=0`	number of bootstraps for the prediction. This allows to estimate a cross-validation error on the prediction. Less than 50-100 will fail. Beware, these are long to run.
+
+*	`n.boot.effects=0`	number of bootstraps in the estimation of the effects of environmental data on the targeted taxa. This allows to judge the robustness and "significativity" of the predicted effect. Less than 50-100 will probably fail. Beware, these are long to run.
+
+*	`bin=FALSE`	wether to bin the original observations spatially, with the same precision has the prediction grid. Some locations might be sampled more often than others for practical reasons. They will be associated with the same values of the environmental data when those will be extracted from the environmental database, and those values will therefore have increased weight in the definition of the environmental niche for the taxa. This is likely to be purely a bias of the sampling. Binning the data summarizes information per grid cell: with several presence/absence observations, a presence is recorded for the cell when at least one of the observation records a presence; with several abundance observations, the mean abundance is used.
+
+*	`extrapolate.env=FALSE`	whether to extrapolate the prediction outside of the *environmental* range of the input data. The environmental range of the input data is the range of values associated with the observed points for each environmental variable. This includes points where both presence and absence, assuming that points that were sampled could have contained the taxon, even though it was not actually detected. For example, samples might have been taken in temperatures ranging from 2 to 4ºC only. From this data alone, it might be risky to extrapolate to what should happen at 5 or 6ºC. This is whay `extrapolate.env` is `FALSE` by default.  
+    When `TRUE`, predictions are made for all points of the predictions grid. When `FALSE`, the predictions are deleted for points whose associated environmental data is outside the range observed in the input data (and not plotted). When `NA`, the predictions at such points are replaced by `NA` (and plotted as grey).
+
+*	`quick=TRUE`	when `TRUE`, computation is made faster:
+    
+    -   the model is fitted with a fixed number of trees (`n.trees.fixed=1000`) instead of estimating the number of trees by a stepwise procedure; this is faster but prone to over/under-fitting.
+    -   the predicted data is subsampled on a 1 x 2º lat/lon grid before plotting, to speed up plotting and reduce the size of the resulting plot file.
+
+*   `n.trees.fixed=0`   when 0, the optimal number of trees is estimated through a stepwise procedure. When > 0 (either specified explicity or with `quick=TRUE`), a fixed numnber of trees is used.
+
+*	`overlay.stations=FALSE`	wether to overlay stations in the input dataset on top of the prediction plot.
 
 *	`path="env_data"`	path to the environmental data location (see `HOWTO deal with environmental data.txt` for more information on the environmental data).
 
@@ -115,8 +120,6 @@ It returns a named list with one element per taxa studied. Each element is an ob
 *   `contributions`  named vector of the percentage of contributions of all prediction variables to the model (sum to 100)
 
 *   `prediction`  `data.frame` with the prediction grid (`lat`, `lon`), the predicted probability of presence / abundance (`pred`) at the grid points and possibly the cross validated error (`CVpred`).
-
-*   `plot.pred`  a ggplot2 object with the prediction plot.
 
 
 ## Analysis routine
