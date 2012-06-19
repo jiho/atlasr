@@ -635,7 +635,6 @@ compute.brt <- function(
             NULL
           }
         )
-        if ( ! quiet ) { cat("\n") }
 
         # if the GBM does not converge, the return object is NULL or of size 0
         if ( ! is.null(obj) ) {
@@ -649,6 +648,7 @@ compute.brt <- function(
         # decrease the learning rate
         lr = lr / 2
       }
+      if ( ! quiet ) { cat("\n") }
 
     } else {
       # fit model with fixed number of trees using gbm.fixed
