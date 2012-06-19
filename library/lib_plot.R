@@ -192,9 +192,9 @@ layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
   minRange <- min(lonRange, latRange) + expand * 2
 
   # choose the resolution based on the range of the data
-  if (minRange < 20) {
+  if (minRange < 35) {
     resolution <- 0.01
-  } else if (minRange < 35){
+  } else if (minRange < 45){
     resolution <- 0.05
   } else {
     resolution <- 0.1
