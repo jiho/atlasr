@@ -527,35 +527,30 @@ require(gbm)
 ## Run BRT analysis
 #-----------------------------------------------------------------------------
 
-brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "poisson"), tree.complexity=2, n.boot.effects=0, plot.layout=c(2,2), predict=FALSE, newdata=data, extrapolate.env=FALSE, n.boot.pred=0, n.trees.fixed=0, quick=TRUE, quiet=FALSE, ...) {
-    #
-    # Fit, evaluate and predict BRT (for one species)
-    #
-    # resp.var          response variable = column of data holding abundance or presence
-    # pred.vars         predictor variables = columns of data holding environmental data
-    # data              data.frame of presence/abundance and environmental data
-    # family            distribution family
-    #                   (bernoulli for presence-absence, gaussian or poisson for abundances)
-    # tree.complexity   number of interactions
-    # n.boot.effects    number of bootstraps for the estimation of the effects of the environment
-    # plot.layout       dimension of the matrix of effects plots
-    # predict           whether to perform the prediction or only fit the model
-    # newdata           environmental conditions at locations where presence/abundance should be predicted
-    # extrapolate.env   wether to extrapolate outside of the environmental range for the prediction
-    #                   FALSE removes the points, TRUE keeps them, NA replaces the values with NA
-    # n.boot.effects    number of bootstraps for the prediction
-    #                   (allows to estimate error through cross validation)
-    # n.trees.fixed     if > 0, specifies the fixed number of trees to use in the BRT model. Otherwise, the number
-    #                   of trees is estimated by a stepwise procedure
-    # quick             subsmaple the output plot to be quicker
-    # quiet             when TRUE, do not print messages when true
-    # ...               passed to dismo::gbm.step, plot.pred.brt
-    #
-
+compute.brt <- function(
+  #
+  # Fit, evaluate and predict BRT (for one species)
+  #
+  resp.var,               # response variable = column of data holding abundance or presence
+  pred.vars,              # predictor variables = columns of data holding environmental data
+  data,                   # data.frame of presence/abundance and environmental data
+  family="bernoulli",     # distribution family ("bernoulli" for presence-absence, "gaussian" or "poisson" for abundances)
+  tree.complexity=2,      # number of interactions
+  n.boot.effects=0,       # number of bootstraps for the estimation of the effects of the environment
+  predict=FALSE,          # whether to perform the prediction or only fit the model
+  newdata=data,           # environmental conditions at locations where presence/abundance should be predicted
+  extrapolate.env=FALSE,  # whether to extrapolate outside of the environmental range for the prediction. FALSE removes the points, TRUE keeps them, NA replaces the values with NA
+  n.boot.pred=0,          # number of bootstraps for the prediction (allows to estimate error through cross validation)
+  n.trees.fixed=0,        # if > 0, specifies the fixed number of trees to use in the BRT model. Otherwise, the number of trees is estimated by a stepwise procedure
+  quiet=FALSE,            # do not print messages when TRUE
+  ...                     # passed to dismo::gbm.step or dismo::gbm.fixed depending on n.tree.fixed
+)
+{
     suppressPackageStartupMessages(require("gbm", quietly=T))
     suppressPackageStartupMessages(require("dismo", quietly=T))
 
-    # arguments checks
+    ## Check arguments
+    #-------------------------------------------------------------------------
     if (!(resp.var %in% names(data))) {
         stop("Response variable not found in the original dataset")
     }
@@ -576,7 +571,7 @@ brt <- function(resp.var, pred.vars, data, family = c("bernoulli", "gaussian", "
     }
 
     family <- tolower(family)
-    family <- match.arg(family)
+    family <- match.arg(family, c("bernoulli", "gaussian", "poisson"))
 
     # start the output object
     result <- list()
