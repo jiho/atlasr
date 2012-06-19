@@ -117,11 +117,11 @@ compute.bioreg <- function(
       # n.groups is integer, i.e. we specified a number of groups directly
       hclust.num <- cutree(hcl, k=n.groups)
       # work out the dissimilarity level (height) that corresponds to this number of groups
-      temph <- mean(c(hcl$height[length(hcl$height)+2-n.groups], hcl$height[length(hcl$height)+2-n.groups-1]))
+      hcl$cut.height <- mean(c(hcl$height[length(hcl$height)+2-n.groups], hcl$height[length(hcl$height)+2-n.groups-1]))
   } else {
       # we specified a height at which to cut the dendrogram
       # show on the dendrogram the height at which we are cutting
-      temph <- n.groups
+      hcl$cut.height <- n.groups
       hclust.num <- cutree(hcl, h=n.groups)
       n.groups <- length(unique(cn.new))
   }
@@ -147,7 +147,6 @@ compute.bioreg <- function(
     hcl=hcl,
     data=data
   )
-  res$hcl$temph <- temph
   class(res) <- c("bioreg", "list")
 
   return(res)
@@ -323,7 +322,7 @@ bioreg <- function(
     # dendrogram
     plot(bioregObj$hcl, labels=F, hang=-1)
     # cutting level
-    lines(c(1,n.groups.intermediate), c(bioregObj$hcl$temph,bioregObj$hcl$temph), lty=2, col="red")
+    lines(c(1,n.groups.intermediate), c(bioregObj$hcl$cut.height,bioregObj$hcl$cut.height), lty=2, col="red")
     # markers for group labels
     colours <- cmap[bioregObj$data$cluster][bioregObj$hcl$order]
     points(1:n.groups.intermediate, rep(-0.02, n.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
