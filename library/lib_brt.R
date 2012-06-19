@@ -838,6 +838,7 @@ brt <- function(
   bin=FALSE,              # whether to bin the observation data on the prediction grid
   plot.layout=c(2,2),     # dimension of the matrix of effects plots
   quick=TRUE,             # when TRUE, a fixed number of trees is used in the fit and the prediction plot is subsampled, to increase speed
+  overlay.stations=FALSE, # when TRUE, stations in the observed data are overlaid on top of the prediction plot
   path=getOption("atlasr.env.data"),  # path to the environmental database
   # compute.brt() arguments
   predict=FALSE,          # whether to perform the prediction or only fit the model
@@ -942,7 +943,7 @@ brt <- function(
 
       # plot prediction
       if ( ! quiet ) cat("   plot predictions\n")
-      print(plot.pred.brt(brtObj, quick=quick))
+      print(plot.pred.brt(brtObj, quick=quick, overlay.stations=overlay.stations))
 
       # close PDF
       dev.off()
