@@ -62,35 +62,124 @@ function.maker <- function(str) {
 ## Run bioregionalisation
 #-----------------------------------------------------------------------------
 
-bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, transformations=NULL, weights=NULL, quick=TRUE, path=getOption("atlasr.env.data"), output.dir=NULL)
+compute.bioreg <- function(
+  #
+  # Perform bioregionalisation based on clustering
+  #
+  data,                       # data set with lon, lat and variables to cluster, as columns
+  n.groups=12,                # either an integer number of groups (e.g. 10), or the height at which to cut the dendrogram (e.g. 0.13) in the hierarchical clustering step (hclust)
+  n.groups.intermediate=200,  # number of groups in the non-hierarchical clustering step (clara); increasing this increases computation time significantly
+  quick=TRUE,                 # TRUE produces less precise clustering, suitable for exploratory runs; FALSE is for high quality final analyses
+  quiet=FALSE                 # output messages along the computation
+)
 {
-    #
-    # Perform bioregionalisation based on clustering
-    #
-    # variables     vector of names of environmental variables used in the bioregionalisation
-    # n.groups      either an integer number of groups, or the height at which to cut the dendrogram (e.g. 0.13)
-    # n.groups.intermediate   an integer number of groups in the intermediate, non-hierachical clustering step
-    #                         increasing this increases computational time significantly
-    # l**.min
-    # l**.max
-    # l**.step      definition of the grid on which the clustering will be done
-    # transformations   list giving transformation function for each variable, or NULL for no transformation
-    # weights       vector giving the weight for each variable
-    # quick         TRUE produces less precise clustering and fast plots, suitable for exploratory runs; FALSE is for high quality final analyses
-    # path          path where the environmental data is to be found
-    # output.dir    destination for output files; if NULL, no output files will be saved
+  # load packages
+  suppressPackageStartupMessages(require("cluster", quietly=TRUE))
+  suppressPackageStartupMessages(require("vegan", quietly=TRUE))
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
 
+  # cleanup data
+  data <- na.omit(data)
+
+  # # record which lines (i.e. locations) are masked out because of missing data (including land)
+  # missing.mask <- rowSums(is.na(data.transformed)) > 0
+  # data.trans.noNA <- na.omit(data.transformed)
+
+  if ( ! quiet ) cat("   Perform non-hierarchical clustering first\n")
+  # For the later hierarchical clustering we will need to compte a distance matrix between all data points. This is obviously impossible on the full data set, so we reduce the information to a smaller number of similar clusters through non-hierarchical clustering
+
+  # number of samples according to the quality argument (smaller numbers speed-up computation)
+  if (quick) {
+    samples <- 5
+  } else {
+    samples <- 50
+  }
+
+  # perform clustering
+  cl <- clara(data[,!names(data) %in% c("lon", "lat")], k=n.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
+
+  # associate non-hierachical cluster number with data
+  data$clara.num <- cl$clustering
+
+
+  if ( ! quiet ) cat("   Perform hierarchical clustering on the result\n")
+  # Do a hierarchical clustering using the output of the nonhierarchical step. This defines the bioregions
+
+  # first calculate mean properties of the non-hierarchical clusters
+  xc <- ddply(data[,!names(data) %in% c("lon", "lat")], ~clara.num, colMeans, na.rm=TRUE)
+
+  # dissimilarities of these clusters
+  D <- vegdist(xc[!names(xc) %in% "clara.num"], method="gower")
+
+  # hierarchical clustering
+  hcl <- hclust(D, method="ave")
+
+  # now extract the desired number of groups from the dendrogram
+  if (floor(n.groups)==n.groups) {
+      # n.groups is integer, i.e. we specified a number of groups directly
+      hclust.num <- cutree(hcl, k=n.groups)
+      # work out the dissimilarity level (height) that corresponds to this number of groups
+      temph <- mean(c(hcl$height[length(hcl$height)+2-n.groups], hcl$height[length(hcl$height)+2-n.groups-1]))
+  } else {
+      # we specified a height at which to cut the dendrogram
+      # show on the dendrogram the height at which we are cutting
+      temph <- n.groups
+      hclust.num <- cutree(hcl, h=n.groups)
+      n.groups <- length(unique(cn.new))
+  }
+  # associate hierachical cluster number to each non-hierarchical cluster
+  xc$hclust.num <- hclust.num
+
+  # associate hierarchical cluster number to each data point
+  data <- join(data, xc[,c("clara.num", "hclust.num")], by="clara.num", type="full")
+  data <- rename(data, c(hclust.num="cluster"))
+
+  # transform into factors
+  data$clara.num <- factor(data$clara.num)
+  data$cluster <- factor(data$cluster)
+
+
+  # Store result
+  res <- list(
+    cl=cl,
+    hcl=hcl,
+    data=data
+  )
+  res$hcl$temph <- temph
+  class(res) <- c("bioreg", "list")
+
+  return(res)
+}
+
+
+bioreg <- function(
+  #
+  # User-friendly interface to bioregionalisation
+  #
+  variables,                  # names (or abbreviations) of the variables to use for the bioregionalisation
+  lat.min=-80, lat.max=-30,   # definition of the prediction grid
+  lat.step=0.1,
+  lon.min=-180, lon.max=180,
+  lon.step=0.5,
+  transformations=NULL,       # named vector of transformations applied to each variable (has to match variables)
+  weights=NULL,               # named vector of weigths associated with each variable (has to match variables; will be scaled to a max of 1)
+  quick=TRUE,                 # TRUE produces less precise clustering and faster plots;  FALSE is for high quality final analyses
+  output.dir=NULL,            # destination for output files; if NULL, no output files will be saved and plots will be printed to the screen
+  path=getOption("atlasr.env.data"),  # path to the environment database
+  ...                         # passed to compute.bioreg()
+)
+{
     # load packages
-    suppressPackageStartupMessages(require("cluster", quietly=TRUE))
-    suppressPackageStartupMessages(require("vegan", quietly=TRUE))
     suppressPackageStartupMessages(require("plyr", quietly=TRUE))
     suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
     suppressPackageStartupMessages(require("stringr", quietly=TRUE))
     suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
 
 
-    # Check input arguments
-    # possibly expand variable names
+    ## Check input arguments
+    #-------------------------------------------------------------------------
+
+    # expand variable names
     allVariables <- list.env.data(variables, quiet=FALSE)
     # when expansion occurs, stop/warn that transformations and weights might be problematic
     if ((length(allVariables) > length(variables)) && (! is.null(transformations) || ! is.null(weights)) ) {
@@ -134,10 +223,14 @@ bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-8
             }
         }
     } else {
+      transformations <- rep("", length(variables))
       tfuncs <- NULL
     }
 
-    # Get and transform data
+
+    ## Get and transform data
+    #-------------------------------------------------------------------------
+
     # get database
     database <- read.env.data(variables=variables, path=path)
     # remove information on land
@@ -171,67 +264,16 @@ bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-8
         data.transformed[,i] <- data.transformed[,i] * weights[i]
     }
 
-    # record which lines (i.e. locations) are masked out because of missing data (including land)
-    missing.mask <- rowSums(is.na(data.transformed)) > 0
-    data.trans.noNA <- na.omit(data.transformed)
 
-    message("-> Perform non-hierarchical clustering first")
-    # For the later hierarchical clustering we will need to compte a distance matrix between all data points. This is obviously impossible on the full data set, so we reduce the information to a smaller number of similar clusters through non-hierarchical clustering
-
-    # number of samples according to the quality argument (smaller numbers speed-up computation)
-    if (quick) {
-      samples <- 5
-    } else {
-      samples <- 50
-    }
-
-    # perform clustering
-    cl <- clara(data.trans.noNA, k=n.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
-
-    # extract cluster numbers
-    data.trans.noNA$clara.num <- cl$clustering
+    ## Run bioregionalisation
+    #-------------------------------------------------------------------------
+    message("-> Compute bioregions")
+    data <- data.frame(data.raw[,c("lon", "lat")], data.transformed)
+    bioregObj  <- compute.bioreg(data, quick=quick, ...)
 
 
-    message("-> Perform hierarchical clustering on the result")
-    # Do a hierarchical clustering using the output of the nonhierarchical step. This defines the bioregions
-
-    # first calculate mean properties of the non-hierarchical clusters
-    xc <- ddply(data.trans.noNA, ~clara.num, colMeans, na.rm=TRUE)
-
-    # dissimilarities of these clusters
-    D <- vegdist(xc[!names(xc) %in% "clara.num"], method="gower")
-
-    # hierarchical clustering
-    hcl <- hclust(D, method="ave")
-
-    # now extract the desired number of groups from the dendrogram
-    if (floor(n.groups)==n.groups) {
-        # n.groups is integer, i.e. we specified a number of groups directly
-        hclust.num <- cutree(hcl, k=n.groups)
-        # work out the dissimilarity level (height) that corresponds to this number of groups
-        temph <- mean(c(hcl$height[length(hcl$height)+2-n.groups], hcl$height[length(hcl$height)+2-n.groups-1]))
-    } else {
-        # we specified a height at which to cut the dendrogram
-        # show on the dendrogram the height at which we are cutting
-        temph <- n.groups
-        hclust.num <- cutree(hcl, h=n.groups)
-        n.groups <- length(unique(cn.new))
-    }
-    # associate hierachical cluster number to each non-hierarchical cluster
-    xc$hclust.num <- hclust.num
-
-    # associate hierarchical cluster number to each data point on the total grid
-    # non-hierarchical cluster number
-    data.raw$clara.num[!missing.mask] <- cl$clustering
-    # hierarchical cluster number
-    data.raw <- join(data.raw, xc[,c("clara.num", "hclust.num")], by="clara.num", type="full")
-    data.raw <- rename(data.raw, c(hclust.num="cluster"))
-    data.raw$cluster <- factor(data.raw$cluster)
-
-
-    # Output data
-    # define the output to be of class "bioreg"
-    class(data.raw) <- c("bioreg", class(data.raw))
+    ## Output data
+    #-------------------------------------------------------------------------
 
     # should we save some data on disk ?
     output <- !is.null(output.dir)
@@ -248,14 +290,14 @@ bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-8
 
       # Rdata
       rdataFile <- str_c(baseName, ".Rdata")
-      save(data.raw, data.transformed, file=rdataFile)
+      save(bioregObj, file=rdataFile)
 
       # Shapefiles
-      write.shapefile(data.raw, baseName, "cluster")
+      write.shapefile(bioregObj$data, baseName, "cluster")
 
       # # CSV
       # csvFile <- str_c(baseName, ".csv")
-      # write.table(data.raw, file=csvFile, sep=",", row.names=FALSE)
+      # write.table(bioregObj$data, file=csvFile, sep=",", row.names=FALSE)
 
       # variables
       csvVarFile <- str_c(baseName, "-variables.csv")
@@ -272,15 +314,16 @@ bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-8
     }
 
     # get a nice colour map
-    cmap <- discrete.colourmap(n.groups)
+    cmap <- discrete.colourmap(nlevels(bioregObj$data$cluster))
 
     # Dendrogram
+    n.groups.intermediate <- nlevels(bioregObj$data$clara.num)
     # dendrogram
-    plot(hcl, labels=F, hang=-1)
+    plot(bioregObj$hcl, labels=F, hang=-1)
     # cutting level
-    lines(c(1,n.groups.intermediate), c(temph,temph), lty=2, col="red")
+    lines(c(1,n.groups.intermediate), c(bioregObj$hcl$temph,bioregObj$hcl$temph), lty=2, col="red")
     # markers for group labels
-    colours <- cmap[hclust.num][hcl$order]
+    colours <- cmap[bioregObj$data$cluster][bioregObj$hcl$order]
     points(1:n.groups.intermediate, rep(-0.02, n.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
 
     # ask for further plots
@@ -288,11 +331,11 @@ bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-8
     if (!output) devAskNewPage(TRUE)
 
     # plot of variables distributions within each cluster
-    print(boxplotPlot <- plot.bioreg(data.raw, geom="boxplot"))
-    print(violinPlot <- plot.bioreg(data.raw, geom="violin"))
+    print(boxplotPlot <- plot.bioreg(bioregObj$data, geom="boxplot"))
+    print(violinPlot <- plot.bioreg(bioregObj$data, geom="violin"))
 
     # Image map
-    clusterPlot <- plot.pred.bioreg(data.raw, quick=quick)
+    clusterPlot <- plot.pred.bioreg(bioregObj$data, quick=quick)
     print(clusterPlot)
 
     # switch back to old setting
@@ -305,7 +348,7 @@ bioreg <- function(variables, n.groups=12, n.groups.intermediate=200, lat.min=-8
 
     message("Done")
 
-    return(invisible(data.raw))
+    return(invisible(bioregObj))
     # NB: invisible() so that it doesn't get printed to console if not assigned to a variable
 }
 
