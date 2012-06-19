@@ -1117,7 +1117,7 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
 
 do.brt <- function() {
   #
-  # Open a GUI to select the arguments of the brts() function
+  # Open a GUI to select the arguments of the brt() function
   #
 
   suppressPackageStartupMessages(require("rpanel"))
@@ -1294,7 +1294,7 @@ do.brt <- function() {
 
       # build the function call
       message("Command:")
-      call <- str_c("brts(",
+      call <- str_c("brt(",
         "file=", str_c(deparse(win$file, width=500), collapse=""),
         ", taxa=", str_c(deparse(taxa, width=500), collapse=""),
         ", variables=", str_c(deparse(variables, width=500), collapse=""),

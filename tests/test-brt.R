@@ -27,11 +27,11 @@ write.table(data, file=temp, row.names=FALSE, sep=",")
 # run BRT models
 # optimised number of trees
 capture.output(suppressMessages(
-  b <- brts(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), path=path, quiet=T, predict=TRUE, lat.step=2, lon.step=4)
+  b <- brt(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), predict=TRUE, lat.step=2, lon.step=4, quick=FALSE, path=path, quiet=TRUE)
 ), file=tempfile())
 # fixed number of trees
 capture.output(suppressMessages(
-  bf <- brts(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), path=path, quiet=T, predict=TRUE, lat.step=2, lon.step=4, n.trees.fixed=1000)
+  bf <- brt(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), predict=TRUE, lat.step=2, lon.step=4, quick=TRUE, path=path, quiet=TRUE)
 ), file=tempfile())
 
 
