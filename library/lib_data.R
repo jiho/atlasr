@@ -394,13 +394,17 @@ match.vars <- function(vars, choices, quiet=TRUE) {
   # quiet   wether to provide a message about matches
   #
 
+  # prepare storage
   res = c()
+  var.index = c()
+  choice.index = c()
+
   for (i in seq(along=vars)) {
     # try exact matches first
-    matches = grep(paste("^",vars[i],"$",sep=""), choices, value=TRUE)
-    if (length(matches) == 0) {
+    idx = grep(paste("^",vars[i],"$",sep=""), choices)
+    if (length(idx) == 0) {
       # then try partial matches if needed
-      matches = grep(vars[i], choices, value=TRUE)
+      idx = grep(vars[i], choices)
 
       # if no variable can be matched, issue a warning
       if (length(idx) == 0) {
@@ -414,7 +418,10 @@ match.vars <- function(vars, choices, quiet=TRUE) {
       }
     }
     # store all matches for all variables
+    matches = choices[idx]
     res = c(res, matches)
+    choice.index = c(choice.index, idx)
+    var.index = c(var.index, rep(i, length(matches)))
 
     # issue a message when an expansion match occurred
     if (! quiet & any(matches != vars[i])) {
@@ -425,6 +432,10 @@ match.vars <- function(vars, choices, quiet=TRUE) {
       message(messageText, paste(matches, collapse=paste("\n", padding, sep="")))
     }
   }
+
+  # store the indexes of the matches as attributes
+  attr(res, "var.index") <- var.index
+  attr(res, "choice.index") <- choice.index
 
   return(res)
 }
