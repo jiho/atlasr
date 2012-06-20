@@ -403,8 +403,14 @@ match.vars <- function(vars, choices, quiet=TRUE) {
       matches = grep(vars[i], choices, value=TRUE)
 
       # if no variable can be matched, issue a warning
-      if (length(matches) == 0) {
-        stop("No variable matching \"", vars[i], "\" could be found. Please check the variable names you have supplied and that your environmental data directory is up to date.")
+      if (length(idx) == 0) {
+        nChoices <- length(choices)
+        if ( nChoices > 6 ) {
+          possibilities <- paste(paste(choices[1:6], collapse=", "), "... and", nChoices - 6, "more")
+        } else {
+          possibilities <- paste(choices, collapse=", ")
+        }
+        stop("No variable matching \"", vars[i], "\" could be found.\n  The possibilities were : ", possibilities)
       }
     }
     # store all matches for all variables
