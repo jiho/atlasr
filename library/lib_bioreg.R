@@ -135,7 +135,6 @@ compute.bioreg <- function(
   return(res)
 }
 
-
 bioreg <- function(
   #
   # User-friendly interface to bioregionalisation
@@ -291,6 +290,7 @@ bioreg <- function(
     return(invisible(bioregObj))
     # NB: invisible() so that it doesn't get printed to console if not assigned to a variable
 }
+
 
 ## Plots
 #-----------------------------------------------------------------------------
