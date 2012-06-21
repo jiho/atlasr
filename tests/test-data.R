@@ -102,3 +102,20 @@ test_that("writing shapefile to a directory with spaces in the name works", {
 })
 
 
+context("Transforming data")
+
+test_that("defining a function from a string accepts various inputs", {
+  # explicit function definitions
+  expect_that(is.function(function.maker("log(x)")), is_true())
+  # pre-existing functions
+  expect_that(is.function(function.maker("log")), is_true())
+  # custom defined functions
+  myFunc <- function(x) {x}
+  expect_that(is.function(function.maker("myFunc")), is_true())
+})
+
+test_that("unparsable functions produce an error", {
+  expect_that( function.maker("$"),  throws_error() )
+  expect_that( transform.data(data.frame(foo=1:2), c(foo="$")),  throws_error() )
+})
+
