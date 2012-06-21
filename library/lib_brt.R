@@ -1252,8 +1252,8 @@ do.brt <- function() {
     rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=-180, showvalue=TRUE, pos=c(w/2, mid+h*1, w/4, h))
     rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=180 , showvalue=TRUE, pos=c(3*w/4, mid+h*1, w/4, h))
     rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=-80 , showvalue=TRUE, pos=c(w/2+w/8, mid+h*2, w/4, h))
-    rp.slider(win, lon.step, from=0.1, to=4  ,  resolution=0.1, title="Step lon", initval=0.5 , showvalue=TRUE, pos=c(w/2, mid+h*3, w/4, h))
-    rp.slider(win, lat.step, from=0.1, to=4   , resolution=0.1, title="Step lat", initval=0.1 , showvalue=TRUE, pos=c(3*w/4, mid+h*3, w/4, h))
+    rp.slider(win, lon.step, from=0.1, to=4  ,  resolution=0.1, title="Step lon", initval=1 , showvalue=TRUE, pos=c(w/2, mid+h*3, w/4, h))
+    rp.slider(win, lat.step, from=0.1, to=4   , resolution=0.1, title="Step lat", initval=1 , showvalue=TRUE, pos=c(3*w/4, mid+h*3, w/4, h))
 
 
     # action buttons
