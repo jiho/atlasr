@@ -265,21 +265,22 @@ bioreg <- function(
 
     # dendrogram
     plot.dendro(bioregObj)
+
+    # ask for further plots if we are using interactive output
     if (!output) devAskNewPage(TRUE)
 
     # plot of variables distributions within each cluster
-    print(boxplotPlot <- plot.bioreg(bioregObj$data, geom="boxplot"))
-    print(violinPlot <- plot.bioreg(bioregObj$data, geom="violin"))
+    print(boxplotPlot <- plot.bioreg(bioregObj, geom="boxplot"))
+    print(violinPlot <- plot.bioreg(bioregObj, geom="violin"))
 
-    # Image map
-    clusterPlot <- plot.pred.bioreg(bioregObj$data, quick=quick)
-    print(clusterPlot)
+    # map of clusters
+    print(clusterPlot <- plot.pred.bioreg(bioregObj, quick=quick))
 
-    # switch back to old setting
-    devAskNewPage(ask)
-
-    if (output) {
-      # close the PDF file
+    if (!output) {
+      # switch back to not asking for plots if we were working interactively and switched it on
+      devAskNewPage(FALSE)
+    } else {
+      # close the PDF file otherwise
       dev.off()
     }
 
@@ -325,9 +326,14 @@ plot.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
   # Plot the effects in a bioregionalisation study:
   # the values of the variables in each cluster
   #
-  # x     data.frame of class "bioreg" resulting from a bioreg() call
+  # x     object of class "bioreg" resulting from a bioreg() or compute.bioreg() call
   # geom  type of plot: violin plot or boxplot
   #
+
+  suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+
+  # extract the data.frame with predictions from the object
+  x <- x$data
 
   geom <- match.arg(geom)
 
@@ -375,11 +381,14 @@ plot.pred.bioreg <- function(x, quick=FALSE, path=getOption("atlasr.env.data"), 
   #
   # Plot a map of bioregionalisation clusters
   #
-  # x     data.frame of class "bioreg" resulting from a bioreg() call
+  # x     object of class "bioreg" resulting from a bioreg() or compute.bioreg() call
   # quick when TRUE, use a raster plot with no projection; when FALSE, use a vector plot with polar stereographic projection
   #
 
   suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+
+  # extract the data.frame with predictions from the object
+  x <- x$data
 
   # get colours
   cmap <- discrete.colourmap(n=nlevels(x$cluster))
