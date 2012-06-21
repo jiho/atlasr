@@ -32,13 +32,13 @@ Unzipping the file should create an `atlasr` directory with all the scripts.
 
 ### Start R and get all supporting functions
 
-In the just-created `atlasr` directory, open `get_functions.R` with RStudio (right-click and `Open With...` if necessary). You should get a four panes window with the script on the top-left, the R console on the bottom-left and some stuff we don't care about yet on the right. 
+In the just-created `atlasr` directory, open `initialize.R` with RStudio (right-click and `Open With...` if necessary). You should get a four panes window with the script on the top-left, the R console on the bottom-left and some stuff we don't care about yet on the right. 
 
-Then, click on the `Source` button at the top of the file pane. This should write something starting with `source(` in the console. This command executes `get_functions.R` which loads all functions stored in the `library` folder and installs all the R "packages" that they use. This is long the first time you run it because it needs to download all packages, but it should be instantaneous afterwards.
+Then, click on the `Source` button at the top of the file pane. This should write something starting with `source(` in the console. This command executes `initialize.R` which loads all functions stored in the `library` folder, installs all the R "packages" that they use, and fetches the environment data layers. This is long the first time you run it because it needs to download everything, but it should be instantaneous afterwards.
 
 With any kind of R interface (not just RStudio), you could just write
 
-	source("get_functions.R")
+	source("initialize.R")
 
 in the console to achieve this.
 
@@ -47,13 +47,11 @@ By default, R works in your home directory (`Documents and Settings/bla bla/some
 
 If you want to work in the `atlasr` directory directly, keeping the code and the data together, you can even use the shortcut `Tools > Set Working Directory >  To Source File Location` in RStudio, which saves you from having to browse through your computer.
 
-You can now close the `get_functions.R` file.
+You can now close the `initialize.R` file.
 
 ### Run an analysis
 
-In the console, type the command to run your analysis. If the environmental database is not yet present (in the `env_data` directory), it will be downloaded.
-
-For example, to run a BRT model using the automatic graphical interface, type
+In the console, type the command to run your analysis. For example, to run a BRT model using the automatic graphical interface, type
 
 	do.brt()
 
