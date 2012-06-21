@@ -119,9 +119,10 @@ test_that("weighting data is not influenced by column order", {
   # precompute what weighting should give
   dataW <- data
   dataW$bar <- dataW$bar * 0.5
-  expect_that(weight.data(data, c(foo=1, bar=0.5)), equals(dataW))
-  expect_that(weight.data(data, c(bar=0.5, foo=1)), equals(dataW))
-  expect_that(weight.data(data[,c(2,1)], c(foo=1, bar=0.5)), equals(dataW[,c(2,1)]))
+  expect_equivalent(weight.data(data, c(foo=1, bar=0.5)), dataW)
+  expect_equivalent(weight.data(data, c(bar=0.5, foo=1)), dataW)
+  expect_equivalent(weight.data(data[,c(2,1)], c(foo=1, bar=0.5)), dataW[,c(2,1)])
+  # NB: weight.data sets some attributes so we use "equivalent" instead of "equal"
 })
 
 test_that("omitting weights defaults to weight=1", {
@@ -179,9 +180,9 @@ test_that("transforming data is not influenced by column order", {
   dataW <- data
   dataW$foo <- sqrt(dataW$foo)
   dataW$bar <- log(dataW$bar)
-  expect_that(transform.data(data, c(foo="sqrt(x)", bar="log(x)")), equals(dataW))
-  expect_that(transform.data(data, c(bar="log(x)", foo="sqrt(x)")), equals(dataW))
-  expect_that(transform.data(data[,c(2,1)], c(foo="sqrt(x)", bar="log(x)")), equals(dataW[,c(2,1)]))
+  expect_equivalent(transform.data(data, c(foo="sqrt(x)", bar="log(x)")), dataW)
+  expect_equivalent(transform.data(data, c(bar="log(x)", foo="sqrt(x)")), dataW)
+  expect_equivalent(transform.data(data[,c(2,1)], c(foo="sqrt(x)", bar="log(x)")), dataW[,c(2,1)])
 })
 
 test_that("omitting transformation defaults to no transformation", {
