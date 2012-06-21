@@ -18,130 +18,112 @@
 #-----------------------------------------------------------------------------
 
 # Ben
-# "ftp://ftp.aad.gov.au/aadc/derived/antarctic" <- slower
 # "http://webdav.data.aad.gov.au/data/environmental/derived/antarctic"
 # Bruno
 # "http://share.biodiversity.aq/GIS/Antarctic/"
 
-dl.env.data <- function(url="http://webdav.data.aad.gov.au/data/environmental/derived/antarctic", path=getOption("atlasr.env.data"), user=NULL, password=NULL, ...) {
-  # Download the environmental database
-  # = get an archive of all netCDF files and decompress it
+update.env.data <- function(url="http://webdav.data.aad.gov.au/data/environmental/derived/antarctic", path=getOption("atlasr.env.data")) {
+  #
+  # Check if the database of environmental data is present and up-to-date
+  # If not, download the missing bits
   #
   # url   URL where the database can be downloaded
   # path  where to store the netCDF files of the database
   #
 
-  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
-  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
-  suppressPackageStartupMessages(require("RCurl", quietly=TRUE))
-  suppressPackageStartupMessages(require("bitops", quietly=TRUE))
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))  # string manipulation
+  suppressPackageStartupMessages(require("tools", quietly=TRUE))    # md5 sum
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))     # automation and loops
 
-  # prepare user and password
-  if ( !is.null(user) || !is.null(password) ) {
-    if ( is.null(user) || is.null(password) ) {
-      stop("Both user and password are needed")
-    } else {
-      pieces <- str_split(url, fixed("//"))[[1]]
-      protocol <- pieces[1]
-      address <- pieces[2]
-      if (protocol == "ftp:") {
-        url <- str_c(protocol, "//", user, ":", password, "@", address)
-      } else {
-        warning("Authentication only works with ftp servers")
-      }
-    }
-  }
+  # get remote checksum
+  checksumsFile <- tempfile()
+  download.file(str_c(url, "/checksums.txt"), destfile=checksumsFile, quiet=T)
+  remoteMD5 <- read.table(checksumsFile, header=F, sep=",", col.names=c("path", "md5"), stringsAsFactors=FALSE)
+  unlink(checksumsFile)
 
-  message("-> Download environment database")
+  # remove asc files, for now
+  # TODO remove this restriction at some point
+  remoteMD5 <- remoteMD5[!str_detect(remoteMD5$path, "asc\\.zip$"), ]
 
-  dir.create(path, showWarnings=FALSE)
+  # extract directory names
+  paths <- str_split(remoteMD5$path, pattern=fixed("/"))
+  remoteMD5$dir <- laply(paths, `[`, 1)
+  dirs <- unique(remoteMD5$dir)
 
-  # NetCDF files
-  message("   data layers")
-  ncUrl <- str_c(url, "/netcdf/")
+  # create directories if they don't exist yet
+  dirs <- str_c(path, "/", dirs)
+  a_ply(dirs, 1, dir.create, showWarnings=FALSE, recursive=TRUE)
 
-  # base url()
-  # page <- url(ncUrl, open="rt")
-  # html <- scan(page, what="character")
-  # close(page)
-  # does not work
-
-  # RCurl
-  html <- getURL(ncUrl, ftp.use.epsv=FALSE)
-  # NB: ftp.use.epsv=FALSE activates passive mode
-
-  # download.file
-  # temp <- tempfile()
-  # download.file(ncUrl, destfile=temp)
-  # download.file(ncUrl, destfile=temp, method="wget")
-  # download.file(ncUrl, destfile=temp, method="curl")
-  # html <- scan(temp, "character")
-
-  # extract file names
-  ncList <- unique(unlist(str_extract_all(html, "\\w*\\.nc\\.zip")))
-
-  # download files
-  temp <- tempfile()
-  a_ply(ncList, .margins=1, .fun=function(x, url, tempfile, path) {
-    fileUrl <- str_c(url, x)
-    # download zip to a temporary file
-    download.file(fileUrl, destfile=tempfile, quiet=TRUE)
-    # unzip to the data folder
-    unzip(tempfile, exdir=path)
-  }, url=ncUrl, tempfile=temp, path=path, .progress="text")
-  unlink(temp)
+  # prepare url and destination
+  remoteMD5$url <- str_c(url, "/", remoteMD5$path)
+  remoteMD5$destination <- str_c(path, "/", remoteMD5$path)
 
 
-  # images of layers
-  message("   images")
-
-  # get list of images from the server
-  imgUrl <- str_c(url, "/images/")
-  html <- getURL(imgUrl, ftp.use.epsv=FALSE)
-
-  # extract file names
-  imgList <- unique(unlist(str_extract_all(html, "\\w*\\.png")))
-
-  # download files
-  a_ply(imgList, .margins=1, .fun=function(x, url, path) {
-    url <- str_c(url, x)
-    dest <- str_c(path, x, sep="/")
-    download.file(url, destfile=dest, quiet=TRUE)
-  }, url=imgUrl, path=path, .progress="text")
-
-
-  # coastlines
-  message("   coastlines")
-
-  # get list of files from the server
-  coastUrl <- str_c(url, "/coastline/")
-  html <- getURL(coastUrl, ftp.use.epsv=FALSE)
-
-  # extract file names
-  coastList <- unique(unlist(str_extract_all(html, "[[:alnum:]_-]*\\.csv")))
-
-  # download files
-  a_ply(coastList, .margins=1, .fun=function(x, url, path) {
-    url <- str_c(url, x)
-    dest <- str_c(path, x, sep="/")
-    download.file(url, destfile=dest, quiet=TRUE)
-  }, url=coastUrl, path=path, .progress="text")
-
-  return(invisible(path))
-}
-
-
-check.get.env.data <- function(path=getOption("atlasr.env.data")) {
-  # Check if the database of environmental data is present; if not, download it
-  #
-  # path  where to store the netCDF files of the database
-  #
-
-  # TODO compare the list of files online and locally and update the missing ones + remove the local ones which are not on the server
-  if (! file.exists(path)) {
+  # get missing files
+  if ( ! file.exists(path) ) {
+    # when the database does not exist yet, get everything
     warning("No environment database", call.=FALSE, immediate.=TRUE)
-    dl.env.data(path=path)
+    message("-> Download entire environment database")
+    message("   This will be long...")
+
+    # split by directory
+    d_ply(remoteMD5, ~dir, function(x) {
+      # print directory identifier
+      message(str_c("   ", x$dir[1]))
+
+      # download all files, with a global progress bar
+      a_ply(x, 1, function(x) {
+        download.file(x$url, destfile=x$destination, quiet=TRUE)
+        # unzip if it is a zipped netcdf file
+        if (str_detect(x$destination, "nc\\.zip$")) {
+          unzip(x$destination, exdir=path)
+        }
+      }, .progress="text")
+    })
+
+
+  } else {
+    # when the database exists, compare its content to the online repository
+
+    # get local checksums
+    files <- list.files(path, pattern="(zip|png|csv|shp)$", full=T, recursive=TRUE)
+    localMD5 <- data.frame(
+      path=str_replace(files, str_c(path, "/"), ""),
+      md5=as.character(md5sum(files)),
+      stringsAsFactors=FALSE
+    )
+
+    # get missing files
+    missing <- remoteMD5[-which(remoteMD5$md5 %in% localMD5$md5),]
+
+    if (nrow(missing) > 0) {
+      # issue a message
+      many <- ( nrow(missing) > 10 )
+      if (many) {
+        missingFiles <- str_c(missing$path[1:10], collapse="\n     ")
+        missingFiles <- str_c(missingFiles, "\n      and ", nrow(missing) - 10, " more ...")
+      } else {
+        missingFiles <- str_c(missing$path, collapse="\n     ")
+      }
+
+      message("-> Updating environment database")
+      message("   The files : \n     ", missingFiles, "\n   are missing or have been updated. They will be downloaded.")
+
+      # download the missing files
+      a_ply(missing, 1, function(x) {
+        download.file(x$url, destfile=x$destination, quiet=many)
+        # unzip if it is a zipped netcdf file
+        if (str_detect(x$destination, "nc\\.zip$")) {
+          unzip(x$destination, exdir=path)
+        }
+      }, .progress=ifelse(many, "text", "none"))
+
+      } else {
+        message("-> Environment database up to date")
+      }
+
   }
+
   return(invisible(path))
 }
 
@@ -158,8 +140,9 @@ list.env.data <- function(variables="", path=getOption("atlasr.env.data"), full=
 
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
 
-  # check that environment data exists
-  check.get.env.data(path=path)
+  if (!file.exists(path)) {
+    stop("Environment database not found in ", path)
+  }
 
   # list all files and transform file names into variable names
   ncFiles <- list.files(path, pattern=glob2rx("*.nc"), full.names=TRUE)
@@ -182,7 +165,6 @@ list.env.data <- function(variables="", path=getOption("atlasr.env.data"), full=
   }
 }
 
-
 read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) {
   # Read data from the netCDF files
   #
@@ -197,8 +179,9 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) 
   # functions to automate loops and split-apply functions
   suppressPackageStartupMessages(require("plyr"))
 
-  # check that environment data exists
-  check.get.env.data(path=path)
+  if (!file.exists(path)) {
+    stop("Environment database not found in ", path)
+  }
 
   message("-> Read environment data")
 

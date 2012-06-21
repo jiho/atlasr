@@ -72,13 +72,20 @@ if (Sys.info()["sysname"] == "Windows" & "RCurl" %in% missingPackages) {
 for (file in sourceFiles) {
     source(file)
 }
+message("-> All functions loaded")
 
-# Set up options
+
+# Check the status of the environment database
+
 # location of environmental data
 if (is.null(getOption("atlasr.env.data"))) {
   options(atlasr.env.data=paste(path, "/env_data", sep=""))
 }
 # NB: it can be set by the user in a script or in the .Rprofile config file
+
+# check and update if necessary
+update.env.data()
+
 
 # Cleanup the environment
 rm(file, content, installedPackages, m, matched, missingPackages, pack, requiredPackages, sourceFiles)
