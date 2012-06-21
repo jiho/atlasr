@@ -156,52 +156,15 @@ bioreg <- function(
     ## Check input arguments
     #-------------------------------------------------------------------------
 
-    # expand variable names
-    allVariables <- list.env.data(variables, quiet=FALSE)
-    # when expansion occurs, stop/warn that transformations and weights might be problematic
-    if ((length(allVariables) > length(variables)) && (! is.null(transformations) || ! is.null(weights)) ) {
-      warning("Environment variables names were expanded; there are now ", length(allVariables), ". Please check that the number and order of transformations and weights matches.", immediate.=TRUE)
-    }
-    variables <- allVariables
+    message("-> Expand variables names")
+    allVariables <- list.env.data(path=path)
 
-    # variables
+    # expand variable names
+    variables <- match.vars(variables, allVariables, quiet=FALSE)
+
+    # check that there are enought variables
     if (length(variables) < 2) {
         stop("You must specify at least two input variables")
-    }
-
-    # weights
-    if (is.null(weights)) {
-        weights <- rep(1,length(variables))
-    }
-    weights <- as.numeric(weights)
-    weights <- weights / max(weights) # normalize so that max weight is 1
-
-    # transformation functions
-    if (!is.null(transformations)) {
-        tfuncs <- list()
-        for (i in seq(along=transformations)) {
-            if (is.character(transformations[[i]]) & nchar(transformations[[i]])>0) {
-                # convert from string expression into actual function
-                tryCatch(
-                    tfuncs[[i]] <- function.maker(transformations[[i]]),
-                    error=function(e) stop("Error parsing transformation function : ", transformations[[i]], "\n  ", e)
-                )
-
-            } else if (is.function(transformations[[i]])) {
-                # store actual functions
-                tfuncs[[i]] <- transformations[[i]]
-
-            } else if (is.null(transformations[[i]]) | is.na(transformations[[i]]) | (is.character(transformations[[i]]) & nchar(transformations[[i]])==0)) {
-                # pass-through for the rest
-                tfuncs[[i]] <- function(x){x}
-
-            } else {
-                stop("Supplied transformation is neither a string nor a function")
-            }
-        }
-    } else {
-      transformations <- rep("", length(variables))
-      tfuncs <- NULL
     }
 
 
@@ -220,25 +183,25 @@ bioreg <- function(
     # get environment data at the points of interest
     data.raw <- associate.env.data(prediction_grid, database)
 
-    data.transformed <- data.raw[,! names(data.raw) %in% c("lon", "lat")]
+    # transform data
+    if (!is.null(transformations)) {
+      data.transformed <- transform.data(data.raw[,! names(data.raw) %in% c("lon", "lat")], transformations)
+    } else {
+      data.transformed <- data.raw[,! names(data.raw) %in% c("lon", "lat")]
+    }
+
     for (i in 1:ncol(data.transformed)) {
-        # apply user supplied transformations
-        # TODO this is fragile : dependent on ordering of weights and transformations and data columns being the same: need to code it better
-        # TODO: suggestion JO: use named lists/vectors for transformation and weights with names matching data columns? i.e. list(bathymetry="log(x)", floor_temperature=ceiling). But it's much more cumbersome to write then
-        if (!is.null(tfuncs[[i]])) {
-            data.transformed[,i] <- tfuncs[[i]](data.transformed[,i])
-        }
+      # clean up any Inf values
+      data.transformed[is.infinite(data.transformed[,i]),i] <- NA
 
-        # clean up any Inf values
-        data.transformed[is.infinite(data.transformed[,i]),i] <- NA
+      # normalise each column of x to 0-1 range
+      data.transformed[,i] <- data.transformed[,i] - min(data.transformed[,i], na.rm=T)
+      data.transformed[,i] <- data.transformed[,i] / max(data.transformed[,i], na.rm=T)
+    }
 
-        # normalise each column of x to 0-1 range
-        data.transformed[,i] <- data.transformed[,i] - min(data.transformed[,i], na.rm=T)
-        data.transformed[,i] <- data.transformed[,i] / max(data.transformed[,i], na.rm=T)
-
-        # apply weighting
-        # cat(sprintf("i=%d, weights[i-2]: %s\n",i,str(weights[[i-2]])))
-        data.transformed[,i] <- data.transformed[,i] * weights[i]
+    # weight data
+    if (!is.null(weights)) {
+      data.transformed <- weight.data(data.transformed, weights)
     }
 
 
