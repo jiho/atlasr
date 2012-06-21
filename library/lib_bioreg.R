@@ -263,21 +263,8 @@ bioreg <- function(
       pdf(pdfFile, width=11.7, height=8.3)
     }
 
-    # get a nice colour map
-    cmap <- discrete.colourmap(nlevels(bioregObj$data$cluster))
-
-    # Dendrogram
-    n.groups.intermediate <- nlevels(bioregObj$data$clara.num)
     # dendrogram
-    plot(bioregObj$hcl, labels=F, hang=-1)
-    # cutting level
-    lines(c(1,n.groups.intermediate), c(bioregObj$hcl$cut.height,bioregObj$hcl$cut.height), lty=2, col="red")
-    # markers for group labels
-    colours <- cmap[bioregObj$data$cluster][bioregObj$hcl$order]
-    points(1:n.groups.intermediate, rep(-0.02, n.groups.intermediate), col=NA, bg=colours, pch=21, cex=1)
-
-    # ask for further plots
-    ask <- devAskNewPage()
+    plot.dendro(bioregObj)
     if (!output) devAskNewPage(TRUE)
 
     # plot of variables distributions within each cluster
@@ -304,6 +291,34 @@ bioreg <- function(
 
 ## Plots
 #-----------------------------------------------------------------------------
+
+plot.dendro <- function(x) {
+  #
+  # Plot the dendrogram of the final hierarchical clustering
+  #
+  # x     object of class "bioreg" resulting from a bioreg() or compute.bioreg() call
+  #
+
+  # re-extract variables from the object
+  n.groups <- nlevels(x$data$cluster)
+  n.groups.intermediate <- nlevels(x$data$clara.num)
+
+  # plot the dendrogram
+  plot(x$hcl, labels=F, hang=-1)
+
+  # add the cutting level
+  lines(c(1,n.groups.intermediate), c(x$hcl$cut.height, x$hcl$cut.height), lty=2, col="red")
+
+  # add markers for group labels
+  # get colour map
+  cmap <- discrete.colourmap(n.groups)
+  # reorder colours
+  colours <- cmap[x$hcl$clustering][x$hcl$order]
+  suppressPackageStartupMessages(require("scales", quietly=TRUE))   # for function alpha()
+  points(1:n.groups.intermediate, rep(-0.004, n.groups.intermediate), col=alpha("black", 0.5), bg=colours, pch=22, cex=1)
+
+  return(invisible(x))
+}
 
 plot.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
   #
