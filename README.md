@@ -14,9 +14,9 @@ Go to the [R download site](http://cran.at.r-project.org/) and download R for yo
 
 *	Windows users, you should select the `base` subdirectory and then the main `Download R 2.** for Windows` link. Install with the default choices everywhere.
 
-*   Linux users, you should get it from your package management system rather than from the above site.
+*   Linux users, you should get it from your package management system rather than from the above site. The pacckage is usually called R-cran.
 
-Optionally (but this is recommended as it makes things easier in the following), you can install a specialized editor on top of R, which can become your only interface to R. We recommend [RStudio](http://rstudio.org/). On the download page, select `RStudio Desktop` and it should detect your operating system and present the recommended file for you on the next page. If you already use RStudio, **ensure that you have the latest version installed**.
+Optionally (but this is recommended as it makes things easier in the following), you can install a specialized editor on top of R, which can become your only interface to R. We recommend [RStudio](http://rstudio.org/). On the download page, select `RStudio Desktop` and it should detect your operating system and present the recommended file for you on the next page.
 
 
 ### Download the latest version of the scripts
