@@ -472,6 +472,7 @@ weight.data <- function(x, weights, warn=TRUE) {
   if ( any(NAweights) ) {
     if (warn) warning("Weights are missing for ", paste(names(x)[NAweights], collapse=", ") ,"\n  Assuming weight(s) of 1")
     weights[NAweights] <- 1
+    names(weights) <- names(x)
   }
 
   # normalize so that max weight is 1
@@ -552,6 +553,7 @@ transform.data <- function(x, transformations, warn=TRUE) {
   if ( any(NAtransformations) ) {
     if (warn) warning("Transformations are missing for ", paste(names(x)[NAtransformations], collapse=", ") ,"\n  Assuming no transformation")
     transformations[NAtransformations] <- "x"
+    names(transformations) <- names(x)
     # TODO just skip these columns for improved speed
   }
 

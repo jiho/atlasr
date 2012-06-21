@@ -142,6 +142,24 @@ test_that("name expansion cause weights to be replicated", {
   expect_that(dataW$fii, equals(data$fii * 0.5))
 })
 
+test_that("weighting saves weights as attributes", {
+  x <- data.frame(foo=1:3, bar=4:6)
+
+  xW <- weight.data(x, c(foo=2, bar=1))
+  w <- attr(xW, "weights")
+  expect_that(names(w), equals(names(x)))
+
+  # no matter the order
+  xW <- weight.data(x, c(bar=1, foo=2))
+  w2 <- attr(xW, "weights")
+  expect_that(w2, equals(w))
+
+  # or whether some are ommitted
+  xW <- weight.data(x, c(foo=2), warn=F)
+  w2 <- attr(xW, "weights")
+  expect_that(w2, equals(w))
+})
+
 
 context("Transforming data")
 
@@ -177,6 +195,24 @@ test_that("name expansion cause transformations to be replicated", {
   # log transformation is replicated
   expect_that(dataW$foo, equals(log(data$foo)))
   expect_that(dataW$fii, equals(log(data$fii)))
+})
+
+test_that("transforming saves transforms as attributes", {
+  x <- data.frame(foo=1:3, bar=4:6)
+
+  xW <- transform.data(x, c(foo="log(x)", bar="x"))
+  w <- attr(xW, "transformations")
+  expect_that(names(w), equals(names(x)))
+
+  # no matter the order
+  xW <- transform.data(x, c(bar="x", foo="log(x)"))
+  w2 <- attr(xW, "transformations")
+  expect_that(w2, equals(w))
+
+  # or whether some are ommitted
+  xW <- transform.data(x, c(foo="log(x)"), warn=F)
+  w2 <- attr(xW, "transformations")
+  expect_that(w2, equals(w))
 })
 
 test_that("defining a function from a string accepts various inputs", {
