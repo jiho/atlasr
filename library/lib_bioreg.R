@@ -2,7 +2,9 @@
 #     Perform abiotic regionalisation
 #
 # (c) Copyright 2012 Ben Raymond, ben dot raymond at aad dot gov dot au
-#     Last-Modified: <2012-05-22 08:54:50>
+#                    Jean-Olivier Irisson
+#     GNU General Public License v3
+#     Last-Modified: <2012-Jun-21 17:04>
 #
 #-----------------------------------------------------------------------------
 
