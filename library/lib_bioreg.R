@@ -572,7 +572,7 @@ do.bioreg.variables <- function(variables, file) {
   # defaults
   weights <- rep(1,length(variables))
   names(weights) <- variables
-  transformations <- rep("",length(variables))
+  transformations <- rep("x",length(variables))
   names(transformations) <- variables
 
   # if the options file exists, read it to use the previously saved weights and transformations
