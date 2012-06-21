@@ -228,21 +228,31 @@ bioreg <- function(
       suffix <- format(Sys.time(), "%Y-%m-%d_%H-%M-%S")
       baseName <- str_c(output.dir,"/bioreg-", suffix)
 
-      # Rdata
+      # Rdata with full object
       rdataFile <- str_c(baseName, ".Rdata")
       save(bioregObj, file=rdataFile)
 
-      # Shapefiles
-      write.shapefile(bioregObj$data, baseName, "cluster")
+      # Shapefiles of clusters
+      write.shapefile(bioregObj$data, name=baseName, variables="cluster")
 
-      # # CSV
-      # csvFile <- str_c(baseName, ".csv")
-      # write.table(bioregObj$data, file=csvFile, sep=",", row.names=FALSE)
+      # CSV file of clusters
+      csvFile <- str_c(baseName, ".csv")
+      write.table(bioregObj$data, file=csvFile, sep=",", row.names=FALSE)
 
-      # variables
-      csvVarFile <- str_c(baseName, "-variables.csv")
-      variablesFrame <- data.frame(variables, transformations, weights)
-      write.table(variablesFrame, file=csvVarFile, sep=",", row.names=FALSE)
+      # TXT file with variables info
+      infoFile <- str_c(baseName, "-info.txt")
+      infoD <- data.frame(variables)
+      if (!is.null(transformations)) {
+        infoD$transformations <- attr(data.transformed, "transformations")
+      } else {
+        infoD$transformations <- ""
+      }
+      if (!is.null(weights)) {
+        infoD$weights <- attr(data.transformed, "weights")
+      } else {
+        infoD$weights <- 1
+      }
+      write.table(infoD, file=infoFile, sep="\t", row.names=FALSE)
     }
 
     message("-> Produce plots")
