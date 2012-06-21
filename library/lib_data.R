@@ -468,7 +468,10 @@ function.maker <- function(str) {
       str <- str_c("{",str,"}")
 
       # fill in the body of the function
-      body(f) <- parse(text=str)
+      body(f) <- tryCatch(
+        parse(text=str),
+        error = function(e) { stop("Error parsing transformation function : ", str, call.=FALSE) }
+      )
     }
 
     return(f)
