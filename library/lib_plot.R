@@ -212,7 +212,7 @@ layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
   }
 
   # read coordinates of land masses at the appropriate resolution
-  land <- read.csv(str_c(path, "/worldmap-", resolution, ".csv"))
+  land <- read.csv(str_c(path, "/coastline/worldmap-", resolution, ".csv"))
 
   # clip land masses to data range
   land <- clip.to.data(land, x, expand=expand)
