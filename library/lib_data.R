@@ -441,6 +441,52 @@ match.vars <- function(vars, choices, quiet=TRUE) {
 }
 
 
+weight.data <- function(x, weights, warn=TRUE) {
+  #
+  # Apply weights to the columns of a data.frame
+  #
+  # x         data.frame to be weighted
+  # weights   named vector of weights
+  #           names will be expanded using match.vars and the final set of names must match the names of x
+  #           numeric values will be scaled to a maximum of 1
+  # warn      wether to warn when weights are missing for some of the columns
+  #
+
+  # expand each element of weights by name
+  # this allows to specify something like weights=c(nox=2) and have *all* nox variables double weighted
+  expandedNames <- match.vars(names(weights), names(x), quiet=TRUE)
+  # NB: we expand based in what is in x. If the name of an element in weights does not match, match.vars will throw an error
+
+  # if name expansion resulted in more weights, replicate the weight values appropriately
+  if (length(expandedNames) > length(weights)) {
+    weights <- weights[attr(expandedNames, "var.index")]
+    # NB: we use the attributes regarding indexes assigned by match.var to do this
+  }
+
+  # assign the new, expanded names
+  names(weights) <- expandedNames
+
+  # warn when all elements of x do not have a weight associated with them and use the default weight (1)
+  weights <- weights[names(x)]
+  NAweights <- is.na(weights)
+  if ( any(NAweights) ) {
+    if (warn) warning("Weights are missing for ", paste(names(x)[NAweights], collapse=", ") ,"\n  Assuming weight(s) of 1")
+    weights[NAweights] <- 1
+  }
+
+  # normalize so that max weight is 1
+  weights <- weights / max(weights)
+
+  # apply weights to the columns of x
+  for (i in 1:ncol(x)) {
+    x[,i] <- x[,i] * weights[i]
+  }
+
+  # store the weights as attributes
+  attr(x, "weights") <- weights
+
+  return(x)
+}
 
 function.maker <- function(str) {
     #
@@ -476,6 +522,78 @@ function.maker <- function(str) {
 
     return(f)
 }
+
+transform.data <- function(x, transformations, warn=TRUE) {
+  #
+  # Apply transformations to the columns of a data.frame
+  #
+  # x                 data.frame to be transformed
+  # transformations   named vector of transformations
+  #                   names will be expanded using match.vars and the final set of names must match the names of x
+  # warn              wether to warn when transformations are missing for some of the columns
+  #
+
+  # NB: see weight.data, which is very similar, for more detailed comments
+
+  # expand each element of transformations by name
+  expandedNames <- match.vars(names(transformations), names(x), quiet=TRUE)
+
+  # replicate transformations appropriately
+  if (length(expandedNames) > length(transformations)) {
+    transformations <- transformations[attr(expandedNames, "var.index")]
+  }
+
+  # assign the new, expanded names
+  names(transformations) <- expandedNames
+
+  # warn when all elements of x do not have a weight associated with them and use the default weight (1)
+  transformations <- transformations[names(x)]
+  NAtransformations <- is.na(transformations)
+  if ( any(NAtransformations) ) {
+    if (warn) warning("Transformations are missing for ", paste(names(x)[NAtransformations], collapse=", ") ,"\n  Assuming no transformation")
+    transformations[NAtransformations] <- "x"
+    # TODO just skip these columns for improved speed
+  }
+
+  # apply transformations to the columns of x
+  for (i in 1:ncol(x)) {
+
+    # make a function from the textual description
+    trans <- function.maker(transformations[i])
+
+    # apply the function, catching errors and warnings
+    x[,i] <- tryCatch(
+      # try applying the function
+      trans(x[,i]),
+      # if everything goes smoothly, the result is stored in x[,i]
+
+      # if there is a warning, print it and still return the value
+      warning=function(w) {
+        # custom message
+        warning("Warning when applying transformation \"", transformations[i], "\" to \"", names(x)[i], "\" : \n  ", w$message, call.=FALSE)
+        # # original message
+        # warning(w)
+        # still compute the result, suppressing the warning
+        y <- suppressWarnings(trans(x[,i]))
+        return(y)
+      },
+
+      # if there is an error, convert it into a warning and return NA
+      error=function(e) {
+        warning("Error when applying transformation \"", transformations[i], "\" to \"", names(x)[i], "\" : \n  ", e$message, "\nReturning NA for \"", names(x)[i], "\"", call.=FALSE)
+        return(NA)
+      }
+    )
+
+  }
+
+  # store the transformations as attributes
+  attr(x, "transformations") <- transformations
+
+  return(x)
+}
+
+
 rasterize <- function(x, vars, n=10, precisions=NULL, fun=sum, ...) {
   #
   # Reduce the precision of certain columns of a data.frame to bins and summarize the rest of the information per bin

@@ -71,7 +71,7 @@ test_that("latitude and longitude names are flexible", {
 })
 
 
-context("Data processing")
+context("Writing shapefiles")
 
 test_that("writing shapefile to a directory with accents in the name works", {
   temp <- tempfile("test_accent_éü")
@@ -102,7 +102,82 @@ test_that("writing shapefile to a directory with spaces in the name works", {
 })
 
 
+context("Weighting data")
+
+test_that("weighting data warns or errors appropriately when names do not match", {
+  x <- data.frame(foo=1:3, bar=4:6)
+  # additional weight
+  expect_that(weight.data(x, c(foo=1, bar=2, bob=3)), throws_error())
+  # missing weight and additional weight
+  expect_that(weight.data(x, c(foo=1, bob=2)), throws_error())
+  # missing weight
+  expect_that(weight.data(x, c(foo=1)), gives_warning("Weights are missing"))
+})
+
+test_that("weighting data is not influenced by column order", {
+  data <- data.frame(foo=1:3, bar=4:6)
+  # precompute what weighting should give
+  dataW <- data
+  dataW$bar <- dataW$bar * 0.5
+  expect_that(weight.data(data, c(foo=1, bar=0.5)), equals(dataW))
+  expect_that(weight.data(data, c(bar=0.5, foo=1)), equals(dataW))
+  expect_that(weight.data(data[,c(2,1)], c(foo=1, bar=0.5)), equals(dataW[,c(2,1)]))
+})
+
+test_that("omitting weights defaults to weight=1", {
+  data <- data.frame(foo=1:3, bar=4:6)
+  # all weights are 1
+  expect_that(weight.data(data, weights=c(foo=1)  , warn=FALSE)$bar, equals(data$bar))
+  # after scaling, weights=c(2,1) become c(1, 0.5)
+  expect_that(weight.data(data, weights=c(foo=2)  , warn=FALSE)$bar, equals(data$bar*0.5))
+  # since weight of foo is 0.5, weight of bar=1 becomes the maximum and is not affected by scaling
+  expect_that(weight.data(data, weights=c(foo=0.5), warn=FALSE)$bar, equals(data$bar))
+})
+
+test_that("name expansion cause weights to be replicated", {
+  data <- data.frame(foo=1:3, fii=4:6, bar=4:6)
+  dataW <- weight.data(data, weights=c(f=1, bar=2))
+  # weight of 1 should be replicated and becomes 0.5 after scaling by maximum weight
+  expect_that(dataW$foo, equals(data$foo * 0.5))
+  expect_that(dataW$fii, equals(data$fii * 0.5))
+})
+
+
 context("Transforming data")
+
+test_that("transforming data warns or errors appropriately when names do not match", {
+  x <- data.frame(foo=1:3, bar=4:6)
+  # additional transformation
+  expect_that(transform.data(x, c(foo="x", bar="x", bob="x")), throws_error())
+  # missing transformation and additional transformation
+  expect_that(transform.data(x, c(foo="x", bob="x")), throws_error())
+  # missing transformation
+  expect_that(transform.data(x, c(foo="x")), gives_warning("Transformations are missing"))
+})
+
+test_that("transforming data is not influenced by column order", {
+  data <- data.frame(foo=1:3, bar=4:6)
+  # precompute what transforming should give
+  dataW <- data
+  dataW$foo <- sqrt(dataW$foo)
+  dataW$bar <- log(dataW$bar)
+  expect_that(transform.data(data, c(foo="sqrt(x)", bar="log(x)")), equals(dataW))
+  expect_that(transform.data(data, c(bar="log(x)", foo="sqrt(x)")), equals(dataW))
+  expect_that(transform.data(data[,c(2,1)], c(foo="sqrt(x)", bar="log(x)")), equals(dataW[,c(2,1)]))
+})
+
+test_that("omitting transformation defaults to no transformation", {
+  data <- data.frame(foo=1:3, bar=4:6)
+  expect_that(transform.data(data, c(foo="log(x)"), warn=FALSE)$bar, equals(data$bar))
+})
+
+test_that("name expansion cause transformations to be replicated", {
+  data <- data.frame(foo=1:3, fii=4:6, bar=4:6)
+  dataW <- transform.data(data, c(f="log(x)", bar="x"))
+  # log transformation is replicated
+  expect_that(dataW$foo, equals(log(data$foo)))
+  expect_that(dataW$fii, equals(log(data$fii)))
+})
 
 test_that("defining a function from a string accepts various inputs", {
   # explicit function definitions
@@ -119,3 +194,22 @@ test_that("unparsable functions produce an error", {
   expect_that( transform.data(data.frame(foo=1:2), c(foo="$")),  throws_error() )
 })
 
+test_that("errors and warnings in transformation functions are handled", {
+  # TODO split that into several tests
+  data <- data.frame(foo=-1:1)
+
+  # errors are transformed into warnings
+  expect_that(transform.data(data, c(foo="stop('my error')")), gives_warning("Error when applying transformation"))
+  # and return NA
+  res <- suppressWarnings(transform.data(data, c(foo="stop('my error')"))$foo)
+  expect_that(all(is.na(res)), is_true())
+
+  # warnings (here : produce NaNs) are issued in context
+  expect_that(transform.data(data, c(foo="log(x)")), gives_warning("Warning when applying transformation"))
+  # but still computes the result
+  res <- suppressWarnings(transform.data(data, c(foo="log(x)"))$foo)
+  expect_that(res, equals(suppressWarnings(log(data$foo))))
+
+  # applying a meaningless "function" throws an error which is converted into a warning
+  expect_that(transform.data(data, c(foo="aMeaningLessVariable39825")), gives_warning("Error when applying transformation"))
+})
