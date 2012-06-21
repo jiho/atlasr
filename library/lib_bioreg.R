@@ -42,7 +42,8 @@ compute.bioreg <- function(
   #
   # Perform bioregionalisation based on clustering
   #
-  data,                       # data set with lon, lat and variables to cluster, as columns
+  data,                       # data.frame containing only variables to cluster (after transforming, scaling, weighting, etc.)
+  data.orig=data,             # original data.frame, before data processing (and usually with lon and lat); this is later used for plots etc.
   n.groups=12,                # either an integer number of groups (e.g. 10), or the height at which to cut the dendrogram (e.g. 0.13) in the hierarchical clustering step (hclust)
   n.groups.intermediate=200,  # number of groups in the non-hierarchical clustering step (clara); increasing this increases computation time significantly
   quick=TRUE,                 # TRUE produces less precise clustering, suitable for exploratory runs; FALSE is for high quality final analyses
@@ -54,9 +55,15 @@ compute.bioreg <- function(
   suppressPackageStartupMessages(require("vegan", quietly=TRUE))
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
 
+  # check arguments
+  if (nrow(data) != nrow(data.orig)) {
+    stop("Rows (i.e. locations) in data and data.orig do not match")
+  }
+
+
   # remove lines (i.e. locations) NAs but keep track of them
   missing.mask <- rowSums(is.na(data)) > 0
-  data.used <- data[!missing.mask, !names(data) %in% c("lon", "lat")]
+  data.used <- data[!missing.mask,]
 
 
   if ( ! quiet ) cat("   Perform non-hierarchical clustering first\n")
@@ -107,21 +114,21 @@ compute.bioreg <- function(
 
   # Store result
   # associate non-hierarchical cluster number to each data point
-  data$clara.num[!missing.mask] <- cl$clustering
+  data.orig$clara.num[!missing.mask] <- cl$clustering
 
   # associate hierarchical cluster number to each data point
-  data <- join(data, data.mean[,c("clara.num", "hclust.num")], by="clara.num", type="full")
-  data <- rename(data, c(hclust.num="cluster"))
+  data.orig <- join(data.orig, data.mean[,c("clara.num", "hclust.num")], by="clara.num", type="full")
+  data.orig <- rename(data.orig, c(hclust.num="cluster"))
 
   # transform into factors
-  data$clara.num <- factor(data$clara.num)
-  data$cluster <- factor(data$cluster)
+  data.orig$clara.num <- factor(data.orig$clara.num)
+  data.orig$cluster <- factor(data.orig$cluster)
 
   # store everything in a list
   res <- list(
     cl=cl,
     hcl=hcl,
-    data=data
+    data=data.orig
   )
   class(res) <- c("bioreg", "list")
 
@@ -204,8 +211,7 @@ bioreg <- function(
     ## Run bioregionalisation
     #-------------------------------------------------------------------------
     message("-> Compute bioregions")
-    data <- data.frame(data.raw[,c("lon", "lat")], data.transformed)
-    bioregObj <- compute.bioreg(data, quick=quick, ...)
+    bioregObj <- compute.bioreg(data=data.transformed, data.orig=data.raw, quick=quick, ...)
 
 
     ## Output data
