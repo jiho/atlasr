@@ -86,7 +86,7 @@ update.env.data <- function(url="http://webdav.data.aad.gov.au/data/environmenta
     # when the database exists, compare its content to the online repository
 
     # get local checksums
-    files <- list.files(path, pattern="(zip|png|csv|shp)$", full=T, recursive=TRUE)
+    files <- list.files(path, pattern="(zip|png|csv|shp|dbf|shx)$", full=T, recursive=TRUE)
     localMD5 <- data.frame(
       path=str_replace(files, str_c(path, "/"), ""),
       md5=as.character(md5sum(files)),
