@@ -441,6 +441,38 @@ match.vars <- function(vars, choices, quiet=TRUE) {
 }
 
 
+
+function.maker <- function(str) {
+    #
+    # Transform a character string into a function
+    #
+    # str   character string defining the function
+    #
+
+    # first consider the situation in which the string is just the name of a function ("log", "sqrt")
+    f <- tryCatch(
+      eval(parse(text=str)),
+      # if the string does not represent a function, evaluating it can throw errors or warnings. We catch them and forget about them
+      warning=function(x) { NULL },
+      error=function(x) { NULL }
+    )
+
+    if ( ! is.function(f) ) {
+      # when it is not, assume it is the body of a function definition in which the argument is x
+
+      # start with an empty function
+      f <- function(x) {}
+      environment(f) <- baseenv()
+
+      # make sure str is enclosed in curly brackets in case the function has several commands (i.e. spans several lines)
+      str <- str_c("{",str,"}")
+
+      # fill in the body of the function
+      body(f) <- parse(text=str)
+    }
+
+    return(f)
+}
 rasterize <- function(x, vars, n=10, precisions=NULL, fun=sum, ...) {
   #
   # Reduce the precision of certain columns of a data.frame to bins and summarize the rest of the information per bin

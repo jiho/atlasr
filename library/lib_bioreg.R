@@ -34,30 +34,6 @@ mcolor=function(x,y=NULL,z=NULL,interp=F,col=topo.colors(100),clim=NULL) {
     rasterImage(tempa,min(x,na.rm=T)-xbin/2,min(y,na.rm=T),max(x,na.rm=T)+xbin/2,max(y,na.rm=T),interp=F)
 }
 
-function.maker <- function(str) {
-    #
-    # Transform a character string into a function
-    #
-    # str   character string defining the function
-    #
-
-    suppressPackageStartupMessages(require("stringr", quietly=TRUE))
-
-    # empty function
-    f <- function(x) {}
-    environment(f) <- baseenv()
-
-    str <- str_c("{",str,"}") # make sure str is enclosed in curly brackets (will it matter if user also supplies these? - to check)
-
-    # fill in the body of the function
-    body(f) <- substitute(tryCatch(expr,
-                                   error=function(e) "Error applying transformation function"),
-                          list(expr=parse(text=str)[[1]])
-    )
-
-    return(f)
-}
-
 
 ## Run bioregionalisation
 #-----------------------------------------------------------------------------
