@@ -8,34 +8,6 @@
 #
 #-----------------------------------------------------------------------------
 
-## Toolbox functions
-#-----------------------------------------------------------------------------
-
-flipud <- function(A) A[nrow(A):1,]
-
-mcolor=function(x,y=NULL,z=NULL,interp=F,col=topo.colors(100),clim=NULL) {
-    ## uses rasterImage() as a faster alternative to image()
-    if (is.null(y) & is.null(z)) {
-        z=x
-        x=1:dim(z)[1]
-        y=1:dim(z)[2]
-    }
-    ncolours=length(col)
-    tempz=z
-    if (!is.null(clim)) {
-       tempz[tempz<clim[1]]=clim[1]
-       tempz[tempz>clim[2]]=clim[2]
-    }
-    temp=round((flipud(t(tempz))-min(tempz,na.rm=T))*(ncolours-1)/(max(tempz,na.rm=T)-min(tempz,na.rm=T)))+1
-    tempa=as.raster(col[temp],nrow=dim(temp)[1])
-
-    ## show on figure
-    xbin=mean(abs(diff(x)))
-    ybin=mean(abs(diff(y)))
-    plot(c(min(x,na.rm=T)-xbin/2,max(x,na.rm=T)+xbin/2),c(min(y,na.rm=T)-ybin/2,max(y,na.rm=T)+ybin/2),type="n",xlab="",ylab="",xlim=c(min(x,na.rm=T)-xbin/2-0.05,max(x,na.rm=T)+xbin/2+0.05),ylim=c(min(y,na.rm=T)-ybin/2-0.05,max(y,na.rm=T)+ybin/2+0.05),yaxs='i', xaxs='i')
-    rasterImage(tempa,min(x,na.rm=T)-xbin/2,min(y,na.rm=T),max(x,na.rm=T)+xbin/2,max(y,na.rm=T),interp=F)
-}
-
 
 ## Run bioregionalisation
 #-----------------------------------------------------------------------------
