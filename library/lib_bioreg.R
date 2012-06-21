@@ -532,8 +532,14 @@ do.bioreg <- function() {
       call <- str_c("bioreg(",
         "variables=", str_c(deparse(win$variables, width=500), collapse=""),
         ", n.groups=", win$n.groups,
-        ", weights=", str_c("c(",str_c(names(weights), unlist(weights), sep="=", collapse=", "), ")"),
-        ", transformations=", str_c("c(",str_c(names(transformations), str_c("\"", unlist(transformations),"\"") , sep="=", collapse=", "), ")"),
+        ifelse( is.null(weights),
+          ", weights=NULL",
+          str_c(", weights=", str_c("c(",str_c(names(weights), unlist(weights), sep="=", collapse=", "), ")"))
+        ),
+        ifelse( is.null(transformations),
+          ", transformations=NULL",
+          str_c(", transformations=", str_c("c(",str_c(names(transformations), str_c("\"", unlist(transformations),"\"") , sep="=", collapse=", "), ")"))
+        ),
         ", lat.min=", win$lat.min, ", lat.max=", win$lat.max, ", lat.step=", win$lat.step,
         ", lon.min=", win$lon.min, ", lon.max=", win$lon.max, ", lon.step=", win$lon.step,
         ", quick=", quick,
