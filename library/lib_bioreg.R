@@ -209,7 +209,7 @@ bioreg <- function(
     #-------------------------------------------------------------------------
     message("-> Compute bioregions")
     data <- data.frame(data.raw[,c("lon", "lat")], data.transformed)
-    bioregObj  <- compute.bioreg(data, quick=quick, ...)
+    bioregObj <- compute.bioreg(data, quick=quick, ...)
 
 
     ## Output data
