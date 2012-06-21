@@ -472,10 +472,10 @@ do.bioreg <- function() {
   rp.slider(win, n.groups,  from=2, to=40,  resolution=1,   title="Number of clusters", initval=12 , showvalue=TRUE, pos=c(0, mid+3*h, w/2, h))
 
   # location
-  rp.slider(win, lat.max,  from=-90, to=-30,  resolution=1,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
-  rp.slider(win, lon.min,  from=-180, to=180, resolution=1,   title="West"    , initval=-180,  showvalue=TRUE, pos=c(w/2, mid+h*1, w/4, h))
-  rp.slider(win, lon.max,  from=-180, to=180, resolution=1,   title="East"    , initval=180 , showvalue=TRUE, pos=c(3*w/4, mid+h*1, w/4, h))
-  rp.slider(win, lat.min,  from=-90, to=-30,  resolution=1,   title="South"   , initval=-80 , showvalue=TRUE, pos=c(w/2+w/8, mid+h*2, w/4, h))
+  rp.slider(win, lat.max,  from=-90, to=-30,  resolution=2,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
+  rp.slider(win, lon.min,  from=-180, to=180, resolution=5,   title="West"    , initval=-180,  showvalue=TRUE, pos=c(w/2, mid+h*1, w/4, h))
+  rp.slider(win, lon.max,  from=-180, to=180, resolution=5,   title="East"    , initval=180 , showvalue=TRUE, pos=c(3*w/4, mid+h*1, w/4, h))
+  rp.slider(win, lat.min,  from=-90, to=-30,  resolution=2,   title="South"   , initval=-80 , showvalue=TRUE, pos=c(w/2+w/8, mid+h*2, w/4, h))
   rp.slider(win, lon.step, from=0.1, to=4,    resolution=0.1, title="Step lon", initval=1 ,     showvalue=TRUE, pos=c(w/2, mid+h*3, w/4, h))
   rp.slider(win, lat.step, from=0.1, to=4,    resolution=0.1, title="Step lat", initval=1 ,     showvalue=TRUE, pos=c(3*w/4, mid+h*3, w/4, h))
 
