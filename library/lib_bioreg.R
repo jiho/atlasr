@@ -153,10 +153,10 @@ bioreg <- function(
     suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
 
 
-    ## Check input arguments
+    ## Get and transform data
     #-------------------------------------------------------------------------
 
-    message("-> Expand variables names")
+    message("-> Get environmental variables")
     allVariables <- list.env.data(path=path)
 
     # expand variable names
@@ -166,10 +166,6 @@ bioreg <- function(
     if (length(variables) < 2) {
         stop("You must specify at least two input variables")
     }
-
-
-    ## Get and transform data
-    #-------------------------------------------------------------------------
 
     # get database
     database <- read.env.data(variables=variables, path=path)
