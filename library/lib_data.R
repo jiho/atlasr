@@ -95,32 +95,52 @@ update.env.data <- function(url="http://webdav.data.aad.gov.au/data/environmenta
 
     # get missing files
     missing <- remoteMD5[-which(remoteMD5$md5 %in% localMD5$md5),]
+    additional <- localMD5[-which(localMD5$md5 %in% remoteMD5$md5),]
 
-    if (nrow(missing) > 0) {
-      # issue a message
-      many <- ( nrow(missing) > 10 )
-      if (many) {
-        missingFiles <- str_c(missing$path[1:10], collapse="\n     ")
-        missingFiles <- str_c(missingFiles, "\n      and ", nrow(missing) - 10, " more ...")
-      } else {
-        missingFiles <- str_c(missing$path, collapse="\n     ")
-      }
-
+    if (nrow(missing) > 0 | nrow(additional) > 0) {
       message("-> Updating environment database")
-      message("   The files : \n     ", missingFiles, "\n   are missing or have been updated. They will be downloaded.")
 
-      # download the missing files
-      a_ply(missing, 1, function(x) {
-        download.file(x$url, destfile=x$destination, quiet=many)
-        # unzip if it is a zipped netcdf file
-        if (str_detect(x$destination, "nc\\.zip$")) {
-          unzip(x$destination, exdir=path)
+      # delete additional files
+      if (nrow(additional) > 0) {
+        # issue a message
+        many <- ( nrow(additional) > 10 )
+        if (many) {
+          additionalFiles <- str_c(additional$path[1:10], collapse="\n     ")
+          additionalFiles <- str_c(additionalFiles, "\n      and ", nrow(additional) - 10, " more ...")
+        } else {
+          additionalFiles <- str_c(additional$path, collapse="\n     ")
         }
-      }, .progress=ifelse(many, "text", "none"))
+        message("   The files : \n     ", additionalFiles, "\n   are not on the server anymore. They will be deleted.")
 
-      } else {
-        message("-> Environment database up to date")
+        # delete files
+        unlink(str_c(path, "/", additional$path))
       }
+
+      # download missing files
+      if (nrow(missing) > 0) {
+        # issue a message
+        many <- ( nrow(missing) > 10 )
+        if (many) {
+          missingFiles <- str_c(missing$path[1:10], collapse="\n     ")
+          missingFiles <- str_c(missingFiles, "\n      and ", nrow(missing) - 10, " more ...")
+        } else {
+          missingFiles <- str_c(missing$path, collapse="\n     ")
+        }
+        message("   The files : \n     ", missingFiles, "\n   are missing or have been updated. They will be downloaded.")
+
+        # download the missing files
+        a_ply(missing, 1, function(x) {
+          download.file(x$url, destfile=x$destination, quiet=many)
+          # unzip if it is a zipped netcdf file
+          if (str_detect(x$destination, "nc\\.zip$")) {
+            unzip(x$destination, exdir=path)
+          }
+        }, .progress=ifelse(many, "text", "none"))
+      }
+
+    } else {
+      message("-> Environment database up to date")
+    }
 
   }
 
