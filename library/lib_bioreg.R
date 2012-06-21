@@ -91,18 +91,18 @@ compute.bioreg <- function(
   # now extract the desired number of groups from the dendrogram
   if (floor(n.groups)==n.groups) {
       # n.groups is integer, i.e. we specified a number of groups directly
-      hclust.num <- cutree(hcl, k=n.groups)
+      hcl$clustering <- cutree(hcl, k=n.groups)
       # work out the dissimilarity level (height) that corresponds to this number of groups
       hcl$cut.height <- mean(c(hcl$height[length(hcl$height)+2-n.groups], hcl$height[length(hcl$height)+2-n.groups-1]))
   } else {
       # we specified a height at which to cut the dendrogram
       # show on the dendrogram the height at which we are cutting
       hcl$cut.height <- n.groups
-      hclust.num <- cutree(hcl, h=n.groups)
-      n.groups <- length(unique(cn.new))
+      hcl$clustering <- cutree(hcl, h=n.groups)
+      n.groups <- length(unique(hcl$clustering))
   }
   # associate hierachical cluster number to each non-hierarchical cluster
-  data.mean$hclust.num <- hclust.num
+  data.mean$hclust.num <- hcl$clustering
 
 
   # Store result
