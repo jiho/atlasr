@@ -94,8 +94,8 @@ update.env.data <- function(url="http://webdav.data.aad.gov.au/data/environmenta
     )
 
     # get missing files
-    missing <- remoteMD5[-which(remoteMD5$md5 %in% localMD5$md5),]
-    additional <- localMD5[-which(localMD5$md5 %in% remoteMD5$md5),]
+    missing <- remoteMD5[ ! remoteMD5$md5 %in% localMD5$md5,]
+    additional <- localMD5[ ! localMD5$md5 %in% remoteMD5$md5,]
 
     if (nrow(missing) > 0 | nrow(additional) > 0) {
       message("-> Updating environment database")
