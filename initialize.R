@@ -48,6 +48,8 @@ for (file in sourceFiles) {
 
 # Install missing packages
 requiredPackages = c(unique(requiredPackages), "mapproj")
+library("utils")
+# NB: this is for installed.packages(). utils is usually loaded automatically with R but when we exectute the initialize.R script from .Rprofile, it seems this packages is not loaded yet.
 installedPackages = row.names(installed.packages())
 missingPackages = setdiff(requiredPackages, installedPackages)
 if (length(missingPackages) > 0) {
