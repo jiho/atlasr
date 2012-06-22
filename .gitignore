@@ -6,5 +6,9 @@
 *.bak
 *~
 
+# mac stuff
+._*
+*.DS_Store
+
 # Environmental data
 env_data
