@@ -80,4 +80,4 @@ update.env.data()
 
 
 # Cleanup the environment
-rm(file, content, installedPackages, m, matched, missingPackages, pack, requiredPackages, sourceFiles)
+rm(file, content, installedPackages, m, matched, missingPackages, pack, requiredPackages, sourceFiles, frame_files, path)
