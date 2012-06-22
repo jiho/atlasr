@@ -54,11 +54,6 @@ if (length(missingPackages) > 0) {
     install.packages(missingPackages, repos="http://cran.at.r-project.org")
 }
 
-# # Load all packages
-# for (pack in requiredPackages) {
-#   suppressPackageStartupMessages(library(pack, character.only=TRUE, quietly=TRUE))
-# }
-
 
 ## Set up computation environment
 #-----------------------------------------------------------------------------
