@@ -42,7 +42,8 @@ function (x, y, geo=FALSE, wtype=c("equal", "standard", "custom"),w=NULL, sample
             # NB: the solution above requires allocating a vector of size totalpairs, which can be too large to store in memory
             # instead of using sample(), we use runif() which only needs to allocate a vector of size npairs, for the result
             # round(runif()) can produce duplicates. We compensate for their expected number
-            nDup <- sum(1:(npairs-1))/totalpairs
+            # NB: sum(1:n) = n * (n+1) / 2
+            nDup <- (npairs - 1) * npairs / 2 / totalpairs
             samplevec <- sort(unique(round(runif(npairs + nDup, min=0, max=totalpairs))))
             # record the real number of samples taken
             npairs <- length(samplevec)
