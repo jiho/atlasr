@@ -27,7 +27,7 @@ write.table(data, file=temp, row.names=FALSE, sep=",")
 # run BRT models
 # optimised number of trees
 capture.output(suppressMessages(
-  b <- brt(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), predict=TRUE, lat.step=2, lon.step=4, quick=FALSE, path=path, quiet=TRUE, save=F)
+  b <- brt(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), predict=TRUE, lat.step=2, lon.step=4, quick=FALSE, path=path, quiet=TRUE, save=T)
 ), file=tempfile())
 # fixed number of trees
 capture.output(suppressMessages(
