@@ -224,7 +224,7 @@ layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
 }
 
 
-polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", "tile"), lat.precision=NULL, lon.precision=NULL, path=getOption("atlasr.env.data"), land=layer_land(data, alpha=0.9, path=path), scale=1, ...) {
+polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", "tile"), lat.precision=NULL, lon.precision=NULL, path=getOption("atlasr.env.data"), land=NULL, scale=1, ...) {
   #
   # data          data frame with columns lat, lon, and variables to plot
   # mapping       a call to `aes()` which maps a variable to a plotting
@@ -240,7 +240,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
   #               precision, the data is *subsampled* to those locations
   #               i.e. some data is actually dropped. If you want to average or
   #               sum the data per cell, use rasterize() in lib_data.R
-  # land          layer (result of a geom call) to show the land on top of the data; NULL shows nothing
+  # land          layer (result of a geom call) to show the land on top of the data; NULL uses layer_land to produce it
   # scale         scale of the points plotted
   # ...           passed to the selected geom
   #
@@ -326,6 +326,9 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
   }
 
   # add the land masses
+  if (is.null(land)) {
+    land <- layer_land(data, alpha=0.9, path=path)
+  }
   p <- p + land
 
   # use nice colours
