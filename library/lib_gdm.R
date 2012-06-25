@@ -32,20 +32,18 @@ compute.gdm <- function(
   set.seed(123)
 
   # remove lines with missing data
-  data <- data[,c(resp.vars, pred.vars)]
+  data <- data[,c("lon", "lat", resp.vars, pred.vars)]
   data <- na.omit(data)
 
-  # subsample input data
+  # subsample input data ( and remove lon and lat)
   if (!is.null(pre.sample)) {
-    data <- data[sample.int(nrow(data), pre.sample),]
+    sdata <- data[sample.int(nrow(data), pre.sample), -c(1,2)]
+  } else {
+    sdata <- data[,-c(1,2)]
   }
 
-  # identify response and preduction columns
-  pred.var.col <- match(pred.vars, names(data))
-  resp.var.col <- match(resp.vars, names(data))
-
   # run GDM
-  m.gdm <- gdm.fit(data[,pred.var.col], data[,resp.var.col], sample=intern.sample, ...)
+  m.gdm <- gdm.fit(sdata[,pred.vars], sdata[,resp.vars], sample=intern.sample, ...)
 
 
   ## Cluster the data
@@ -102,6 +100,7 @@ compute.gdm <- function(
 
   # store elements in the resulting object
   res <- list(
+    data=data,
     model=m.gdm,
     cl=cl,
     prediction=newdata
