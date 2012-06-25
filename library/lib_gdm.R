@@ -72,7 +72,7 @@ compute.gdm <- function(
 
     # try several possibilities
     for (cl in min.n.groups:max.n.groups) {
-      for (samples in 3:8) {
+      for (samples in 5:10) {
         for (sampsz in 2:4) {
           temp <- clara(pred, k=cl, metric="manhattan", keep.data=FALSE, samples=samples, sampsize=min(nrow(pred), 40 + sampsz * cl))
           res[cl,samples,sampsz] <- temp$silinfo$avg.width
