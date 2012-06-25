@@ -944,7 +944,7 @@ brt <- function(
 
       # plot effects
       if ( ! quiet ) cat("   plot results\n")
-      plot.brt(brtObj, plot.layout=plot.layout, quick=quick, overlay.stations=overlay.stations)
+      plot.brt(brtObj, plot.layout=plot.layout, quick=quick, overlay.stations=overlay.stations, path=path)
 
       # print info about the fit
       summary(brtObj)

@@ -224,7 +224,7 @@ layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
 }
 
 
-polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", "tile"), lat.precision=NULL, lon.precision=NULL, land=layer_land(data, alpha=0.9), scale=1, ...) {
+polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", "tile"), lat.precision=NULL, lon.precision=NULL, path=getOption("atlasr.env.data"), land=layer_land(data, alpha=0.9, path=path), scale=1, ...) {
   #
   # data          data frame with columns lat, lon, and variables to plot
   # mapping       a call to `aes()` which maps a variable to a plotting
