@@ -19,6 +19,8 @@ compute.gdm <- function(
   data,               # data frame containing locations (lat, lon), presence/absence data and environment variables
   newdata,            # prediction grid coordinates and associated environment variables
   n.groups=NULL,      # number of clusters in the result; when NULL (the default) the optimal number of clusters is determined by a stepwise procedure
+  min.n.groups=3,
+  max.n.groups=10,    # minimum and maximum number tested when searching for the optimal number of clusters; testing a larger range takes more time
   pre.sample=2500,    # sub-sample the input data before feeding it to the GDM function. When NULL, no subsampling occurs. Subsampling reduces the number of pairwise operations needed, speeds up the function and determines the amount of memory required. Since the library is 32 bits, the amount of allocatable memory is limited and this should not be much larger than 2500
   intern.sample=NULL, # internally, the GDM function can also subsample the pairwise dissimilarities. When NULL, no subsampling occurs. The total number of pairwise dissimilarities is n * ( n - 1 ) / 2, where n is the number of rows in `data` (or `pre.sample` when subsampling a priori), so for this to be effective, intern.sample must be lower than that. As a rule of thumb, n=2500 gives over 3 million pairwise dissimilarities.
   ...                 # passed to the internal GDM function
@@ -69,7 +71,7 @@ compute.gdm <- function(
     res <- array(NA,c(10,8,4))
 
     # try several possibilities
-    for (cl in 4:10) {
+    for (cl in min.n.groups:max.n.groups) {
       for (samples in 3:8) {
         for (sampsz in 2:4) {
           temp <- clara(pred, k=cl, metric="manhattan", keep.data=FALSE, samples=samples, sampsize=min(nrow(pred), 40 + sampsz * cl))
