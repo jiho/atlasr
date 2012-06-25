@@ -1088,7 +1088,6 @@ plot.effects.brt <- function(x, plot.layout=c(2,2), ...) {
   return(invisible(x))
 }
 
-
 plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
   #
   # Plot BRT predictions
@@ -1153,6 +1152,25 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
 
     return(p)
   }
+}
+
+plot.brt.list <- function(x, ...) {
+  lapply(x, plot.brt)
+  return(invisible(x))
+}
+
+plot.effects.brt.list <- function(x, ...) {
+  if (dev.interactive() | names(dev.cur()) == "null device") devAskNewPage(TRUE)
+  lapply(x, plot.effects.brt)
+  devAskNewPage(FALSE)
+  return(invisible(x))
+}
+
+plot.pred.brt.list <- function(x, ...) {
+  if (dev.interactive() | names(dev.cur()) == "null device") devAskNewPage(TRUE)
+  print(lapply(x, plot.pred.brt))
+  devAskNewPage(FALSE)
+  return(invisible(x))
 }
 
 
