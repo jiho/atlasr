@@ -33,7 +33,7 @@ temp <- tempdir()
 
 # run bioregionalisation
 capture.output(suppressMessages(
-  b <- bioreg(c("bathymetry", "sst_summer_climatology"), n.groups=2, n.groups.intermediate=5, lat.min=-40, lat.max=-30, lat.step=2, lon.min=0, lon.max=20, lon.step=2, output=temp)
+  b <- bioreg(c("bathymetry", "sst_summer_climatology"), n.groups=2, n.groups.intermediate=5, lat.min=-40, lat.max=-30, lat.step=2, lon.min=0, lon.max=20, lon.step=2, output=temp, path=path)
 ), file=tempfile())
 
 
