@@ -238,24 +238,10 @@ bioreg <- function(
       pdf(pdfFile, width=11.7, height=8.3)
     }
 
-    # dendrogram
-    plot.dendro(bioregObj)
+    plot.bioreg(bioregObj, quick=quick, path=path)
 
-    # ask for further plots if we are using interactive output
-    if (!output) devAskNewPage(TRUE)
-
-    # plot of variables distributions within each cluster
-    print(boxplotPlot <- plot.bioreg(bioregObj, geom="boxplot"))
-    print(violinPlot <- plot.bioreg(bioregObj, geom="violin"))
-
-    # map of clusters
-    print(clusterPlot <- plot.pred.bioreg(bioregObj, quick=quick))
-
-    if (!output) {
-      # switch back to not asking for plots if we were working interactively and switched it on
-      devAskNewPage(FALSE)
-    } else {
-      # close the PDF file otherwise
+    if (output) {
+      # close the PDF file
       dev.off()
     }
 
@@ -269,7 +255,7 @@ bioreg <- function(
 ## Plots
 #-----------------------------------------------------------------------------
 
-plot.dendro <- function(x) {
+plot.dendro <- function(x, ...) {
   #
   # Plot the dendrogram of the final hierarchical clustering
   #
@@ -297,7 +283,7 @@ plot.dendro <- function(x) {
   return(invisible(x))
 }
 
-plot.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
+plot.effects.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
   #
   # Plot the effects in a bioregionalisation study:
   # the values of the variables in each cluster
@@ -353,7 +339,7 @@ plot.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
   return(p)
 }
 
-plot.pred.bioreg <- function(x, quick=FALSE, path=getOption("atlasr.env.data"), ...) {
+plot.pred.bioreg <- function(x, quick=FALSE, geom="auto", ...) {
   #
   # Plot a map of bioregionalisation clusters
   #
@@ -371,15 +357,39 @@ plot.pred.bioreg <- function(x, quick=FALSE, path=getOption("atlasr.env.data"), 
 
   if (quick) {
     geom="raster"
+    lat.precision <- 1
+    lon.precision <- 2
   } else {
-    geom="auto"
+    lat.precision <- NULL
+    lon.precision <- NULL
   }
-  clusterMap <- polar.ggplot(x, aes(fill=cluster), geom=geom) +
+
+  clusterMap <- polar.ggplot(x, aes(fill=cluster), geom=geom, lat.precision=lat.precision, lon.precision=lon.precision, ...) +
     # nice colours
     scale_colour_manual(values=cmap)
 
   return(clusterMap)
 }
+
+plot.bioreg <- function(x, ...) {
+  #
+  # Produce all plots for a BRT object
+  #
+  # x   object of class brt
+  #
+
+  if (dev.interactive() | names(dev.cur()) == "null device") devAskNewPage(TRUE)
+
+  plot.dendro(x, ...)
+
+  print(plot.effects.bioreg(x, geom="boxplot", ...))
+  print(plot.effects.bioreg(x, geom="violin", ...))
+
+  print(plot.pred.bioreg(x, ...))
+
+  devAskNewPage(FALSE)
+}
+
 
 
 ## GUI
