@@ -224,7 +224,7 @@ layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
 }
 
 
-polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", "tile"), lat.precision=NULL, lon.precision=NULL, draw.coast=TRUE, scale=1, ...) {
+polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", "tile"), lat.precision=NULL, lon.precision=NULL, land=layer_land(data, alpha=0.9), scale=1, ...) {
   #
   # data          data frame with columns lat, lon, and variables to plot
   # mapping       a call to `aes()` which maps a variable to a plotting
@@ -240,6 +240,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
   #               precision, the data is *subsampled* to those locations
   #               i.e. some data is actually dropped. If you want to average or
   #               sum the data per cell, use rasterize() in lib_data.R
+  # land          layer (result of a geom call) to show the land on top of the data; NULL shows nothing
   # scale         scale of the points plotted
   # ...           passed to the selected geom
   #
@@ -252,9 +253,6 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
   # geoms
   geom <- match.arg(geom)
 
-  # allow lon/lat to be called more liberally
-  names(data)[tolower(names(data)) %in% c("latitude","lat")] <- "lat"
-  names(data)[tolower(names(data)) %in% c("longitude","lon","long")] <- "lon"
   # check that we have something that looks like lat and lon
   if (! all(c("lat","lon") %in% names(data)) ) {
     stop("Need two columns named lat and lon to be able to plot\nYou have ", paste(names(data), collapse=", "))
@@ -327,8 +325,8 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
     p <- p + geom_raster(mapping=mapping, ...)
   }
 
-  # add the coastline
-  # p <- p + layer_land(data, alpha=0.9)
+  # add the land masses
+  p <- p + land
 
   # use nice colours
   if ("fill" %in% names(mapping)) {
