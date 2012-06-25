@@ -27,11 +27,11 @@ write.table(data, file=temp, row.names=FALSE, sep=",")
 # run BRT models
 # optimised number of trees
 capture.output(suppressMessages(
-  b <- brt(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), predict=TRUE, lat.step=2, lon.step=4, quick=FALSE, path=path, quiet=TRUE)
+  b <- brt(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), predict=TRUE, lat.step=2, lon.step=4, quick=FALSE, path=path, quiet=TRUE, save=F)
 ), file=tempfile())
 # fixed number of trees
 capture.output(suppressMessages(
-  bf <- brt(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), predict=TRUE, lat.step=2, lon.step=4, quick=TRUE, path=path, quiet=TRUE)
+  bf <- brt(file=temp, taxa="sp1", variables=c("bathymetry", "ssh"), predict=TRUE, lat.step=2, lon.step=4, quick=TRUE, path=path, quiet=TRUE, save=T)
 ), file=tempfile())
 
 
@@ -66,23 +66,25 @@ test_that("predictions are replicable", {
 
 outDir <- str_replace(temp, ".csv", "")
 outDir <- str_c(outDir, "/sp1-BRT/")
-outPrefix <- str_c(outDir, "sp1-BRT.")
+outPrefix <- str_c(outDir, "sp1-BRT")
 
 test_that("produces all output files", {
   # plots
-  expect_that( file.exists(str_c(outPrefix, "pdf")), is_true() )
+  expect_that( file.exists(str_c(outPrefix, ".pdf")), is_true() )
   # shapefiles
-  expect_that( file.exists(str_c(outPrefix, "shp")), is_true() )
-  expect_that( file.exists(str_c(outPrefix, "dbf")), is_true() )
-  expect_that( file.exists(str_c(outPrefix, "shx")), is_true() )
-  expect_that( file.exists(str_c(outPrefix, "prj")), is_true() )
+  expect_that( file.exists(str_c(outPrefix, ".shp")), is_true() )
+  expect_that( file.exists(str_c(outPrefix, ".dbf")), is_true() )
+  expect_that( file.exists(str_c(outPrefix, ".shx")), is_true() )
+  expect_that( file.exists(str_c(outPrefix, ".prj")), is_true() )
   # Rdata archive
-  expect_that( file.exists(str_c(outPrefix, "Rdata")), is_true() )
+  expect_that( file.exists(str_c(outPrefix, ".Rdata")), is_true() )
   # csv file
-  expect_that( file.exists(str_c(outPrefix, "csv")), is_true() )
+  expect_that( file.exists(str_c(outPrefix, ".csv")), is_true() )
+  # info file
+  expect_that( file.exists(str_c(outPrefix, "-info.txt")), is_true() )
   
   # count number of files
-  expect_that( length(list.files(outDir)), equals(7) )
+  expect_that( length(list.files(outDir)), equals(8) )
 })
 
 unlink(temp)
