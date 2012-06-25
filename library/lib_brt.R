@@ -844,6 +844,7 @@ brt <- function(
   predict=FALSE,          # whether to perform the prediction or only fit the model
   quiet=FALSE,            # do not print messages when TRUE
   n.trees.fixed=ifelse(quick, 1000, 0), # if > 0, specifies the fixed number of trees to use in the BRT model. Otherwise, the number of trees is estimated by a stepwise procedure
+  save=TRUE,              # save output to files
   ...                     # passed to compute.brt()
 )
 {
@@ -912,54 +913,55 @@ brt <- function(
       next
 
     } else {
-      # prepare names of the files where the results will be written
-      # taxon name
-      cTaxon <- taxa[i]
-      # data file without extension
-      fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
-      # replace "." by "_" because shapefile writing does not support "."
-      # fileName <- str_replace_all(fileName, fixed("."), "_")
-      cTaxon <- str_replace_all(cTaxon, fixed("."), "_")
-      # prepare directory
-      dirName <- str_c(fileName, "/", cTaxon, "-BRT")
-      dir.create(dirName, showWarnings=FALSE, recursive=TRUE)
-      if (!file.exists(dirName)) {
-        stop("Could not produce output directory : ", dirName)
+
+      if (save) {
+        # prepare names of the files where the results will be written
+        # taxon name
+        cTaxon <- taxa[i]
+        # data file without extension
+        fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
+        # replace "." by "_" because shapefile writing does not support "."
+        # fileName <- str_replace_all(fileName, fixed("."), "_")
+        cTaxon <- str_replace_all(cTaxon, fixed("."), "_")
+        # prepare directory
+        dirName <- str_c(fileName, "/", cTaxon, "-BRT")
+        dir.create(dirName, showWarnings=FALSE, recursive=TRUE)
+        if (!file.exists(dirName)) {
+          stop("Could not produce output directory : ", dirName)
+        }
+        # prepare a basic name from this
+        baseName <- str_c(dirName, "/", cTaxon, "-BRT")
+
+        # prepare specific filenames
+        pdfFile <- str_c(baseName, ".pdf", sep="")
+        csvFile <- str_c(baseName, ".csv", sep="")
+        rdataFile <- str_c(baseName, ".Rdata", sep="")
+
+        # open the PDF
+        pdf(pdfFile, width=11.7, height=8.3)
       }
-      # prepare a basic name from this
-      baseName <- str_c(dirName, "/", cTaxon, "-BRT")
-
-      # prepare specific filenames
-      pdfFile <- str_c(baseName, ".pdf", sep="")
-      csvFile <- str_c(baseName, ".csv", sep="")
-      rdataFile <- str_c(baseName, ".Rdata", sep="")
-
-      # open the PDF
-      pdf(pdfFile, width=11.7, height=8.3)
 
       # plot effects
-      if ( ! quiet ) cat("   plot effects\n")
-      plot.brt(brtObj, plot.layout=plot.layout)
-
-      # plot prediction
-      if ( ! quiet ) cat("   plot predictions\n")
-      print(plot.pred.brt(brtObj, quick=quick, overlay.stations=overlay.stations))
-
-      # close PDF
-      dev.off()
+      if ( ! quiet ) cat("   plot results\n")
+      plot.brt(brtObj, plot.layout=plot.layout, quick=quick, overlay.stations=overlay.stations)
 
       # print info about the fit
       summary(brtObj)
 
-      # write the results in files
-      message("   Write output to ", dirName)
-      save(brtObj, file=rdataFile)
-      if (predict) {
-        # CSV file
-        write.table(brtObj$prediction, file=csvFile, sep=",", row.names=FALSE)
+      if (save) {
+        # close PDF
+        dev.off()
 
-        # Shapefiles
-        write.shapefile(brtObj$prediction, baseName, c("pred", "CVpred"))
+        # write the results in files
+        message("   Write output to ", dirName)
+        save(brtObj, file=rdataFile)
+        if (predict) {
+          # CSV file
+          write.table(brtObj$prediction, file=csvFile, sep=",", row.names=FALSE)
+
+          # Shapefiles
+          write.shapefile(brtObj$prediction, baseName, c("pred", "CVpred"))
+        }
       }
     }
 
