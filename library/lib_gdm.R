@@ -38,9 +38,14 @@ compute.gdm <- function(
   data <- na.omit(data)
 
   # subsample input data (and remove lon and lat)
-  if (!is.null(pre.sample) & pre.sample < nrow(data)) {
-    sdata <- data[sample.int(nrow(data), pre.sample), -c(1,2)]
+  n <- nrow(data)
+  if (!is.null(pre.sample) & pre.sample < n) {
+    message("   Your dataset was subsampled. ", pre.sample, " lines were chosen randomly.")
+    sdata <- data[sample.int(n, pre.sample), -c(1,2)]
   } else {
+    if (n > 2600) {
+      warning("Your input dataset has ", n, " non-missing data points, which is a lot and may lead to memory errors. Consider using the argument `pre.sample` to subsample it randomly.")
+    }
     sdata <- data[,-c(1,2)]
   }
 
