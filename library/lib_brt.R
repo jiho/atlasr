@@ -1047,7 +1047,23 @@ summary.brt.list <- function(x) {
 }
 
 
-plot.brt <- function(x, plot.layout=c(2,2), ...) {
+plot.brt <- function(x, ...) {
+  #
+  # Produce all plots for a BRT object
+  #
+  # x   object of class brt
+  #
+
+  if (dev.interactive() | names(dev.cur()) == "null device") devAskNewPage(TRUE)
+
+  plot.effects.brt(x, ...)
+
+  print(plot.pred.brt(x, ...))
+
+  devAskNewPage(FALSE)
+}
+
+plot.effects.brt <- function(x, plot.layout=c(2,2), ...) {
   #
   # Plot effects in a brt model
   #
