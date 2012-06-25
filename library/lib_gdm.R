@@ -68,7 +68,7 @@ compute.gdm <- function(
   if ( is.null(n.groups) ) {
     # optimise the number of clusters
     # prepare storage
-    res <- array(NA,c(10,8,4))
+    res <- array(NA,c(max.n.groups,10,4))
 
     # try several possibilities
     for (cl in min.n.groups:max.n.groups) {
