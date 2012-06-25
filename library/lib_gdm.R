@@ -123,6 +123,9 @@ gdm <- function(
 )
 {
 
+  ## Prepare data
+  #--------------------------------------------------------------------------
+
   # read selected variables from the database
   database <- read.env.data(variables, path=path, quiet=FALSE)
   # get the full names of those variables
@@ -155,10 +158,67 @@ gdm <- function(
   # get environment data on this grid
   prediction.data <- associate.env.data(prediction.data, database)
 
-  # compute the GDM model and clustering
-  gdmObject <- compute.gdm(resp.vars=resp.vars, pred.vars=pred.vars, data=input.data, newdata=prediction.data, ...)
 
-  return(invisible(gdmObject))
+  ## Compute the GDM model and clustering
+  #--------------------------------------------------------------------------
+  gdmObj <- compute.gdm(resp.vars=resp.vars, pred.vars=pred.vars, data=input.data, newdata=prediction.data, ...)
+
+
+  ## Store output
+  #--------------------------------------------------------------------------
+
+  # prepare names of the files where the results will be written
+  # data file without extension
+  fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
+  baseName <- basename(fileName)
+
+  # prepare directory
+  dirName <- str_c(fileName, "-GDM")
+  dir.create(dirName, showWarnings=FALSE, recursive=TRUE)
+  if (!file.exists(dirName)) {
+    stop("Could not produce output directory : ", dirName)
+  }
+  # prepare a basic name from this
+  baseName <- str_c(dirName, "/", baseName, "-GDM")
+
+  # prepare specific filenames
+  pdfFile <- str_c(baseName, ".pdf")
+  csvFile <- str_c(baseName, ".csv")
+  rdataFile <- str_c(baseName, ".Rdata")
+
+  # print info about the fit
+  # summary(brtObj)
+  # TODO shorten the summary
+
+  # write the results in files
+  message("-> Write output to ", dirName)
+
+  # RData file with the object
+  save(gdmObj, file=rdataFile)
+
+  # CSV file
+  write.table(gdmObj$prediction, file=csvFile, sep=",", row.names=FALSE)
+
+  # Shapefiles
+  write.shapefile(gdmObj$prediction, baseName, c("cluster"))
+
+  message("-> Plot results")
+  # open the PDF
+  pdf(pdfFile, width=11.7, height=8.3)
+
+  # plot effects
+  # if ( ! quiet ) cat("   plot effects\n")
+  print(plot.gdm(gdmObj))
+
+  # plot prediction
+  # if ( ! quiet ) cat("   plot predictions\n")
+  print(plot.pred.gdm(gdmObj))
+
+  # close PDF
+  dev.off()
+
+
+  return(invisible(gdmObj))
 }
 
 
