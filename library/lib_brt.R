@@ -1092,7 +1092,7 @@ plot.effects.brt <- function(x, plot.layout=c(2,2), ...) {
   return(invisible(x))
 }
 
-plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
+plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", ...) {
   #
   # Plot BRT predictions
   #
@@ -1126,7 +1126,6 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
       lat.precision <- 1
       lon.precision <- 2
     } else {
-      geom="auto"
       # do not subsample and use the default geom
       lat.precision <- NULL
       lon.precision <- NULL
