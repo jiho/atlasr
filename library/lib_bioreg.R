@@ -370,27 +370,13 @@ plot.pred.bioreg <- function(x, quick=FALSE, path=getOption("atlasr.env.data"), 
   cmap <- discrete.colourmap(n=nlevels(x$cluster))
 
   if (quick) {
-    # raster based plot
-
-    clusterMap <- ggplot(x, aes(x=lon, y=lat)) +
-      geom_raster(aes(fill=cluster)) +
-      # no extra space
-      scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0)) +
-      # nice colours
-      scale_fill_manual(values=c(cmap)) +
-      # super-impose land
-      layer_land(x) +
-      # use theme_bw() otherwise holes (missing data) look very similar to the grey cluster
-      theme_bw()
-
+    geom="raster"
   } else {
-    # polar projected plot
-
-    clusterMap <- polar.ggplot(x, aes(fill=cluster)) +
-      # nice colours
-      scale_colour_manual(values=cmap)
-
+    geom="auto"
   }
+  clusterMap <- polar.ggplot(x, aes(fill=cluster), geom=geom) +
+    # nice colours
+    scale_colour_manual(values=cmap)
 
   return(clusterMap)
 }

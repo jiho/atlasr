@@ -1103,14 +1103,16 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, ...) {
     # main plot
     if (quick) {
       # subsample the plot
+      geom = "raster"
       lat.precision <- 1
       lon.precision <- 2
     } else {
+      geom="auto"
       # do not subsample and use the default geom
       lat.precision <- NULL
       lon.precision <- NULL
     }
-    p <- polar.ggplot(x$prediction, mapping=mapping, geom="point", lat.precision=lat.precision, lon.precision=lon.precision, ...)
+    p <- polar.ggplot(x$prediction, mapping=mapping, geom=geom, lat.precision=lat.precision, lon.precision=lon.precision, ...)
 
     # overlay stations
     if (overlay.stations) {
