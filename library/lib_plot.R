@@ -290,7 +290,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
   if (geom == "auto") {
     if (n <= 2000) {
       geom <- "tile"
-    } else if (n <= 30000) {
+    } else if (n <= 50000) {
       geom <- "point"
     } else {
       geom <- "raster"
