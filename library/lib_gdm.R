@@ -37,8 +37,8 @@ compute.gdm <- function(
   data <- data[,c("lon", "lat", resp.vars, pred.vars)]
   data <- na.omit(data)
 
-  # subsample input data ( and remove lon and lat)
-  if (!is.null(pre.sample)) {
+  # subsample input data (and remove lon and lat)
+  if (!is.null(pre.sample) & pre.sample < nrow(data)) {
     sdata <- data[sample.int(nrow(data), pre.sample), -c(1,2)]
   } else {
     sdata <- data[,-c(1,2)]
