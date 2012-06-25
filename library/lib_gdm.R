@@ -348,3 +348,296 @@ plot.pred.gdm <- function(x, ...) {
 #   if (do.indicator.species) {
 #     res=list('predicted'=newdata,'model'=no.gdm,'plot.obj'=p,'dat.cluster'=dat$cluster,'indval'=frodo.baggins)
 #   } else {
+
+
+## GUI
+#-----------------------------------------------------------------------------
+
+
+do.gdm <- function() {
+  #
+  # Open a GUI to select the arguments of the gdm() function
+  #
+
+  suppressPackageStartupMessages(require("rpanel"))
+
+
+  # default dimensions (in px)
+  w <- 600      # width of the window
+  w.h <- 700    # height of the window
+  h <- 50       # height of elements
+  spacer <- 10  # height of spacer
+
+  # main window
+  win <- rp.control(title="Run BRT model", size=c(w,w.h))
+
+  # NB: positions are x, y, width, eight
+  #     x, y are the coordinates of the top-left hand corner
+
+  rp.button(win, title="Choose file", pos=c(0, 0, w/4, h), action=function(win) {
+
+    # choose the data file
+    file <- file.choose()
+    # file <- "../data/euphau-clean.txt"
+    win$file <- clean.path(file)
+
+
+    # write the filename, for information
+    rp.text(win, txt=file, initval=file, pos=c(w/4, 0, 3*w/4, h))
+
+    # build species list
+    suppressMessages(data <- read.data(file))
+
+    # the selection panel should be 380px high for the whole window to fit in 700px height
+    hSel <- 380
+    # this is roughly equivalent to 20 rows in the listbox
+    nRows <- 20
+
+    # we can fit ~20 checkboxes into that space, so we need to split the checkbox list into columns when there are more than that
+    nBoxes <- 20
+    # however, it is not possible to do that programmatically in a for loop because variables with numbered names have to be defined in each case and this requires eval(parse(...)) constructs which mostly don't work
+    # so we only accommodate for a situation with two columns
+    allTaxa <- setdiff(names(data), c("lat", "lon"))
+    nTaxa <- length(allTaxa)
+
+    if (nTaxa <= nBoxes) {
+      # when all taxa can fit into one column, just use this
+      rp.checkbox(win, var=taxa, labels=allTaxa, title="Taxa", initval=rep(TRUE, times=nTaxa), pos=c(0, h, 2*w/3, hSel), action=function(win) {
+        if (sum(win$taxa) < 2) {
+          rp.messagebox("At least two taxa must be selected", title="Warning")
+        }
+        return(win)
+      })
+
+    } else {
+      # otherwise, split in half
+      half <- ceiling(nTaxa/2)
+      rest <- nTaxa - half
+      allTaxa1 <- allTaxa[1:half]
+      allTaxa2 <- allTaxa[(half+1):nTaxa]
+
+      rp.checkbox(win, var=taxa1, labels=allTaxa1, title="Taxa", initval=rep(TRUE, times=half), pos=c(0, h, w/3, hSel), action=function(win) {
+        if (all(! c(win$taxa1, win$taxa2))) {
+          rp.messagebox("At least one taxon must be selected", title="Warning")
+        }
+        return(win)
+      })
+      rp.checkbox(win, var=taxa2, labels=allTaxa2, title="", initval=rep(TRUE, times=rest), pos=c(w/3, h+7, w/3, hSel-7), action=function(win) {
+        if (all(! c(win$taxa1, win$taxa2))) {
+          rp.messagebox("At least one taxon must be selected", title="Warning")
+        }
+        return(win)
+      })
+
+    }
+
+    # build environment variables list
+    allVariables <- list.env.data()
+    rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables",  rows=nRows, cols=22, pos=c(2*w/3, h, w/3, hSel-h), action=function(win) {
+      return(win)
+    })
+
+    # transform environmental variables
+    # options
+    optionsFile <- tempfile()
+    win <- rp.button(win, "Variables transformation", pos=c(2*w/3, hSel, w/3, h) , action=function(win) {
+      if (length(win$variables) < 2) {
+        rp.messagebox("At least two variables must be selected", title="Warning")
+      } else {
+        do.gdm.variables(variables=win$variables, file=optionsFile)
+      }
+      return(win)
+    })
+
+
+    # compute vertical coordinate of the middle of the window
+    mid <- hSel + h + spacer
+
+
+    # effects options
+    # rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, w/4, h*2))
+
+    # prediction options
+    # rp.radiogroup(win, prediction, values=c("no", "yes", "yes + bootstrap"), initval="yes", title="Prediction", pos=c(0, mid+h*2, w/4, h*2))
+
+    # checkboxes range
+    # checkH <- 4*h/5
+    # rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initval=FALSE, pos=c(w/4, mid, w/4, checkH))
+    # rp.checkbox(win, bin, title="Bin original data\non prediction grid", initval=FALSE, pos=c(w/4, mid+checkH, w/4, checkH))
+    # rp.checkbox(win, extrapolate.env, title="Extrapolate envi-\nronmental range", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH))
+    # rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(w/4, mid+checkH*3, w/4, h))
+    # rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initval=FALSE, pos=c(w/4, mid+checkH*4, w/4, checkH))
+
+    # location
+    rp.slider(win, lat.max,  from=-90, to=-30,  resolution=2,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
+    rp.slider(win, lon.min,  from=-180, to=180, resolution=5,   title="West"    , initval=-180, showvalue=TRUE, pos=c(w/2, mid+h*1, w/4, h))
+    rp.slider(win, lon.max,  from=-180, to=180, resolution=5,   title="East"    , initval=180 , showvalue=TRUE, pos=c(3*w/4, mid+h*1, w/4, h))
+    rp.slider(win, lat.min,  from=-90, to=-30,  resolution=2,   title="South"   , initval=-80 , showvalue=TRUE, pos=c(w/2+w/8, mid+h*2, w/4, h))
+    rp.slider(win, lon.step, from=0.1, to=4  ,  resolution=0.1, title="Step lon", initval=1 , showvalue=TRUE, pos=c(w/2, mid+h*3, w/4, h))
+    rp.slider(win, lat.step, from=0.1, to=4   , resolution=0.1, title="Step lat", initval=1 , showvalue=TRUE, pos=c(3*w/4, mid+h*3, w/4, h))
+
+
+    # action buttons
+    rowY <- mid+h*4+spacer
+    rp.button(win, "Help", pos=c(0, rowY, w/4, h), action=function(win) {
+      rp.messagebox("Someday... Maybe", title="Help")
+      return(win)
+    })
+    rp.button(win, "Cancel", quitbutton=TRUE, pos=c(w/2, rowY, w/4, h) , action=function(win) {
+      message("Aborting");
+      return(win)
+    })
+
+    rp.button(win, "Run", pos=c(3*w/4, rowY, w/4, h), action=function(win) {
+
+      # print(win$file)
+
+      if (nTaxa <= nBoxes) {
+        taxa <- names(win$taxa)[win$taxa]
+      } else {
+        taxa <- names(win$taxa1)[win$taxa1]
+        taxa <- c(taxa, names(win$taxa2)[win$taxa2])
+      }
+      # print(taxa)
+
+      # quick checks
+      if (length(taxa) < 2) {
+        rp.messagebox("At least two taxa must be selected", title="Warning")
+        return(win)   # return early
+      }
+      if (length(win$variables) < 2) {
+        rp.messagebox("At least two variables must be selected", title="Warning")
+        return(win)   # return early
+      }
+
+      # simplify the taxa argument if all taxa are selected
+      if (all(allTaxa %in% taxa)) {
+        taxa <- ""
+      }
+
+      variables <- win$variables
+      # print(variables)
+
+      # variables transformations
+      if (file.exists(optionsFile)) {
+        # read the options in the file
+        load(optionsFile)
+        transformations <- opts$transformations
+      } else {
+        transformations <- NULL
+      }
+      # print(transformations)
+
+      # build the function call
+      message("Command:")
+      call <- str_c("gdm(",
+        "file=", str_c(deparse(win$file, width=500), collapse=""),
+        ", taxa=", str_c(deparse(taxa, width=500), collapse=""),
+        ", variables=", str_c(deparse(variables, width=500), collapse=""),
+        ifelse( is.null(transformations),
+          ", transformations=NULL",
+          str_c(", transformations=", str_c("c(",str_c(names(transformations), str_c("\"", unlist(transformations),"\"") , sep="=", collapse=", "), ")"))
+        ),
+        ", lat.min=", win$lat.min, ", lat.max=", win$lat.max, ", lat.step=", win$lat.step,
+        ", lon.min=", win$lon.min, ", lon.max=", win$lon.max, ", lon.step=", win$lon.step,
+        # ", quick=", win$quick,
+        # ", extrapolate.env=", win$extrapolate.env,
+        # ", overlay.station=", win$overlay.stations,
+        ")"
+      )
+      cat(call, "\n")
+
+      # execute call
+      # b <- eval(parse(text=call))
+
+      return(win)
+
+    })
+
+
+    return(win)
+  })
+
+}
+
+do.gdm.variables <- function(variables, file) {
+  #
+  # Second part of the GUI. Called from do.gdm()
+  # Select variables transformations
+  #
+
+  suppressPackageStartupMessages(require("rpanel"))
+
+  # defaults
+  transformations <- rep("x",length(variables))
+  names(transformations) <- variables
+
+  # if the options file exists, read it to use the previously saved weights and transformations
+  # TODO avoid using a file storage, we should be able to pass everything through functions and operate in memory
+  if (file.exists(file)) {
+    load(file)
+
+    # transformations are stored as a list in the options file
+    # transform them back to vectors
+    opts <- lapply(opts, function(x) {
+      y <- as.character(x)
+      names(y) <- names(x)
+      return(y)
+    })
+
+    # the selected variables may have changed, use what we can from the options file (opts$***) and use defaults for the rest (***)
+    commonNames <- intersect(names(transformations), names(opts$transformations))
+    transformations[match(commonNames, names(transformations))] <- opts$transformations[match(commonNames, names(opts$transformations))]
+  }
+
+  # default dimensions (in px)
+  w <- 600          # width of the window
+  h <- 50           # height of elements
+  h.var <- 25       # height of a variable in the list
+  spacer <- 10      # height of spacer
+
+
+  n <- length(variables)
+  varH <- (n+1) * h.var
+  examplesH <- (3+1) * h.var
+  windowH <-  varH + examplesH + spacer + h
+
+  # main window
+  win <- rp.control(title="Variables", size=c(w, windowH), aschar=F)
+
+  # transformations
+  # TODO look into why with rp.textentry.immediate, the results are not all carried to the stage of the close button
+  rp.textentry(win, var=transformsBox, labels=variables, title="Transformations", initval=transformations, pos=c(0,0,w,varH), action=function(win) {
+    return(win)
+  })
+  # TODO adapt height to the number of variables
+
+  # provide example transformations
+  example.transforms.labels=c("log10(x+1)","Square root","log10(-1*negative values only)")
+  example.transforms.functions=list('"log10(x+1)"', '"sqrt(x)"', '"x[x>=0]=NA; log10(-x)"')
+  rp.textentry(win, var=exampletransformBox, labels=example.transforms.labels, title="Example transformations", initval=example.transforms.functions, pos=c(0,varH,w,examplesH), action=function(win) {
+    return(win)
+  })
+
+  # close button
+  rp.button(win, title="Close", quitbutton=TRUE, pos=c(1/2*w, varH + examplesH + spacer, w/2, h), action=function(win) {
+    # print("Transformations")
+    # print(win$transformsBox)
+    # print("Weights")
+    # print(win$weightsBox)
+
+    # extract transformations and weights and store them in named lists
+    transformations <- as.list(win$transformsBox)
+
+    # store them in a single object
+    opts <- list(transformations=transformations)
+
+    # save this object to the options file
+    save(opts, file=file)
+
+    return(win)
+  })
+
+  return(invisible(win))
+}
+
