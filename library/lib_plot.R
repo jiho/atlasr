@@ -93,6 +93,13 @@ plot.pred <- function(x, ...) {
   UseMethod("plot.pred")
 }
 
+plot.effects <- function(x, ...) {
+  #
+  # Generic for the plot of predictions from a model
+  #
+  UseMethod("plot.effects")
+}
+
 clip.polygon <- function(x, lon.min=-180, lon.max=180, lat.min=-90, lat.max=90) {
   #
   # Clip a polygon within given limits
