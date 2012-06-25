@@ -853,18 +853,18 @@ brt <- function(
   # read dataset
   file <- clean.path(file)
   if (file.exists(file)) {
-    observed_data <- read.data(file)
+    input_data <- read.data(file)
   } else {
     stop("Cannot find file : ", file)
   }
   # get selected taxa
-  allTaxa <- setdiff(names(observed_data), c("lat", "lon"))
+  allTaxa <- setdiff(names(input_data), c("lat", "lon"))
   taxa <- match.vars(taxa, allTaxa, quiet=FALSE)
-  observed_data <- observed_data[, c("lat", "lon", taxa)]
+  input_data <- input_data[, c("lat", "lon", taxa)]
 
   # bin observation data
   if (bin) {
-    observed_data <- rasterize(observed_data, c("lat", "lon"), precisions=c(lat.step, lon.step), fun=mean, na.rm=T)
+    input_data <- rasterize(input_data, c("lat", "lon"), precisions=c(lat.step, lon.step), fun=mean, na.rm=T)
     # NB: when the initial data is abundance, if makes sense to compute the average abundance per bin
     #     when the initial data is presence, we compute the average number of presence per bin while we want a boolean response (0 or 1)
     #     but it is actually OK, because the family should then be `bernoulli` and the data is reconverted to presence/absence only in the brt() function
@@ -879,7 +879,7 @@ brt <- function(
   variables <- names(database)
 
   # get environment data for the observations
-  obsdata <- associate.env.data(observed_data, database)
+  obsdata <- associate.env.data(input_data, database)
 
   # build prediction grid if needed
   if (predict) {

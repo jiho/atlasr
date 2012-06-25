@@ -146,37 +146,37 @@ gdm <- function(
   # read input dataset
   file <- clean.path(file)
   if (file.exists(file)) {
-    input.data <- read.data(file)
+    input_data <- read.data(file)
   } else {
     stop("Cannot find file : ", file)
   }
 
   # get the names of the taxa of interest
-  allTaxa <- names(input.data[,!names(input.data) %in% c("lat", "lon")])
+  allTaxa <- names(input_data[,!names(input_data) %in% c("lat", "lon")])
   resp.vars <- match.vars(taxa, allTaxa)
 
   # get environment data for the observations
-  input.data <- associate.env.data(input.data, database)
+  input_data <- associate.env.data(input_data, database)
 
   # build prediction grid
-  prediction.data <- build.grid(
+  prediction_grid <- build.grid(
     lat.min=lat.min, lat.max=lat.max, lat.step=lat.step,
     lon.min=lon.min, lon.max=lon.max, lon.step=lon.step
   )
   # get environment data on this grid
-  prediction.data <- associate.env.data(prediction.data, database)
+  prediction_grid <- associate.env.data(prediction_grid, database)
 
 
   # transform environmental data if necessary
   if (!is.null(transformations)) {
     message("-> Apply transformation to environmental data")
-    input.data[,pred.vars] <- transform.data(input.data[,pred.vars], transformations)
-    suppressWarnings(prediction.data[,pred.vars] <- transform.data(prediction.data[,pred.vars], transformations))
+    input_data[,pred.vars] <- transform.data(input_data[,pred.vars], transformations)
+    suppressWarnings(prediction_grid[,pred.vars] <- transform.data(prediction_grid[,pred.vars], transformations))
   }
 
   ## Compute the GDM model and clustering
   #--------------------------------------------------------------------------
-  gdmObj <- compute.gdm(resp.vars=resp.vars, pred.vars=pred.vars, data=input.data, newdata=prediction.data, ...)
+  gdmObj <- compute.gdm(resp.vars=resp.vars, pred.vars=pred.vars, data=input_data, newdata=prediction_grid, ...)
 
 
   ## Store output
