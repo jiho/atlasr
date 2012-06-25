@@ -936,6 +936,7 @@ brt <- function(
         pdfFile <- str_c(baseName, ".pdf", sep="")
         csvFile <- str_c(baseName, ".csv", sep="")
         rdataFile <- str_c(baseName, ".Rdata", sep="")
+        infoFile <- str_c(baseName, "-info.txt", sep="")
 
         # open the PDF
         pdf(pdfFile, width=11.7, height=8.3)
@@ -955,6 +956,7 @@ brt <- function(
         # write the results in files
         message("   Write output to ", dirName)
         save(brtObj, file=rdataFile)
+        capture.output(summary(brtObj), file=infoFile)
         if (predict) {
           # CSV file
           write.table(brtObj$prediction, file=csvFile, sep=",", row.names=FALSE)
