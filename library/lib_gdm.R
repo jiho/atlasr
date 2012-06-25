@@ -116,6 +116,7 @@ gdm <- function(
   file,               # name of the file where the presence/abundance data is
   taxa="",            # names (or abbreviations) of the taxa of interest (by default, all columns in file except for lat and lon)
   variables,          # names (or abbreviations) of the variables to use for the prediction
+  transformations=NULL,                     # named vector of transformations applied to each variable (has to match variables)
   lat.min=-80, lat.max=-30, lat.step=0.1,   # definition of the prediction grid
   lon.min=-180, lon.max=180, lon.step=0.5,
   path=getOption("atlasr.env.data"),        # path to the environmental database
@@ -158,6 +159,13 @@ gdm <- function(
   # get environment data on this grid
   prediction.data <- associate.env.data(prediction.data, database)
 
+
+  # transform environmental data if necessary
+  if (!is.null(transformations)) {
+    message("-> Apply transformation to environmental data")
+    input.data[,pred.vars] <- transform.data(input.data[,pred.vars], transformations)
+    suppressWarnings(prediction.data[,pred.vars] <- transform.data(prediction.data[,pred.vars], transformations))
+  }
 
   ## Compute the GDM model and clustering
   #--------------------------------------------------------------------------
