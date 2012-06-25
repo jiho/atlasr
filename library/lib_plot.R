@@ -224,13 +224,15 @@ layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
 }
 
 
-polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), lat.precision=NULL, lon.precision=NULL, draw.coast=TRUE, scale=1, ...) {
+polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", "tile"), lat.precision=NULL, lon.precision=NULL, draw.coast=TRUE, scale=1, ...) {
   #
   # data          data frame with columns lat, lon, and variables to plot
   # mapping       a call to `aes()` which maps a variable to a plotting
   #               aesthetic characteristic (fill, size, alpha, etc.)
-  # geom          the type of plot ("geometry" in ggplot parlance) to produce
-  #               = points or tiles (possibly better looking, longer to plot)
+  # geom          the type of plot ("geometry" in ggplot parlance) to produce:
+  #               raster  fast but does not allow projection
+  #               points  reasonably fast, allows projection
+  #               tiles   slow but better looking, allows projection
   #               auto chooses points or tiles depending on the size of the data
   # lat.precision
   # lon.precision the precision at which lat and lon are considered
@@ -286,11 +288,14 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
   }
 
   # define the geom depending on the size of the data when geom="auto"
+  n <- nrow(data)
   if (geom == "auto") {
-    if (nrow(data) <= 2000) {
+    if (n <= 2000) {
       geom <- "tile"
-    } else {
+    } else if (n <= 30000) {
       geom <- "point"
+    } else {
+      geom <- "raster"
     }
   }
 
@@ -299,9 +304,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
 
   # Plot
   # prepare plot
-  p <- ggplot(data, aes(x=lon, y=lat)) +
-        # stereographic projection
-        polar_proj()
+  p <- ggplot(data, aes(x=lon, y=lat))
 
   # plot points or tiles depending on the geom argument
   if (geom == "point") {
@@ -317,12 +320,15 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
     # plot
     # NB: shape: 21 = filled point, 22 = filled square, 23 = filled losange
     p <- p + geom_point(mapping=mapping, shape=21, colour=NA, ...) + scale_size(range=c(baseSize, baseSize*2.2), guide=FALSE)
-  } else if (geom == "tile"){
+  } else if (geom == "tile") {
     p <- p + geom_tile(mapping=mapping, ...)
+
+  } else if (geom == "raster") {
+    p <- p + geom_raster(mapping=mapping, ...)
   }
 
   # add the coastline
-  p <- p + layer_land(data, alpha=0.9)
+  # p <- p + layer_land(data, alpha=0.9)
 
   # use nice colours
   if ("fill" %in% names(mapping)) {
@@ -339,12 +345,20 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "point", "tile"), l
   # no background
   p <- p + theme_bw()
 
-  # nicer, simpler scales
-  p <- p +
-    # scale_x_continuous(name="", breaks=c(0)) +
-    # NB: fails due to a bug in ggplot now, instead use
-    opts(axis.text.x=theme_blank(), axis.title.x=theme_blank()) +
-    scale_y_continuous(name="Latitude")
+  # determine wether to use polar projection and change scales accordingly
+  if (geom %in% c("tile", "point")) {
+    # stereographic projection
+    p <- p + polar_proj()
+
+    # nicer, simpler scales
+    p <- p +
+      # scale_x_continuous(name="", breaks=c(0)) +
+      # NB: fails due to a bug in ggplot now, instead use
+      opts(axis.text.x=theme_blank(), axis.title.x=theme_blank()) +
+      scale_y_continuous(name="Latitude")
+  } else if (geom == "raster") {
+    p <- p + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0))
+  }
 
   return(p)
 }
