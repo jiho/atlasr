@@ -39,17 +39,21 @@ The options (lists and checkboxes) map to the following arguments of the command
 
 *	Distribution : `family`
 
-*	Prediction : `predict` (and `n.boot.pred=200` when bootstrapping)
-
-*	Bootstrap effects : `n.boot.effects=200` when checked
-
 *	Bin original data : `bin=TRUE` when checked
 
 *	Extrapolate environmental range : `extrapolate.env=TRUE` when checked
 
-*	Subsample prediction plot : `quick=TRUE` and `n.trees.fixed=1000` when checked
+*	Quick computation : `quick=TRUE` and `n.trees.fixed=1000` when checked
+
+*	Bootstrap effects : `n.boot.effects=200` when checked
+
+*	Predict : `predict=TRUE` when checked
+
+*	Bootstrap prediction : `n.boot.pred=200` when checked
 
 *	Overlay stations : `overlay.stations=TRUE` when checked
+
+*   Save output : `save=TRUE` when checked
 
 The geographic range determines where the prediction is to be made. Options map to the arguments `lat/lon.min` and `lat/lon.max`. The steps in lon and lat define the precision of the prediction grid and the bin size when binning the original data (when `bin=TRUE`). They map to the arguments `lat/lon.step`.
 
@@ -94,6 +98,8 @@ The function `brt()` is the direct equivalent of the GUI. It formats the data, s
 
 *	`overlay.stations=FALSE`	wether to overlay stations in the input dataset on top of the prediction plot.
 
+*   `save=TRUE` wether to save the output to files or just print info and the console and produce plots
+
 *	`path="env_data"`	path to the environmental data location (see `HOWTO deal with environmental data.txt` for more information on the environmental data).
 
 *	`plot.layout=c(2,2)`	layout of the matrix of effects plots (number of lines, number of columns).
@@ -130,6 +136,7 @@ Results for each taxon are saved in a folder hierachy, next to your data. Let us
         data_fish.csv
         data_fish/
             Electrona_antarctica-BRT/
+                Electrona_antarctica-BRT-info.txt
                 Electrona_antarctica-BRT.csv
                 Electrona_antarctica-BRT.dbf
                 Electrona_antarctica-BRT.pdf
@@ -137,6 +144,8 @@ Results for each taxon are saved in a folder hierachy, next to your data. Let us
                 Electrona_antarctica-BRT.Rdata
                 Electrona_antarctica-BRT.shp
                 Electrona_antarctica-BRT.shx
+
+The `info.txt` file contains basic information about the model, which was previously also printed to the screen.
 
 The PDF file contains the plots of the effect of each variable on the probability of presence/abundance of *Electrona antarctica* and possibly the map of the prediction of its probablity of presence/abundance (if `predict=TRUE`).
 
