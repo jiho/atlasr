@@ -162,56 +162,84 @@ gdm <- function(
 }
 
 
-## Plots
+## Analyse GDM output
 #-----------------------------------------------------------------------------
 
+print.gdm <- function(x, ...) {
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+
+  species <- setdiff(names(x$data), c("lon", "lat", x$model$predictors))
+
+  cat("\n     GDM model\n\n")
+
+  cat("Species :\n")
+  cat(" ", str_c(species, collapse="\n  "), "\n")
+  cat("Predictors :\n")
+  cat(" ", str_c(x$model$predictors, collapse="\n  "), "\n")
+
+}
+
+summary.gdm <- function(x, ...) {
+  gdm.summary(x$model)
+}
 
 
+plot.gdm <- function(x, ...) {
+  #
+  # Plot "effects" in a GDM model
+  #
+  # x   object of class gdm
+  #
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+  suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+  suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
+
+  # compute environmental data range (omitting lat and lon)
+  env.ranges <- llply(x$data[, x$model$predictors], function(x) {
+    seq(from=min(x, na.rm=T), to=max(x, na.rm=T), length.out=200)
+  })
+  env.ranges <- data.frame(do.call(cbind, env.ranges))
+
+  # compute the transformation induced by the model on these ranges
+  env.curves <- gdm.transform(x$model, env.ranges)
+
+  # match original ranges to the transformations
+  env.ranges.m <- melt(env.ranges, measure.vars=names(env.curves), value.name="value")
+  env.curves.m <- melt(env.curves, measure.vars=names(env.curves), value.name="transform")
+  # and join them
+  env <- data.frame(env.curves.m, env.ranges.m)
+
+  # compute quantiles of the original observations, to plot them as a rug plot
+  quant <- data.frame(llply(x$data[,x$model$predictors], function(x) {
+    # to easily mix them with the others, compute 200 quantiles
+    as.numeric(quantile(x, probs=seq(0, 1, length.out=200)))
+  }))
+  quant.m <- melt(quant, measure.vars=names(quant), value.name="quantiles")
+  # put this with the rest of the data
+  env$quantiles <- quant.m$quantiles
+
+  # sort the variables in decreasing order of transform value
+  maxVal <- ldply(env.curves, max, na.rm=T)
+  maxVal <- maxVal[order(maxVal$V1, decreasing=TRUE),]
+  # reorder factor for display
+  env$variable <- factor(env$variable, levels=maxVal$.id)
+
+  # plot
+  p <- ggplot(env) +
+    # the transform result
+    geom_path(aes(x=value, y=transform)) +
+    # the distribution of data
+    geom_rug(aes(x=quantiles), alpha=0.2) +
+    # for each variable
+    facet_wrap(~variable, scales="free_x")
+
+  return(p)
+}
 
 plot.pred.gdm <- function(x, ...) {
   polar.ggplot(x$prediction, aes(fill=cluster), ...)
 }
 
-## and use gdm.transform to create the curves
-
-## make environmental ranges to plot response curves
-
-# env.ranges<-dat[1:200,]
-# for (i in pred.var.col) {
-#     env.ranges[,i]<-seq(from=(Min(dat[,i])),to=Max((dat[,i])),length=200)
-# }
-# env.ranges<-env.ranges[,pred.var.col]
-# no.curves <- gdm.transform(no.gdm,env.ranges)
-#
-# ## sort them by max to min
-# tp<-names(rev(sort(apply(no.curves,2,max))))
-# temp<-match(tp,names(no.curves))
-#
-#
-# ## then plot them out
-# par(mfrow=c(3,4))
-# par(cex=0.9)
-# j<-1
-# for (i in temp) {
-#     if(names(no.curves)[i] %in% names(lookup.names.variables)) {
-#         tp<-as.character(lookup.names.variables[names(no.curves)[i]])
-#     } else {
-#         tp<-names(no.curves)[i]
-#     }
-#     plot(env.ranges[,i],no.curves[,i],type='l',cex=1.5,
-#          xlab=tp, ylab = "transform")
-#     rug(quantile(dat[,names(no.curves)[i]], probs = seq(0, 1, 0.1), na.rm = TRUE))
-# }
-#
-
-
-# ## plot the results
-# p = polar.ggplot(newdata, aes(colour=cluster), geom="point")
-# # add a title
-# p = p + opts(title="GDM")
-# # display the plot
-# print(p)
-# # NB: suppress warnings about missing values: they are necessary to split the coastline in several bits
 
 # ## calculate indicator species using dufrene-legendre method
 # if (do.indicator.species) {
