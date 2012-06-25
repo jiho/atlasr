@@ -110,10 +110,11 @@ update.env.data <- function(url="http://webdav.data.aad.gov.au/data/environmenta
         } else {
           additionalFiles <- str_c(additional$path, collapse="\n     ")
         }
-        message("   The files : \n     ", additionalFiles, "\n   are not on the server anymore. They will be deleted.")
+        message("   The files : \n     ", additionalFiles, "\n   are not on the server.")
 
         # delete files
-        unlink(str_c(path, "/", additional$path))
+        # message("   They will be deleted.")
+        # unlink(str_c(path, "/", additional$path))
       }
 
       # download missing files
