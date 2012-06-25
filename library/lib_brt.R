@@ -1272,18 +1272,19 @@ do.brt <- function() {
 
 
     # effects options
-    rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, w/4, h*2))
-
-    # prediction options
-    rp.radiogroup(win, prediction, values=c("no", "yes", "yes + bootstrap"), initval="yes", title="Prediction", pos=c(0, mid+h*2, w/4, h*2))
-
-    # checkboxes range
     checkH <- 4*h/5
+    rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, w/4, checkH*2))
+
+    # options checkboxes
+    rp.checkbox(win, bin, title="Bin original data\non prediction grid", initval=FALSE, pos=c(0, mid+checkH*2, w/4, checkH))
+    rp.checkbox(win, extrapolate.env, title="Extrapolate envi-\nronmental range", initval=FALSE, pos=c(0, mid+checkH*3, w/4, checkH))
+    rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(0, mid+checkH*4, w/4, checkH))
+
     rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initval=FALSE, pos=c(w/4, mid, w/4, checkH))
-    rp.checkbox(win, bin, title="Bin original data\non prediction grid", initval=FALSE, pos=c(w/4, mid+checkH, w/4, checkH))
-    rp.checkbox(win, extrapolate.env, title="Extrapolate envi-\nronmental range", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH))
-    rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(w/4, mid+checkH*3, w/4, h))
-    rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initval=FALSE, pos=c(w/4, mid+checkH*4, w/4, checkH))
+    rp.checkbox(win, predict, title="Predict", initval=FALSE, pos=c(w/4, mid+checkH, w/4, checkH))
+    rp.checkbox(win, bootstrap.prediction, title="Bootstrap\nprediction", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH))
+    rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initval=FALSE, pos=c(w/4, mid+checkH*3, w/4, checkH))
+    rp.checkbox(win, save, title="Save output", initval=TRUE, pos=c(w/4, mid+checkH*4, w/4, checkH))
 
     # location
     rp.slider(win, lat.max,  from=-90, to=-30,  resolution=2,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
@@ -1331,16 +1332,12 @@ do.brt <- function() {
         n.boot.effects <- 0
       }
 
-      # print(win$prediction)
-      if (win$prediction == "no") {
-        predict <- FALSE
-        n.boot.pred <- 0
-      } else if (win$prediction == "yes") {
-        predict <- TRUE
-        n.boot.pred <- 0
-      } else if (win$prediction == "bootstrap") {
-        predict <- TRUE
+      # print(win$predict)
+      # print(win$bootstrap.prediction)
+      if(win$bootstrap.prediction) {
         n.boot.pred <- 200
+      } else {
+        n.boot.pred <- 0
       }
 
       # print(win$lat.max)
@@ -1354,6 +1351,7 @@ do.brt <- function() {
       # print(win$extrapolate.env)
       # print(win$overlay.stations)
       # print(win$bin)
+      # print(win$save)
 
 
       # build the function call
@@ -1364,7 +1362,7 @@ do.brt <- function() {
         ", variables=", str_c(deparse(variables, width=500), collapse=""),
         ", lat.min=", win$lat.min, ", lat.max=", win$lat.max, ", lat.step=", win$lat.step,
         ", lon.min=", win$lon.min, ", lon.max=", win$lon.max, ", lon.step=", win$lon.step,
-        ", predict=", predict,
+        ", predict=", win$predict,
         ", bin=", win$bin,
         ", family=", deparse(win$family),
         ", n.boot.effects=", n.boot.effects,
@@ -1372,6 +1370,7 @@ do.brt <- function() {
         ", quick=", win$quick,
         ", extrapolate.env=", win$extrapolate.env,
         ", overlay.station=", win$overlay.stations,
+        ", save=", win$save,
         ")"
       )
       cat(call, "\n")
