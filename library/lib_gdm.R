@@ -548,7 +548,7 @@ do.gdm <- function() {
       cat(call, "\n")
 
       # execute call
-      # b <- eval(parse(text=call))
+      b <- eval(parse(text=call))
 
       return(win)
 
