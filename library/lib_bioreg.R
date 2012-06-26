@@ -252,8 +252,16 @@ bioreg <- function(
 }
 
 
-## Plots
+## Analyse bioreg output
 #-----------------------------------------------------------------------------
+
+print.bioreg <- function(x) {
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+  vars <- setdiff(names(x$data), c("lon", "lat", "clara.num", "cluster"))
+  cat("Bioregionalisation : ~ ", str_c(vars, collapse=" + "), "\n", sep="")
+  cat(nlevels(x$data$clara.num), "non-hierachic clusters,")
+  cat(nlevels(x$data$cluster), "hierachic ones.\n")
+}
 
 plot.dendro <- function(x, ...) {
   #
