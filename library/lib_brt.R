@@ -1301,7 +1301,7 @@ do.brt <- function() {
     # action buttons
     rowY <- mid+h*4+spacer
     rp.button(win, "Help", pos=c(0, rowY, w/4, h), action=function(win) {
-      rp.messagebox("Someday... Maybe", title="Help")
+      browseURL("https://github.com/jiho/atlasr/blob/master/documentation/HOWTO%20create%20a%20BRT%20model.md")
       return(win)
     })
     rp.button(win, "Cancel", quitbutton=TRUE, pos=c(w/2, rowY, w/4, h) , action=function(win) {
