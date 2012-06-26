@@ -453,20 +453,15 @@ do.gdm <- function() {
     # compute vertical coordinate of the middle of the window
     mid <- hSel + h + spacer
 
-
-    # effects options
-    # rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, w/4, h*2))
-
-    # prediction options
-    # rp.radiogroup(win, prediction, values=c("no", "yes", "yes + bootstrap"), initval="yes", title="Prediction", pos=c(0, mid+h*2, w/4, h*2))
+    # clustering options
+    rp.slider(win, n.groups, from=0, to=15, resolution=1, title="Number of groups", initval=0 , showvalue=TRUE, pos=c(0, mid , w/4, h))
+    rp.slider(win, min.n.groups, from=2, to=15, resolution=1, title="Min nb of groups", initval=3, showvalue=TRUE, pos=c(0, mid+h, w/4, h))
+    rp.slider(win, max.n.groups, from=2, to=15, resolution=1, title="Max nb of groups", initval=10, showvalue=TRUE, pos=c(0, mid+h*2, w/4, h))
 
     # checkboxes range
-    # checkH <- 4*h/5
-    # rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initval=FALSE, pos=c(w/4, mid, w/4, checkH))
-    # rp.checkbox(win, bin, title="Bin original data\non prediction grid", initval=FALSE, pos=c(w/4, mid+checkH, w/4, checkH))
-    # rp.checkbox(win, extrapolate.env, title="Extrapolate envi-\nronmental range", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH))
-    # rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(w/4, mid+checkH*3, w/4, h))
-    # rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initval=FALSE, pos=c(w/4, mid+checkH*4, w/4, checkH))
+    rp.checkbox(win, pre.sample, title="Subsample data", initval=TRUE, pos=c(w/4, mid, w/4, h))
+    rp.checkbox(win, intern.sample, title="Subsample\ndissimilarity matrix", initval=FALSE, pos=c(w/4, mid+h, w/4, h))
+    rp.checkbox(win, save, title="Save output", initval=FALSE, pos=c(w/4, mid+h*2, w/4, h))
 
     # location
     rp.slider(win, lat.max,  from=-90, to=-30,  resolution=2,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
@@ -528,6 +523,30 @@ do.gdm <- function() {
       }
       # print(transformations)
 
+      print(win$n.groups)
+      if (win$n.groups == 0) {
+        n.groups <- NULL
+      } else {
+        n.groups <- win$n.groups
+      }
+      # print(n.groups)
+      # print(win$min.n.groups)
+      # print(win$max.n.groups)
+
+      if (win$pre.sample) {
+        pre.sample=2500
+      } else {
+        pre.sample=NULL
+      }
+      # print(pre.sample)
+
+      if (win$intern.sample) {
+        intern.sample=100000
+      } else {
+        intern.sample=NULL
+      }
+      # print(intern.sample)
+
       # build the function call
       message("Command:")
       call <- str_c("gdm(",
@@ -543,6 +562,10 @@ do.gdm <- function() {
         # ", quick=", win$quick,
         # ", extrapolate.env=", win$extrapolate.env,
         # ", overlay.station=", win$overlay.stations,
+        ", n.groups=", deparse(dput(n.groups)),
+        ", min.n.groups=", win$min.n.groups, ", max.n.groups=", win$max.n.groups,
+        ", pre.sample=", pre.sample, ", intern.sample=", intern.sample,
+        ", save=", win$save,
         ")"
       )
       cat(call, "\n")
