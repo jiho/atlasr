@@ -369,7 +369,7 @@ do.gdm <- function() {
   spacer <- 10  # height of spacer
 
   # main window
-  win <- rp.control(title="Run BRT model", size=c(w,w.h))
+  win <- rp.control(title="Run GDM model", size=c(w,w.h))
 
   # NB: positions are x, y, width, eight
   #     x, y are the coordinates of the top-left hand corner
