@@ -71,7 +71,7 @@ message("-> All functions loaded")
 
 # location of environmental data
 if (is.null(getOption("atlasr.env.data"))) {
-  options(atlasr.env.data=paste(path, "/env_data", sep=""))
+  options(atlasr.env.data=paste(path, "/../env_data", sep=""))
 }
 # NB: it can be set by the user in a script or in the .Rprofile config file
 
