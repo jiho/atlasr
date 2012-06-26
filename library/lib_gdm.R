@@ -495,13 +495,8 @@ do.gdm <- function() {
       }
       # print(taxa)
 
-      # quick checks
       if (length(taxa) < 2) {
         rp.messagebox("At least two taxa must be selected", title="Warning")
-        return(win)   # return early
-      }
-      if (length(win$variables) < 2) {
-        rp.messagebox("At least two variables must be selected", title="Warning")
         return(win)   # return early
       }
 
@@ -511,6 +506,10 @@ do.gdm <- function() {
       }
 
       variables <- win$variables
+      if (length(win$variables) < 2) {
+        rp.messagebox("At least two variables must be selected", title="Warning")
+        return(win)   # return early
+      }
       # print(variables)
 
       # variables transformations
