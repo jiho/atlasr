@@ -127,7 +127,7 @@ gdm <- function(
   lat.min=-80, lat.max=-30, lat.step=0.1,   # definition of the prediction grid
   lon.min=-180, lon.max=180, lon.step=0.5,
   path=getOption("atlasr.env.data"),        # path to the environmental database
-  ...                 # passed to compute.brt()
+  ...                 # passed to compute.gdm()
 )
 {
 
