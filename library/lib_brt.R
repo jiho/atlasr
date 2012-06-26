@@ -849,6 +849,7 @@ brt <- function(
 )
 {
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
 
   # read dataset
   file <- clean.path(file)
@@ -864,10 +865,21 @@ brt <- function(
 
   # bin observation data
   if (bin) {
-    input_data <- rasterize(input_data, c("lat", "lon"), precisions=c(lat.step, lon.step), fun=mean, na.rm=T)
-    # NB: when the initial data is abundance, if makes sense to compute the average abundance per bin
-    #     when the initial data is presence, we compute the average number of presence per bin while we want a boolean response (0 or 1)
-    #     but it is actually OK, because the family should then be `bernoulli` and the data is reconverted to presence/absence only in the brt() function
+    # round lat and lon on the grid
+    input_data$lonR <- round_any(input_data$lon, lon.step)
+    input_data$latR <- round_any(input_data$lat, lat.step)
+
+    # compute number of data points per bin
+    nb <- ddply(input_data, ~latR+lonR, nrow)
+
+    # compute weight
+    nb$weight <- 1 / nb$V1
+
+    # associate weights to input_data
+    weights <- join(input_data, nb)
+    site.weights <- weights$weight
+  } else {
+    site.weights <- rep(1, nrow(input_data))
   }
 
   # read selected variables from the database
@@ -900,7 +912,7 @@ brt <- function(
     message("-> Run BRT for ", taxa[i])
 
     brtObj <- tryCatch(
-      compute.brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, n.trees.fixed=n.trees.fixed, ...),
+      compute.brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, n.trees.fixed=n.trees.fixed, site.weights=site.weights, ...),
       # do not stop on error
       error=function(e) {
         warning(e)
