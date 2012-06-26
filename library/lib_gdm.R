@@ -30,9 +30,6 @@ compute.gdm <- function(
   #--------------------------------------------------------------------------
   message("-> Compute dissimilarities")
 
-  # set the random number generator seed for replicable results
-  set.seed(123)
-
   # remove lines with missing data
   data <- data[,c("lon", "lat", resp.vars, pred.vars)]
   data <- na.omit(data)
