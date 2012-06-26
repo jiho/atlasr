@@ -16,7 +16,7 @@ Go to the [R download site](http://cran.at.r-project.org/) and download R for yo
 
 *   Linux users, you should get it from your package management system rather than from the above site. The pacckage is usually called R-cran.
 
-Optionally (but this is recommended as it makes things easier in the following), you can install a specialized editor on top of R, which can become your only interface to R. We recommend [RStudio](http://rstudio.org/). On the download page, select `RStudio Desktop` and it should detect your operating system and present the recommended file for you on the next page.
+We recommend using a specialized editor on top of R, which will become your only interface to R. Download and install [RStudio](http://rstudio.org/); on the download page, select `RStudio Desktop` and it should detect your operating system and present the appropriate file for you on the next page.
 
 
 ### Download the latest version of the scripts
@@ -28,31 +28,40 @@ https://github.com/jiho/atlasr/zipball/master
 Unzipping the file should create an `atlasr` directory with all the scripts.
 
 
-## Running an analysis
+## Run an analysis
 
-### Start R and get all supporting functions
+### With RStudio
 
-In the just-created `atlasr` directory, open `initialize.R` with RStudio (right-click and `Open With...` if necessary). You should get a four panes window with the script on the top-left, the R console on the bottom-left and some stuff we don't care about yet on the right. 
+Double-click the `atlasr.Rproj` project file inside the `atlasr` directory. This will start RStudio, R, load all functions and update the environemental data repository. The first time you do this, it will be quite long (over an hour) because it will download all necessary R packages and all environment data layers (well over a Gb of data).
 
-Then, click on the `Source` button at the top of the file pane. This should write something starting with `source(` in the console. This command executes `initialize.R` which loads all functions stored in the `library` folder, installs all the R "packages" that they use, and fetches the environment data layers. This is long the first time you run it because it needs to download everything, but it should be instantaneous afterwards.
+In R's console (left side of the RStudio interface) type the command you want to run. These are for example
 
-With any kind of R interface (not just RStudio), you could just write
+    do.bioreg()
+    do.brt()
+    do.gdm()
 
-	source("initialize.R")
+### Without RStudio
 
-in the console to achieve this.
+Open R as you normally would.
 
+Tell it where to fetch and store the environemnt data layers:
 
-By default, R works in your home directory (`Documents and Settings/bla bla/something` on Windows, `/Users/yourself` on Mac OS X, `/home/yourself` on Linux). If you would rather work somewhere else, you can use the menu `Tools > Set Working Directory > Choose Directory` in RStudio to tell it where to work. It should print something starting with `setwd(` in the console. You have to do this every time you open R.
+    options(atlasr.env.data="/path/to/somewhere")
 
-If you want to work in the `atlasr` directory directly, keeping the code and the data together, you can even use the shortcut `Tools > Set Working Directory >  To Source File Location` in RStudio, which saves you from having to browse through your computer.
+You can write this line in your personal `.Rprofile` file to avoid having to repeat it everytime you start R.
 
-You can now close the `initialize.R` file.
+Load all functions and update the environment data by running
 
-### Run an analysis
+    source("/path/to/atlasr/intitialize.R")
 
-In the console, type the command to run your analysis. For example, to run a BRT model using the automatic graphical interface, type
+The first time you do this, it will be quite long (over an hour) because it will download all necessary R packages and all environment data layers (well over a Gb of data).
 
-	do.brt()
+Next type the command you want to run, for example
 
-Read the additional documentation for each analysis in the [`documentation`](https://github.com/jiho/atlasr/tree/master/documentation) directory. When you are done, quit RStudio. It asks wether you want to save an image of your session. You do not need to save anything (all results are saved appropriately when you run each analysis).
+    do.bioreg()
+    do.brt()
+    do.gdm()
+
+### Read documentation
+
+For each analysis, documentation is provided in the  [`documentation`](https://github.com/jiho/atlasr/tree/master/documentation) directory.
