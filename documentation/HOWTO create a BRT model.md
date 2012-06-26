@@ -171,7 +171,9 @@ A suggested analysis routine is:
 2. remove variables which have little to no influence in the model
 3. run a new model with the selected variables, full computation (quick unchecked) and bootstrapping of effects, but still with no prediction
 4. with the new, bootstrapped, effects plots, trim further fown the explanatory variables
-5. run a new model with the final set of variables, with prediction and, possibly, bootstrapping of the prediction
+5. run a new model with the final set of variables, with prediction, on a **0.1 x 0.1 degree grid** and, possibly, bootstrapping of the prediction
+
+It is paramount to use the same grid to fit the model and to predict. The resolution of the grid used to fit the model is the resolution of the environmental data layers (0.1 degree), therefore the final prediction has to be on a 0.1 degree grid.
 
 
 ## Inspecting the results again
