@@ -1062,7 +1062,9 @@ plot.brt <- function(x, ...) {
 
   plot.effects.brt(x, ...)
 
-  print(plot.pred.brt(x, ...))
+  if (!is.null(x$prediction)) {
+    print(plot.pred.brt(x, ...))
+  }
 
   devAskNewPage(FALSE)
 }
