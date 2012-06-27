@@ -115,6 +115,7 @@ gdm <- function(
   save=TRUE,          # whether to save output to files or just print info on the console and the screen
   quick=TRUE,         # quick plot
   intern.sample=ifelse(quick, 10^5, NULL),  # set subsampling of dissimilarity matrix
+  indval=FALSE,       # compute indicator value of species
   path=getOption("atlasr.env.data"),        # path to the environmental database
   ...                 # passed to compute.gdm()
 )
@@ -196,6 +197,10 @@ gdm <- function(
   #--------------------------------------------------------------------------
   gdmObj <- compute.gdm(resp.vars=resp.vars, pred.vars=pred.vars, data=input_data, newdata=prediction_grid, intern.sample=intern.sample, ...)
 
+  if (indval) {
+    message("-> Compute indicator species per cluster")
+    indic <- indval.gdm(gdmObj)
+  }
 
   ## Store output
   #--------------------------------------------------------------------------
@@ -238,7 +243,10 @@ gdm <- function(
     write.shapefile(gdmObj$prediction, baseName, c("cluster"))
 
     # Info file
-    capture.output(summary(gdmObj), file=infoFile)
+    sink(file=infoFile)
+      summary(gdmObj)
+      if (indval) summary(indic)
+    sink()
 
     # open the PDF
     pdf(pdfFile, width=11.7, height=8.3)
@@ -276,6 +284,7 @@ print.gdm <- function(x, ...) {
 summary.gdm <- function(x, ...) {
   gdm.summary(x$model)
 }
+
 
 plot.gdm <- function(x, ...) {
   #
@@ -380,26 +389,45 @@ plot.pred.gdm <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", .
 }
 
 
+indval.gdm <- function(x, ...) {
+  #
+  # Calculate indicator species using dufrene-legendre method
+  # On a GDM object
+  #
+  # x   object of class gdm
+  #
 
-# ## calculate indicator species using dufrene-legendre method
-# if (do.indicator.species) {
-#     require(labdsv)
-#     library(reshape)
-#     temp <- as.matrix(cast(newdata, lat ~  long, value = "cluster",add.missing=T))
-#     datlonidx <- round(approx(as.numeric(colnames(temp)),1:ncol(temp),dat$long)$y)
-#     datlatidx <- round(approx(as.numeric(rownames(temp)),1:nrow(temp),dat$lat)$y)
-#
-#     dat$cluster <- NA
-#     for (i in 1:length(datlonidx)){
-#       if (!is.na(datlonidx) && !is.na(datlatidx)) {
-#         dat[i,"cluster"] <- temp[datlatidx[i],datlonidx[i]]
-#       }
-#     }
-#
-#     nnanidx=which(!is.na(dat$cluster)) ## only include non-NA clusters
-#     ## calculate indicator species stuff
-#     frodo.baggins=indval(dat[nnanidx,resp.var.col],clustering=dat$cluster[nnanidx])
-# }
+  suppressPackageStartupMessages(require("labdsv", quietly=TRUE))
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+
+  # get species data
+  taxa <- x$data[,setdiff(names(x$data), c(x$model$predictors))]
+
+  # clusters are defined on an output grid, based on environemental variables
+  # for each data point, for which we have taxonomic information we need to "interpolate" the value of the cluster
+
+  # get grid locations
+  pred.lon <- sort(unique(x$prediction$lon))
+  pred.lat <- sort(unique(x$prediction$lat))
+
+  # get precision of prediction grid
+  lon.step <- unique(diff(pred.lon))
+  lat.step <- unique(diff(pred.lat))
+
+  # round the original data to the same precision
+  taxa$lon <- round_any(taxa$lon, lon.step)
+  taxa$lat <- round_any(taxa$lat, lat.step)
+
+  # get cluster info for points which are within the domain
+  taxa <- join(taxa, x$prediction[,c("lon", "lat", "cluster")], by=c("lon", "lat"), type="inner")
+  # NB: this is equivalent to a nearest neighbour interpolation in the end
+
+  # compute Dufrene-Legendre indicator species index
+  indic <- indval(taxa[,! names(taxa) %in% c("lon", "lat", "cluster")], as.numeric(taxa$cluster))
+
+  return(indic)
+}
+
 
 # newdata$cluster<-factor(newdata$cluster)
 # dat$cluster <- factor(dat$cluster)
