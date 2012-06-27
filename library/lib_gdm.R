@@ -255,6 +255,8 @@ gdm <- function(
   message("-> Plot results")
   plot.gdm(gdmObj, quick=quick, ...)
 
+  if (indval) print(plot.species(gdmObj))
+
   if (save) {
     # close PDF
     dev.off()
@@ -428,6 +430,39 @@ indval.gdm <- function(x, ...) {
   return(indic)
 }
 
+plot.species <- function(x, geom="raster", ...) {
+  #
+  # Plot species distribution on top of the GDM clustering
+  # Useful diagnostic plot after the indicator species procedure
+  #
+  # x   an object of class gdm
+  #
+
+  suppressPackageStartupMessages(require("labdsv", quietly=TRUE))
+  suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
+
+  # get species data
+  taxa <- x$data[,setdiff(names(x$data), c(x$model$predictors))]
+
+  # keep data only within the range of prediction
+  lon.range <- range(x$prediction$lon, na.rm=T)
+  lat.range <- range(x$prediction$lat, na.rm=T)
+  taxa <- taxa[taxa$lon >= lon.range[1] & taxa$lon <= lon.range[2] & taxa$lat >= lat.range[1] & taxa$lat <= lat.range[2],]
+
+  # record presences
+  taxaM <- melt(taxa, id.vars=c("lon", "lat"), variable.name="taxon")
+  taxaM <- taxaM[taxaM$value > 0,]
+
+  # reformat taxa names
+  taxaM$taxon <- str_replace(taxaM$taxon, fixed("_"), "\n")
+  taxaM$taxon <- str_replace(taxaM$taxon, fixed("."), "\n")
+
+  # plot presences on top of the cluster map
+  p <- plot.pred(x, geom=geom, ...) + geom_point(data=taxaM, size=1, alpha=0.5) + facet_wrap(~taxon)
+
+  return(p)
+}
 
 # newdata$cluster<-factor(newdata$cluster)
 # dat$cluster <- factor(dat$cluster)
