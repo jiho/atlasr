@@ -21,7 +21,6 @@ compute.gdm <- function(
   n.groups=NULL,      # number of clusters in the result; when NULL (the default) the optimal number of clusters is determined by a stepwise procedure
   min.n.groups=3,
   max.n.groups=10,    # minimum and maximum number tested when searching for the optimal number of clusters; testing a larger range takes more time
-  pre.sample=2500,    # sub-sample the input data before feeding it to the GDM function. When NULL, no subsampling occurs. Subsampling reduces the number of pairwise operations needed, speeds up the function and determines the amount of memory required. Since the library is 32 bits, the amount of allocatable memory is limited and this should not be much larger than 2500
   intern.sample=NULL, # internally, the GDM function can also subsample the pairwise dissimilarities. When NULL, no subsampling occurs. The total number of pairwise dissimilarities is n * ( n - 1 ) / 2, where n is the number of rows in `data` (or `pre.sample` when subsampling a priori), so for this to be effective, intern.sample must be lower than that. As a rule of thumb, n=2500 gives over 3 million pairwise dissimilarities.
   ...                 # passed to the internal GDM function
 )
@@ -34,20 +33,8 @@ compute.gdm <- function(
   data <- data[,c("lon", "lat", resp.vars, pred.vars)]
   data <- na.omit(data)
 
-  # subsample input data (and remove lon and lat)
-  n <- nrow(data)
-  if (!is.null(pre.sample) & pre.sample < n) {
-    message("   Your dataset was subsampled. ", pre.sample, " lines were chosen randomly.")
-    sdata <- data[sample.int(n, pre.sample), -c(1,2)]
-  } else {
-    if (n > 2600) {
-      warning("Your input dataset has ", n, " non-missing data points, which is a lot and may lead to memory errors. Consider using the argument `pre.sample` to subsample it randomly.")
-    }
-    sdata <- data[,-c(1,2)]
-  }
-
   # run GDM
-  m.gdm <- gdm.fit(sdata[,pred.vars], sdata[,resp.vars], sample=intern.sample, ...)
+  m.gdm <- gdm.fit(data[,pred.vars], data[,resp.vars], sample=intern.sample, ...)
 
 
   ## Cluster the data
@@ -123,6 +110,7 @@ gdm <- function(
   transformations=NULL,                     # named vector of transformations applied to each variable (has to match variables)
   lat.min=-80, lat.max=-30, lat.step=0.1,   # definition of the prediction grid
   lon.min=-180, lon.max=180, lon.step=0.5,
+  pre.sample=2500,    # sub-sample the input data before feeding it to the GDM function. When NULL, no subsampling occurs. Subsampling reduces the number of pairwise operations needed, speeds up the function and determines the amount of memory required. Since the library is 32 bits, the amount of allocatable memory is limited and this should not be much larger than 2500
   save=TRUE,          # whether to save output to files or just print info on the console and the screen
   path=getOption("atlasr.env.data"),        # path to the environmental database
   ...                 # passed to compute.gdm()
@@ -152,6 +140,17 @@ gdm <- function(
   # get the names of the taxa of interest
   allTaxa <- names(input_data[,!names(input_data) %in% c("lat", "lon")])
   resp.vars <- match.vars(taxa, allTaxa)
+
+  # subsample input data when required
+  n <- nrow(input_data)
+  if (!is.null(pre.sample) & pre.sample < n) {
+    message("-> Subsample input data (choose ", pre.sample, " lines randomly)")
+    input_data <- input_data[sample.int(n, pre.sample),]
+  } else {
+    if (n > 2600) {
+      warning("Your input dataset still had ", n, " data points, which is a lot and may lead to memory errors. Consider using the argument `pre.sample` to subsample it randomly.")
+    }
+  }
 
   # get environment data for the observations
   input_data <- associate.env.data(input_data, database)
