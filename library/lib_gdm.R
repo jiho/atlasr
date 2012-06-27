@@ -245,9 +245,7 @@ gdm <- function(
   }
 
   message("-> Plot results")
-  print(plot.gdm(gdmObj))
-
-  print(plot.pred.gdm(gdmObj))
+  plot.gdm(gdmObj, quick=quick, ...)
 
   if (save) {
     # close PDF
@@ -279,8 +277,23 @@ summary.gdm <- function(x, ...) {
   gdm.summary(x$model)
 }
 
-
 plot.gdm <- function(x, ...) {
+  #
+  # Produce all plots for a GDM object
+  #
+  # x   object of class gdm
+  #
+
+  if (dev.interactive() | names(dev.cur()) == "null device") devAskNewPage(TRUE)
+
+  print(plot.effects.gdm(x, ...))
+
+  print(plot.pred.gdm(x, ...))
+
+  devAskNewPage(FALSE)
+}
+
+plot.effects.gdm <- function(x, ...) {
   #
   # Plot "effects" in a GDM model
   #
