@@ -225,12 +225,8 @@ gdm <- function(
   }
 
   message("-> Plot results")
-  # plot effects
-  # if ( ! quiet ) cat("   plot effects\n")
   print(plot.gdm(gdmObj))
 
-  # plot prediction
-  # if ( ! quiet ) cat("   plot predictions\n")
   print(plot.pred.gdm(gdmObj))
 
   if (save) {
