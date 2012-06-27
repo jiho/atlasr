@@ -525,8 +525,8 @@ do.gdm <- function() {
     rp.slider(win, taxa.min, from=1, to=5, resolution=1, title="Min taxa per location", initval=1, showvalue=TRUE, pos=c(0, mid+h*3, w/4, h))
 
     # checkboxes range
-    rp.checkbox(win, pre.sample, title="Subsample data", initval=TRUE, pos=c(w/4, mid, w/4, h))
-    rp.checkbox(win, intern.sample, title="Subsample\ndissimilarity matrix", initval=FALSE, pos=c(w/4, mid+h, w/4, h))
+    rp.checkbox(win, pre.sample, title="Limit data to\n2500 lines (at random)", initval=TRUE, pos=c(w/4, mid, w/4, h))
+    rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(w/4, mid+h, w/4, h))
     rp.checkbox(win, save, title="Save output", initval=TRUE, pos=c(w/4, mid+h*3, w/4, h))
 
     # location
@@ -605,13 +605,6 @@ do.gdm <- function() {
       }
       # print(pre.sample)
 
-      if (win$intern.sample) {
-        intern.sample=100000
-      } else {
-        intern.sample=NULL
-      }
-      # print(intern.sample)
-
       # build the function call
       message("Command:")
       call <- str_c("gdm(",
@@ -624,13 +617,13 @@ do.gdm <- function() {
         ),
         ", lat.min=", win$lat.min, ", lat.max=", win$lat.max, ", lat.step=", win$lat.step,
         ", lon.min=", win$lon.min, ", lon.max=", win$lon.max, ", lon.step=", win$lon.step,
-        # ", quick=", win$quick,
+        ", quick=", win$quick,
         # ", extrapolate.env=", win$extrapolate.env,
         # ", overlay.station=", win$overlay.stations,
         ", n.groups=", deparse(dput(n.groups)),
         ", min.n.groups=", win$min.n.groups, ", max.n.groups=", win$max.n.groups,
         ", taxa.min=", win$taxa.min,
-        ", pre.sample=", pre.sample, ", intern.sample=", intern.sample,
+        ", pre.sample=", pre.sample,
         ", save=", win$save,
         ")"
       )
