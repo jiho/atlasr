@@ -123,6 +123,7 @@ gdm <- function(
   transformations=NULL,                     # named vector of transformations applied to each variable (has to match variables)
   lat.min=-80, lat.max=-30, lat.step=0.1,   # definition of the prediction grid
   lon.min=-180, lon.max=180, lon.step=0.5,
+  save=TRUE,          # whether to save output to files or just print info on the console and the screen
   path=getOption("atlasr.env.data"),        # path to the environmental database
   ...                 # passed to compute.gdm()
 )
@@ -179,45 +180,47 @@ gdm <- function(
   ## Store output
   #--------------------------------------------------------------------------
 
-  # prepare names of the files where the results will be written
-  # data file without extension
-  fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
-  baseName <- basename(fileName)
+  if (save) {
+    # prepare names of the files where the results will be written
+    # data file without extension
+    fileName <- str_replace(file, "\\.(csv|xls|txt)$", "")
+    baseName <- basename(fileName)
 
-  # prepare directory
-  dirName <- str_c(fileName, "-GDM")
-  dir.create(dirName, showWarnings=FALSE, recursive=TRUE)
-  if (!file.exists(dirName)) {
-    stop("Could not produce output directory : ", dirName)
+    # prepare directory
+    dirName <- str_c(fileName, "-GDM")
+    dir.create(dirName, showWarnings=FALSE, recursive=TRUE)
+    if (!file.exists(dirName)) {
+      stop("Could not produce output directory : ", dirName)
+    }
+    # prepare a basic name from this
+    baseName <- str_c(dirName, "/", baseName, "-GDM")
+
+    # prepare specific filenames
+    pdfFile <- str_c(baseName, ".pdf")
+    csvFile <- str_c(baseName, ".csv")
+    rdataFile <- str_c(baseName, ".Rdata")
+
+    # print info about the fit
+    # summary(brtObj)
+    # TODO shorten the summary
+
+    # write the results in files
+    message("-> Write output to ", dirName)
+
+    # RData file with the object
+    save(gdmObj, file=rdataFile)
+
+    # CSV file
+    write.table(gdmObj$prediction, file=csvFile, sep=",", row.names=FALSE)
+
+    # Shapefiles
+    write.shapefile(gdmObj$prediction, baseName, c("cluster"))
+
+    # open the PDF
+    pdf(pdfFile, width=11.7, height=8.3)
   }
-  # prepare a basic name from this
-  baseName <- str_c(dirName, "/", baseName, "-GDM")
-
-  # prepare specific filenames
-  pdfFile <- str_c(baseName, ".pdf")
-  csvFile <- str_c(baseName, ".csv")
-  rdataFile <- str_c(baseName, ".Rdata")
-
-  # print info about the fit
-  # summary(brtObj)
-  # TODO shorten the summary
-
-  # write the results in files
-  message("-> Write output to ", dirName)
-
-  # RData file with the object
-  save(gdmObj, file=rdataFile)
-
-  # CSV file
-  write.table(gdmObj$prediction, file=csvFile, sep=",", row.names=FALSE)
-
-  # Shapefiles
-  write.shapefile(gdmObj$prediction, baseName, c("cluster"))
 
   message("-> Plot results")
-  # open the PDF
-  pdf(pdfFile, width=11.7, height=8.3)
-
   # plot effects
   # if ( ! quiet ) cat("   plot effects\n")
   print(plot.gdm(gdmObj))
@@ -226,9 +229,10 @@ gdm <- function(
   # if ( ! quiet ) cat("   plot predictions\n")
   print(plot.pred.gdm(gdmObj))
 
-  # close PDF
-  dev.off()
-
+  if (save) {
+    # close PDF
+    dev.off()
+  }
 
   return(invisible(gdmObj))
 }
