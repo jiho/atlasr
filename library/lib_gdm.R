@@ -588,20 +588,14 @@ do.gdm <- function() {
       }
       # print(transformations)
 
-      print(win$n.groups)
-      if (win$n.groups == 0) {
-        n.groups <- NULL
-      } else {
-        n.groups <- win$n.groups
-      }
-      # print(n.groups)
+      # print(win$n.groups)
       # print(win$min.n.groups)
       # print(win$max.n.groups)
 
       if (win$pre.sample) {
         pre.sample=2500
       } else {
-        pre.sample=NULL
+        pre.sample="NULL"
       }
       # print(pre.sample)
 
@@ -620,14 +614,17 @@ do.gdm <- function() {
         ", quick=", win$quick,
         # ", extrapolate.env=", win$extrapolate.env,
         # ", overlay.station=", win$overlay.stations,
-        ", n.groups=", deparse(dput(n.groups)),
-        ", min.n.groups=", win$min.n.groups, ", max.n.groups=", win$max.n.groups,
+        ", n.groups=", ifelse (win$n.groups == 0,
+          str_c("NULL, min.n.groups=", win$min.n.groups, ", max.n.groups=", win$max.n.groups),
+          win$n.groups
+        ),
         ", taxa.min=", win$taxa.min,
         ", pre.sample=", pre.sample,
         ", save=", win$save,
         ")"
       )
       cat(call, "\n")
+      cat("\n")
 
       # execute call
       b <- eval(parse(text=call))
