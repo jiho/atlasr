@@ -866,20 +866,19 @@ brt <- function(
   # bin observation data
   if (bin) {
     # round lat and lon on the grid
-    input_data$lonR <- round_any(input_data$lon, lon.step)
-    input_data$latR <- round_any(input_data$lat, lat.step)
+    input_data$lon <- round_any(input_data$lon, 0.1)
+    input_data$lat <- round_any(input_data$lat, 0.1)
 
     # compute number of data points per bin
-    nb <- ddply(input_data, ~latR+lonR, nrow)
+    nb <- ddply(input_data, ~lat+lon, function(x) { c(weights=nrow(x)) })
 
     # compute weight
-    nb$weight <- 1 / nb$V1
+    nb$weights <- 1 / nb$weights
 
     # associate weights to input_data
-    weights <- join(input_data, nb)
-    site.weights <- weights$weight
+    input_data <- join(input_data, nb, by=c("lon", "lat"))
   } else {
-    site.weights <- rep(1, nrow(input_data))
+    input_data$weights <- 1
   }
 
   # read selected variables from the database
@@ -912,7 +911,7 @@ brt <- function(
     message("-> Run BRT for ", taxa[i])
 
     brtObj <- tryCatch(
-      compute.brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, n.trees.fixed=n.trees.fixed, site.weights=site.weights, ...),
+      compute.brt(resp.var=taxa[i], pred.vars=variables, data=obsdata, predict=predict, newdata=preddata, n.trees.fixed=n.trees.fixed, site.weights=obsdata$weights, ...),
       # do not stop on error
       error=function(e) {
         warning(e)
@@ -1291,7 +1290,7 @@ do.brt <- function() {
     rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, w/4, checkH*2))
 
     # options checkboxes
-    rp.checkbox(win, bin, title="Bin original data\non prediction grid", initval=FALSE, pos=c(0, mid+checkH*2, w/4, checkH))
+    rp.checkbox(win, bin, title="Bin input data\non 0.1 x 0.1 grid", initval=FALSE, pos=c(0, mid+checkH*2, w/4, checkH))
     rp.checkbox(win, extrapolate.env, title="Extrapolate envi-\nronmental range", initval=FALSE, pos=c(0, mid+checkH*3, w/4, checkH))
     rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(0, mid+checkH*4, w/4, checkH))
 
