@@ -519,10 +519,10 @@ do.gdm <- function() {
     mid <- hSel + h + spacer
 
     # clustering options
-    rp.slider(win, taxa.min, from=1, to=5, resolution=1, title="Min present per location", initval=1, showvalue=TRUE, pos=c(0, mid+h*3, w/4, h))
     rp.slider(win, n.groups, from=0, to=15, resolution=1, title="Number of regions", initval=0 , showvalue=TRUE, pos=c(0, mid , w/4, h))
     rp.slider(win, min.n.groups, from=2, to=15, resolution=1, title="Min nb of regions", initval=3, showvalue=TRUE, pos=c(0, mid+h, w/4, h))
     rp.slider(win, max.n.groups, from=2, to=15, resolution=1, title="Max nb of regions", initval=10, showvalue=TRUE, pos=c(0, mid+h*2, w/4, h))
+    rp.slider(win, taxa.min, from=1, to=5, resolution=1, title="Min taxa per location", initval=1, showvalue=TRUE, pos=c(0, mid+h*3, w/4, h))
 
     # checkboxes range
     rp.checkbox(win, pre.sample, title="Subsample data", initval=TRUE, pos=c(w/4, mid, w/4, h))
