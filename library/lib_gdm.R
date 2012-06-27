@@ -199,6 +199,7 @@ gdm <- function(
     pdfFile <- str_c(baseName, ".pdf")
     csvFile <- str_c(baseName, ".csv")
     rdataFile <- str_c(baseName, ".Rdata")
+    infoFile <- str_c(baseName, "-info.txt")
 
     # print info about the fit
     # summary(brtObj)
@@ -215,6 +216,9 @@ gdm <- function(
 
     # Shapefiles
     write.shapefile(gdmObj$prediction, baseName, c("cluster"))
+
+    # Info file
+    capture.output(summary(gdmObj), file=infoFile)
 
     # open the PDF
     pdf(pdfFile, width=11.7, height=8.3)
