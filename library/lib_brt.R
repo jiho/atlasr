@@ -570,6 +570,7 @@ compute.brt <- function(
   n.boot.pred=0,          # number of bootstraps for the prediction (allows to estimate error through cross validation)
   n.trees.fixed=0,        # if > 0, specifies the fixed number of trees to use in the BRT model. Otherwise, the number of trees is estimated by a stepwise procedure
   quiet=FALSE,            # do not print messages when TRUE
+  site.weights=rep(1, nrow(data)), # location weights
   ...                     # passed to dismo::gbm.step or dismo::gbm.fixed depending on n.trees.fixed
 )
 {
@@ -614,6 +615,7 @@ compute.brt <- function(
     # is Non-Available
     hasNA <- aaply(is.na(data[,c("lat", "lon", resp.var, pred.vars)]), 1, any, .expand=FALSE)
     data <- data[!hasNA,]
+    site.weights <- site.weights[!hasNA]
 
     # remove NAs in the prediction dataset
     newdata <- na.omit(newdata)
@@ -654,6 +656,7 @@ compute.brt <- function(
             family = family,
             plot.main = FALSE,
             silent = TRUE,
+            site.weights = site.weights,
             ...
           ),
           # transform errors into warnings and make obj=NULL when that happens
@@ -691,6 +694,7 @@ compute.brt <- function(
           learning.rate = lr,
           n.trees = n.trees.fixed,
           family = family,
+          site.weights = site.weights,
           ...
         ),
         # transform errors into warnings and make obj=NULL when that happens
