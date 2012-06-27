@@ -111,11 +111,14 @@ gdm <- function(
   lat.min=-80, lat.max=-30, lat.step=0.1,   # definition of the prediction grid
   lon.min=-180, lon.max=180, lon.step=0.5,
   pre.sample=2500,    # sub-sample the input data before feeding it to the GDM function. When NULL, no subsampling occurs. Subsampling reduces the number of pairwise operations needed, speeds up the function and determines the amount of memory required. Since the library is 32 bits, the amount of allocatable memory is limited and this should not be much larger than 2500
+  taxa.min=1,         # minimum number of taxa with a non-null abundance or presence needed to consider a given location in the analysis
   save=TRUE,          # whether to save output to files or just print info on the console and the screen
   path=getOption("atlasr.env.data"),        # path to the environmental database
   ...                 # passed to compute.gdm()
 )
 {
+
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
 
   ## Prepare data
   #--------------------------------------------------------------------------
@@ -140,6 +143,22 @@ gdm <- function(
   # get the names of the taxa of interest
   allTaxa <- names(input_data[,!names(input_data) %in% c("lat", "lon")])
   resp.vars <- match.vars(taxa, allTaxa)
+
+  # keep only those taxa
+  input_data <- input_data[,c("lat", "lon", resp.vars)]
+
+  # bin lat and lon at the same resolution as the environmental data grid
+  input_data <- rasterize(input_data, vars=c("lat", "lon"), precisions=c(lat=0.1, lon=0.1), fun=function(x) {as.numeric(any(x>0))})
+  # NB: for each species, this records a presence as soon as at least one presence is recorded within the grid cell. The number of absences does not count and so 1 presence for 100 absences will still be recorded as a presence. It's not perfect but it's probably the best we can do.
+
+  # keep only locations with a given number of species present
+  message("-> Compute number of species per location (min=", taxa.min,")")
+  nbSp <- aaply(input_data, 1, function(x) {sum(x>0)}, .expand=FALSE)
+  notEnough <- nbSp < taxa.min
+  if (any(notEnough)) {
+    message("   ", sum(notEnough), " / ", nrow(input_data), " locations removed")
+    input_data <- input_data[!notEnough, ]
+  }
 
   # subsample input data when required
   n <- nrow(input_data)
@@ -457,6 +476,7 @@ do.gdm <- function() {
     rp.slider(win, n.groups, from=0, to=15, resolution=1, title="Number of groups", initval=0 , showvalue=TRUE, pos=c(0, mid , w/4, h))
     rp.slider(win, min.n.groups, from=2, to=15, resolution=1, title="Min nb of groups", initval=3, showvalue=TRUE, pos=c(0, mid+h, w/4, h))
     rp.slider(win, max.n.groups, from=2, to=15, resolution=1, title="Max nb of groups", initval=10, showvalue=TRUE, pos=c(0, mid+h*2, w/4, h))
+    rp.slider(win, taxa.min, from=1, to=5, resolution=1, title="Min present per location", initval=1, showvalue=TRUE, pos=c(0, mid+h*3, w/4, h))
 
     # checkboxes range
     rp.checkbox(win, pre.sample, title="Subsample data", initval=TRUE, pos=c(w/4, mid, w/4, h))
@@ -563,6 +583,7 @@ do.gdm <- function() {
         # ", overlay.station=", win$overlay.stations,
         ", n.groups=", deparse(dput(n.groups)),
         ", min.n.groups=", win$min.n.groups, ", max.n.groups=", win$max.n.groups,
+        ", taxa.min=", win$taxa.min,
         ", pre.sample=", pre.sample, ", intern.sample=", intern.sample,
         ", save=", win$save,
         ")"
