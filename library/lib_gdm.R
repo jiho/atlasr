@@ -113,6 +113,7 @@ gdm <- function(
   pre.sample=2500,    # sub-sample the input data before feeding it to the GDM function. When NULL, no subsampling occurs. Subsampling reduces the number of pairwise operations needed, speeds up the function and determines the amount of memory required. Since the library is 32 bits, the amount of allocatable memory is limited and this should not be much larger than 2500
   taxa.min=1,         # minimum number of taxa with a non-null abundance or presence needed to consider a given location in the analysis
   save=TRUE,          # whether to save output to files or just print info on the console and the screen
+  quick=TRUE,         # quick plot
   path=getOption("atlasr.env.data"),        # path to the environmental database
   ...                 # passed to compute.gdm()
 )
@@ -330,9 +331,40 @@ plot.gdm <- function(x, ...) {
   return(p)
 }
 
-plot.pred.gdm <- function(x, ...) {
-  polar.ggplot(x$prediction, aes(fill=cluster), ...)
+plot.pred.gdm <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", ...) {
+  #
+  # Plot GDM predictions
+  #
+  # x                     object of class gdm
+  # quick                 subsample to 1 x 2 degree in lat x lon to plot more quickly
+  # overlay.observations  add points at the location of observation in to original data
+  # ...                   passed on to polar.ggplot
+  #
+
+  suppressPackageStartupMessages(require("ggplot2"))
+
+  if (quick) {
+    # subsample the plot
+    geom = "raster"
+    lat.precision <- 1
+    lon.precision <- 2
+  } else {
+    # do not subsample and use the default geom
+    lat.precision <- NULL
+    lon.precision <- NULL
+  }
+
+  # main plot
+  p <- polar.ggplot(x$prediction, mapping=aes(fill=cluster), geom=geom, lat.precision=lat.precision, lon.precision=lon.precision, ...)
+
+  # overlay stations
+  if (overlay.stations) {
+    p <- p + geom_point(aes_string(x=lon, y=lat), data=x$data, size=1, alpha=0.7)
+  }
+
+  return(p)
 }
+
 
 
 # ## calculate indicator species using dufrene-legendre method
