@@ -527,7 +527,7 @@ do.gdm <- function() {
     # checkboxes range
     rp.checkbox(win, pre.sample, title="Subsample data", initval=TRUE, pos=c(w/4, mid, w/4, h))
     rp.checkbox(win, intern.sample, title="Subsample\ndissimilarity matrix", initval=FALSE, pos=c(w/4, mid+h, w/4, h))
-    rp.checkbox(win, save, title="Save output", initval=FALSE, pos=c(w/4, mid+h*2, w/4, h))
+    rp.checkbox(win, save, title="Save output", initval=TRUE, pos=c(w/4, mid+h*3, w/4, h))
 
     # location
     rp.slider(win, lat.max,  from=-90, to=-30,  resolution=2,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
