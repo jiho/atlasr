@@ -363,6 +363,13 @@ read.data <- function(file, ...) {
   names(d)[tolower(names(d)) %in% c("latitude","lat")] = "lat"
   names(d)[tolower(names(d)) %in% c("longitude","lon","long")] = "lon"
 
+  # check consistency of lat and lon
+  bizarreLatLon <- d$lat < -90 | d$lat > 90 | d$lon < -180 | d$lon > 180
+  if (any(bizarreLatLon)) {
+    # TODO format the bizarre ones and print them in the warning message
+    warning("Some coordinates look funny in your input file. Please check you data")
+  }
+
   return(d)
 }
 
