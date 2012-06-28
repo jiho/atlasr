@@ -468,23 +468,9 @@ plot.species <- function(x, geom="raster", ...) {
   return(p)
 }
 
-# newdata$cluster<-factor(newdata$cluster)
-# dat$cluster <- factor(dat$cluster)
-
-
-# close the PDF file
-# if (!is.null(plot.name)) {
-#   dev.off()
-# }
-#
-#   if (do.indicator.species) {
-#     res=list('predicted'=newdata,'model'=no.gdm,'plot.obj'=p,'dat.cluster'=dat$cluster,'indval'=frodo.baggins)
-#   } else {
-
 
 ## GUI
 #-----------------------------------------------------------------------------
-
 
 do.gdm <- function() {
   #
