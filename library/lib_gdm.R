@@ -114,7 +114,7 @@ gdm <- function(
   taxa.min=1,         # minimum number of taxa with a non-null abundance or presence needed to consider a given location in the analysis
   save=TRUE,          # whether to save output to files or just print info on the console and the screen
   quick=TRUE,         # quick plot
-  intern.sample=ifelse(quick, 10^5, NULL),  # set subsampling of dissimilarity matrix
+  intern.sample=NULL, # set subsampling of dissimilarity matrix
   indval=FALSE,       # compute indicator value of species
   path=getOption("atlasr.env.data"),        # path to the environmental database
   ...                 # passed to compute.gdm()
@@ -122,6 +122,10 @@ gdm <- function(
 {
 
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+
+  if (quick & is.null(intern.sample)) {
+    intern.sample <- 100000
+  }
 
   ## Prepare data
   #--------------------------------------------------------------------------
