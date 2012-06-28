@@ -800,15 +800,21 @@ compute.brt <- function(
           extrapolate <- extrapolate.env
         }
         if ( ! extrapolate ) {
-          # compute original range of all predicted
-          ranges <- ldply(data[pred.vars], range, na.rm=T)
-
           # detect points in the prediction range which are outside the original range
           outsideRange <- c()
           for (pred.var in pred.vars) {
-            cValues <- newdata[,pred.var]
-            cRange <- ranges[ranges$.id == pred.var,]
-            outsideRange <- c(outsideRange, which(cValues < cRange$V1 | cValues > cRange$V2))
+            cData <- data[,pred.var]        # input data
+            cNewData <- newdata[,pred.var]  # new, prediction data
+            if (is.factor(cData)) {
+              # for a factor, compute the available levels and only keep those where there is more that one observation (with only 1, the computation of effects in the BRT fails anyway)
+              cLevels <- table(cData)
+              cLevels <- names(cLevels[cLevels > 1])
+              outsideRange <- c(outsideRange, which(! cNewData %in% cLevels))
+            } else {
+              # for a numeric value, compute the numerical range
+              cRange <- range(cData, na.rm=T)
+              outsideRange <- c(outsideRange, which(cNewData < cRange[1] | cNewData > cRange[2]))
+            }
           }
           outsideRange <- unique(outsideRange)
           # inform the user about it

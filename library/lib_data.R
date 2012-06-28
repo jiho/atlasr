@@ -258,7 +258,9 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) 
 
   # treat geomorphology as a factor
   if (!is.null(database$geomorphology)) {
-    database$geomorphology$z[,] <- as.character(database$geomorphology$z)
+    z <- factor(database$geomorphology$z)
+    dim(z) <- dim(database$geomorphology$z)
+    database$geomorphology$z <- z
   }
 
   return(database)
