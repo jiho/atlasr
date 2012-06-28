@@ -588,7 +588,7 @@ do.gdm <- function() {
     rp.slider(win, taxa.min, from=1, to=5, resolution=1, title="Min taxa per location", initval=1, showvalue=TRUE, pos=c(0, mid+h*3, w/4, h))
 
     # checkboxes range
-    rp.checkbox(win, pre.sample, title="Limit data to\n2500 lines (at random)", initval=TRUE, pos=c(w/4, mid, w/4, h))
+    rp.checkbox(win, pre.sample, title="Limit data to 2500\nlines (at random)", initval=TRUE, pos=c(w/4, mid, w/4, h))
     rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(w/4, mid+h, w/4, h))
     rp.checkbox(win, save, title="Save output", initval=TRUE, pos=c(w/4, mid+h*3, w/4, h))
 
