@@ -388,7 +388,7 @@ plot.pred.gdm <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", .
 
   # overlay stations
   if (overlay.stations) {
-    p <- p + geom_point(aes_string(x=lon, y=lat), data=x$data, size=1, alpha=0.7)
+    p <- p + geom_point(aes_string(x=lon, y=lat), data=x$data, alpha=0.7)
   }
 
   return(p)
