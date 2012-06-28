@@ -256,6 +256,11 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) 
   # NB: sometimes the data names in the netCDF files are the same across several files, we will instead use a name derived from the file
   names(database) <- ncVariables
 
+  # treat geomorphology as a factor
+  if (!is.null(database$geomorphology)) {
+    database$geomorphology$z[,] <- as.character(database$geomorphology$z)
+  }
+
   return(database)
 }
 
@@ -308,7 +313,11 @@ associate.env.data <- function(dataset, database, lon.name="lon", lat.name="lat"
 
   # extract/interpolate the environmental data at the locations specified in the dataset
   envData <- as.data.frame(lapply(database, function(x) {
-    interp.surface(x, coord)
+    if (class(x$z[1,1]) == "numeric") {
+      interp.surface(x, coord)
+    } else {
+      interp.nn(x, coord)
+    }
   }))
 
   # store everthing in the original dataset
@@ -321,6 +330,30 @@ associate.env.data <- function(dataset, database, lon.name="lon", lat.name="lat"
   dataset <- dataset[!allNA,]
 
   return(dataset)
+}
+
+closest.index <- function(x, y) {
+  #
+  #	Find the indexes of x such as the corresponding elements are closest to the values in y
+  #
+	round(approx(x,1:length(x),y)$y)
+}
+
+interp.nn <- function(x, coord) {
+  #
+  # Nearest neigbour interpolation
+  #
+  # x     list with components, x, y and z
+  # coord x,y coordinates to interpolate to
+  #
+
+  # find the closest grid points in x and y
+  xIdx <- closest.index(x$x, coord[,1])
+  yIdx <- closest.index(x$y, coord[,2])
+
+  # fetch the value at those grid points
+  idx <- cbind(xIdx, yIdx)
+  apply(idx, 1, function(id, z) { z[id[1],id[2]] }, z=x$z)
 }
 
 
