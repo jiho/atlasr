@@ -589,6 +589,11 @@ compute.brt <- function(
         stop("Not all explanatory variables are in the prediction dataset")
     }
 
+    if (n.trees.fixed > 0 & (n.boot.effects > 0 | (predict & n.boot.pred > 0))) {
+      warning("Bootstrapping cannot be done with a fixed number of trees (quick computation). Using the full computation, with optimization of the number of trees instead.")
+      n.trees.fixed <- 0
+    }
+
     if ((n.boot.effects > 0 & n.boot.effects < 100)) {
         warning("Less than 100 bootstraps will fail.\nn.boot.effects was increased to 100", call.=FALSE)
         n.boot.effects = 100
@@ -1304,9 +1309,19 @@ do.brt <- function() {
     rp.checkbox(win, extrapolate.env, title="Extrapolate envi-\nronmental range", initval=FALSE, pos=c(0, mid+checkH*3, w/4, checkH))
     rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(0, mid+checkH*4, w/4, checkH))
 
-    rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initval=FALSE, pos=c(w/4, mid, w/4, checkH))
+    rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initval=FALSE, pos=c(w/4, mid, w/4, checkH), action=function(win) {
+      if (win$quick & win$bootstrap.effects) {
+        rp.messagebox("Bootstrapping won't work with the quick computation.\nPlease disable one")
+      }
+      return(win)
+    })
     rp.checkbox(win, predict, title="Predict", initval=FALSE, pos=c(w/4, mid+checkH, w/4, checkH))
-    rp.checkbox(win, bootstrap.prediction, title="Bootstrap\nprediction", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH))
+    rp.checkbox(win, bootstrap.prediction, title="Bootstrap\nprediction", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH), action=function(win) {
+      if (win$quick & win$bootstrap.prediction) {
+        rp.messagebox("Bootstrapping won't work with the quick computation.\nPlease disable one.")
+      }
+      return(win)
+    })
     rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initval=FALSE, pos=c(w/4, mid+checkH*3, w/4, checkH))
     rp.checkbox(win, save, title="Save output", initval=TRUE, pos=c(w/4, mid+checkH*4, w/4, checkH))
 
