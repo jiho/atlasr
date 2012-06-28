@@ -590,6 +590,7 @@ do.gdm <- function() {
     # checkboxes range
     rp.checkbox(win, pre.sample, title="Limit data to 2500\nlines (at random)", initval=TRUE, pos=c(w/4, mid, w/4, h))
     rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(w/4, mid+h, w/4, h))
+    rp.checkbox(win, indval, title="Compute indicator\ntaxa per cluster", initval=TRUE, pos=c(w/4, mid+h*2, w/4, h))
     rp.checkbox(win, save, title="Save output", initval=TRUE, pos=c(w/4, mid+h*3, w/4, h))
 
     # location
@@ -675,6 +676,7 @@ do.gdm <- function() {
         ", lat.min=", win$lat.min, ", lat.max=", win$lat.max, ", lat.step=", win$lat.step,
         ", lon.min=", win$lon.min, ", lon.max=", win$lon.max, ", lon.step=", win$lon.step,
         ", quick=", win$quick,
+        ", indval=", win$indval,
         # ", extrapolate.env=", win$extrapolate.env,
         # ", overlay.station=", win$overlay.stations,
         ", n.groups=", ifelse (win$n.groups == 0,
