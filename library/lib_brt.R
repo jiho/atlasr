@@ -851,7 +851,7 @@ brt <- function(
   lat.min=-80, lat.max=-30, lat.step=0.1,   # definition of the prediction grid
   lon.min=-180, lon.max=180, lon.step=0.5,
   bin=FALSE,              # whether to bin the observation data on the prediction grid
-  plot.layout=c(2,2),     # dimension of the matrix of effects plots
+  # plot.layout=c(2,2),     # dimension of the matrix of effects plots
   quick=TRUE,             # when TRUE, a fixed number of trees is used in the fit and the prediction plot is subsampled, to increase speed
   overlay.stations=FALSE, # when TRUE, stations in the observed data are overlaid on top of the prediction plot
   path=getOption("atlasr.env.data"),  # path to the environmental database
@@ -970,7 +970,7 @@ brt <- function(
 
       # plot effects
       if ( ! quiet ) cat("   plot results\n")
-      plot.brt(brtObj, plot.layout=plot.layout, quick=quick, overlay.stations=overlay.stations, path=path)
+      plot.brt(brtObj, quick=quick, overlay.stations=overlay.stations, path=path)
 
       # print info about the fit
       summary(brtObj)
@@ -1086,7 +1086,7 @@ plot.brt <- function(x, ...) {
 
   if (dev.interactive() | names(dev.cur()) == "null device") devAskNewPage(TRUE)
 
-  plot.effects.brt(x, ...)
+  print(plot.effects.brt(x, ...))
 
   if (!is.null(x$prediction)) {
     print(plot.pred.brt(x, ...))
@@ -1095,29 +1095,116 @@ plot.brt <- function(x, ...) {
   devAskNewPage(FALSE)
 }
 
-plot.effects.brt <- function(x, plot.layout=c(2,2), ...) {
-  #
-  # Plot effects in a brt model
-  #
-  # x             object of class brt
-  # plot.layout   dimensions of the matrix of plots
-  #
+# plot.effects.brt <- function(x, plot.layout=c(2,2), ...) {
+#   #
+#   # Plot effects in a brt model
+#   #
+#   # x             object of class brt
+#   # plot.layout   dimensions of the matrix of plots
+#   #
+# 
+#   # NB: gbm.plot uses eval() in the global environment to find the dataset which was used to fit the model
+#   #     this is highly flawed and only works when used interactively directly from the command prompt
+#   #     to ensure this works, we write the dataset to the global environment with the name it had when running the model fit
+#   dataName <- x$obj$gbm.call$dataframe
+#   assign(x=dataName, value=x$data, pos=.GlobalEnv)
+# 
+#   if (is.null(x$boot)) {
+#     gbm.plot(x$obj, plot.layout = plot.layout)
+#   } else {
+#     gbm.plot.boot(x$obj, x$boot, plot.layout = plot.layout)
+#   }
+# 
+#   rm(list=dataName, pos=.GlobalEnv)
+# 
+#   return(invisible(x))
+# }
 
-  # NB: gbm.plot uses eval() in the global environment to find the dataset which was used to fit the model
-  #     this is highly flawed and only works when used interactively directly from the command prompt
-  #     to ensure this works, we write the dataset to the global environment with the name it had when running the model fit
-  dataName <- x$obj$gbm.call$dataframe
-  assign(x=dataName, value=x$data, pos=.GlobalEnv)
+plot.effects.brt <- function(x, n=100, ...) {
 
-  if (is.null(x$boot)) {
-    gbm.plot(x$obj, plot.layout = plot.layout)
-  } else {
-    gbm.plot.boot(x$obj, x$boot, plot.layout = plot.layout)
+  suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+
+  # predictor variable names
+  vars <- x$obj$var.names
+
+  # if (is.null(x$boot)) {
+    # prepare storage
+    d <- data.frame()
+
+    for (i in 1:length(vars)) {
+      # current data
+      X <- x$data[,vars[i]]
+
+      if (is.numeric(X)) {
+        # range of data
+        value <- seq(min(X, na.rm=T), max(X, na.rm=T), length.out=n)
+        # compute quantiles of the data
+        quantile <- quantile(X, probs=seq(0, 1, length.out=n))
+      } else {
+        # all levels
+        value <- seq(0, nlevels(X)-1)
+        # empty quantiles
+        quantile <- NA
+      }
+
+      # # compute the BRT response
+      fitted <- .Call("gbm_plot",
+        X = as.double(data.matrix(value)),
+        cRows = as.integer(length(value)), cCols = as.integer(1),
+        i.var = as.integer(i-1), n.trees = as.integer(x$obj$n.trees),
+        initF = as.double(x$obj$initF), trees = x$obj$trees,
+        c.splits = x$obj$c.splits, var.type = as.integer(x$obj$var.type), PACKAGE = "gbm"
+      )
+      if (is.numeric(X)) {
+        fitted.num <- fitted
+        fitted.lev <- NA
+      } else {
+        fitted.lev <- fitted
+        fitted.num <- NA
+      }
+
+      # store in a data.frame
+      d <- rbind(d, data.frame(variable=vars[i], value, fitted.num, fitted.lev, quantile))
+    }
+    
+  # } else {
+  #   suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
+  #   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+  # 
+  #   d <- x$boot$function.dataframe
+  #   
+  #   extract <- function(x, pattern) {
+  #     ex <- x[,str_detect(names(x), fixed(pattern))]
+  #     names(ex) <- str_replace(names(ex), fixed(pattern), "")
+  #     return(ex)      
+  #   }
+  #   
+  #   value <- extract(d, ".vals")
+  #   factors <- names(value)[laply(value, class) == "factor"]
+  # 
+  #   allFactors <- str_c(factors, collapse="|")
+  # 
+  #   dF <- d[, str_detect(names(d), allFactors)]
+  #   dN <- d[, !str_detect(names(d), allFactors)]
+  # 
+  # 
+  # 
+  #   fitted <- extract(d, ".mean")
+  #   lower <- extract(d, ".lower")
+  #   upper <- extract(d, ".upper")    
+  # }
+
+  # plot
+  geoms <- list()
+  if (any(!is.na(d$fitted.num))) {
+    geoms <- list(geoms, geom_path(aes(x=value, y=fitted.num), na.rm=T))
   }
-
-  rm(list=dataName, pos=.GlobalEnv)
-
-  return(invisible(x))
+  if (any(!is.na(d$fitted.lev))) {
+    geoms <- list(geoms, geom_point(aes(x=value, y=fitted.lev), na.rm=T, shape=15))
+  }
+  ggplot(d) + facet_wrap(~variable, scale="free") +
+    geoms +
+    geom_rug(aes(x=quantile), alpha=0.6)
 }
 
 plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", ...) {
