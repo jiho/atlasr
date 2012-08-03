@@ -16,138 +16,6 @@
 ## Functions modified / absent from the dismo package
 #-----------------------------------------------------------------------------
 
-gbm.plot.boot <- function(
-     gbm.object,                    # a gbm object - could be one from gbm.step
-     boot.object,                   # a gbm bootstrapped object - could be one from bootstrap
-     variable.no = 0,               # the var to plot - if zero then plots all
-     smooth = FALSE,                # should we add a smoothed version of the fitted function
-     rug = T,                       # plot a rug of deciles
-     n.plots = length(pred.names),  # plot the first n most important preds
-     common.scale = T,              # use a common scale on the y axis
-     write.title = T,               # plot a title above the plot
-     y.label = "fitted function",   # the default y-axis label
-     x.label = NULL,                # the default x-axis label
-     show.contrib = T,              # show the contribution on the x axis
-     plot.layout = c(3,4),          # define the default layout for graphs on the page
-     ...                            # other arguments to pass to the plotting
-                                    # useful options include cex.axis, cex.lab, etc.
-)
-{
-# function to plot gbm bootstrapped response variables, with the option
-# of adding a smooth representation of the response if requested
-# additional options in this version allow for plotting on a common scale
-# note too that fitted functions are now centered by subtracting their mean
-#
-# version 1.0
-#
-# S Mormede Feb 2010
-#
-
-  require(gbm)
-  require(splines)
-
-  #cleaning us start stuff
-
-  gbm.call <- boot.object$gbm.call
-  gbm.x <- gbm.call$gbm.x
-  pred.names <- gbm.call$predictor.names
-  response.name <- gbm.call$response.name
-  data <- boot.object$x
-  boot<-boot.object$function.dataframe
-
-  max.plots <- plot.layout[1] * plot.layout[2]
-  plot.count <- 0
-  n.pages <- 1
-
-  if (length(variable.no) > 1) {stop("only one response variable can be plotted at a time")}
-
-  if (variable.no > 0) {
-    # we are plotting all vars in rank order of contribution
-    n.plots <- 1
-  }
-
-  max.vars <- length(gbm.object$contributions$var)
-  if (n.plots > max.vars) {
-    n.plots <- max.vars
-    cat("warning - reducing no of plotted predictors to maximum available (",max.vars,")\n",sep="")
-  }
-
-
-  # get the variable names here and min and max
-  if (n.plots == 1) {
-    varname <- as.character(pred.names[variable.no])
-  } else varname <- as.character(gbm.object$contributions$var)
-
-  name.vals<-paste(varname,".vals",sep="")
-  name.mean<-paste(varname,".mean",sep="")
-  name.lower<-paste(varname,".lower",sep="")
-  name.upper<-paste(varname,".upper",sep="")
-
-  ymin <- min (boot[,names(boot) %in% name.lower])
-  ymax <- max (boot[names(boot) %in% name.upper])
-
-  # now do the actual plots
-
-  for (j in c(1:length(varname))) {
-
-    if (plot.count == max.plots) {
-      plot.count = 0
-      n.pages <- n.pages + 1
-    }
-
-    if (plot.count == 0) {
-      par(mfrow = plot.layout)
-      # NB: this also creates a new page when there is none
-    }
-
-    plot.count <- plot.count + 1
-
-    if (show.contrib) {
-      x.label <- paste (varname[j],"  (",round(gbm.object$contributions[gbm.object$contributions$var == varname[j],2],1),"%)",sep="")
-    } else {
-      x.label <- varname[j]
-    }
-
-    if (!common.scale) {
-      ymin <-min(boot[,name.lower[j]])
-      ymax <-max(boot[,name.upper[j]])
-    }
-
-    if (is.factor(data[,varname[j]])) {
-      num<-length(unique(data[,varname[j]]))
-      plot(boot[1:num,name.vals[j]],boot[1:num,name.mean[j]],ylim=c(ymin,ymax), type="n", xlab = x.label, ylab = y.label)
-      lines(boot[1:num,name.vals[j]],boot[c(1:num),name.lower[j]],col=8)
-      lines(boot[1:num,name.vals[j]],boot[c(1:num),name.upper[j]],col=8)
-
-    } else {
-       plot(boot[,name.vals[j]],boot[,name.mean[j]],ylim=c(ymin,ymax), type='l', xlab = x.label, ylab = y.label)
-       lines(boot[,name.vals[j]],boot[,name.lower[j]],col=8)
-       lines(boot[,name.vals[j]],boot[,name.upper[j]],col=8)
-    }
-
-
-   if (smooth & is.vector(boot[,name.vals[j]]) ) {
-      temp.lo <- loess(boot[,name.mean[j]] ~ boot[,name.vals[j]], span = 0.3)
-      lines(boot[,name.vals[j]],fitted(temp.lo), lty = 2, col = 2)
-   }
-   if (plot.count == 1) {
-     if (write.title) {
-        title(paste(response.name," - page ",n.pages,sep=""))
-     }
-   } else {
-      if (write.title & j == 1) {
-        title(response.name)
-      }
-   }
-
-    k <- match(varname[j],names(data))
-    if (rug & is.vector(data[,k])) {
-      rug(quantile(data[,k], probs = seq(0, 1, 0.1), na.rm = TRUE),lwd=2)
-    }
-  }
-}
-
-
 gbm.bootstrap <- function(
   gbm.object,                   # a gbm object describing sample intensity
   bootstrap.model = TRUE,       # bootstrap the model fitted and predicted values using 632+
@@ -758,7 +626,7 @@ compute.brt <- function(
     if (n.boot.effects != 0) {
 
         # perform bootstrap
-        if ( ! quiet ) cat("   bootstrap model and effect\n")
+        if ( ! quiet ) cat("   bootstrap model and effects\n")
         boot <- NULL
         boot <- tryCatch(
           gbm.bootstrap(obj, n.reps=n.boot.effects, verbose=FALSE),
@@ -859,7 +727,6 @@ brt <- function(
   lat.min=-80, lat.max=-30, lat.step=0.1,   # definition of the prediction grid
   lon.min=-180, lon.max=180, lon.step=0.5,
   bin=FALSE,              # whether to bin the observation data on the prediction grid
-  # plot.layout=c(2,2),     # dimension of the matrix of effects plots
   quick=TRUE,             # when TRUE, a fixed number of trees is used in the fit and the prediction plot is subsampled, to increase speed
   overlay.stations=FALSE, # when TRUE, stations in the observed data are overlaid on top of the prediction plot
   path=getOption("atlasr.env.data"),  # path to the environmental database
@@ -1094,7 +961,7 @@ plot.brt <- function(x, ...) {
 
   if (dev.interactive() | names(dev.cur()) == "null device") devAskNewPage(TRUE)
 
-  print(plot.effects.brt(x, ...))
+  plot.effects.brt(x, ...)
 
   if (!is.null(x$prediction)) {
     print(plot.pred.brt(x, ...))
@@ -1103,116 +970,127 @@ plot.brt <- function(x, ...) {
   devAskNewPage(FALSE)
 }
 
-# plot.effects.brt <- function(x, plot.layout=c(2,2), ...) {
-#   #
-#   # Plot effects in a brt model
-#   #
-#   # x             object of class brt
-#   # plot.layout   dimensions of the matrix of plots
-#   #
-# 
-#   # NB: gbm.plot uses eval() in the global environment to find the dataset which was used to fit the model
-#   #     this is highly flawed and only works when used interactively directly from the command prompt
-#   #     to ensure this works, we write the dataset to the global environment with the name it had when running the model fit
-#   dataName <- x$obj$gbm.call$dataframe
-#   assign(x=dataName, value=x$data, pos=.GlobalEnv)
-# 
-#   if (is.null(x$boot)) {
-#     gbm.plot(x$obj, plot.layout = plot.layout)
-#   } else {
-#     gbm.plot.boot(x$obj, x$boot, plot.layout = plot.layout)
-#   }
-# 
-#   rm(list=dataName, pos=.GlobalEnv)
-# 
-#   return(invisible(x))
-# }
-
-plot.effects.brt <- function(x, n=100, ...) {
+plot.effects.brt <- function(x, n=200, ...) {
 
   suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+  suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
+  suppressPackageStartupMessages(require("gridExtra", quietly=TRUE))
 
-  # predictor variable names
+  # extract into from object
   vars <- x$obj$var.names
+  data <- x$data[,vars]
+  contrib <- sort(x$contributions, decreasing=T)
 
-  # if (is.null(x$boot)) {
-    # prepare storage
-    d <- data.frame()
+  # detect if the object has bootstraps of effects
+  bootstrap <- ! is.null(x$boot)
 
-    for (i in 1:length(vars)) {
-      # current data
-      X <- x$data[,vars[i]]
+  # compute effects for all variables
+  if ( ! bootstrap ) {
+    # without bootstrap
+    effects <- alply(vars, 1, function(variable, x, n, data) {
 
-      if (is.numeric(X)) {
-        # range of data
-        value <- seq(min(X, na.rm=T), max(X, na.rm=T), length.out=n)
-        # compute quantiles of the data
-        quantile <- quantile(X, probs=seq(0, 1, length.out=n))
+      # compute effects
+      out <- plot.gbm(x$obj, i.var=variable, continuous.resolution = n, return.grid=TRUE)
+      out$y <- out$y - mean(out$y, na.rm=T)
+      out <- rename(out, c(y="fitted"))
+
+      if (is.factor(out[,variable])) {
+        # remove unobserved factor levels when data is discrete
+        counts <- table(data[,variable])
+        zeroCounts <- counts[which(counts == 0)]
+        out$fitted[out[,variable] %in% names(zeroCounts)] <- NA
       } else {
-        # all levels
-        value <- seq(0, nlevels(X)-1)
-        # empty quantiles
-        quantile <- NA
+        # compute quantiles of the data when it is continuous
+        out$quantile <- quantile(data[,variable], probs=seq(0, 1, length.out=n))
       }
+      return(out)
+    }, x=x, n=n, data=data)
 
-      # # compute the BRT response
-      fitted <- .Call("gbm_plot",
-        X = as.double(data.matrix(value)),
-        cRows = as.integer(length(value)), cCols = as.integer(1),
-        i.var = as.integer(i-1), n.trees = as.integer(x$obj$n.trees),
-        initF = as.double(x$obj$initF), trees = x$obj$trees,
-        c.splits = x$obj$c.splits, var.type = as.integer(x$obj$var.type), PACKAGE = "gbm"
-      )
-      if (is.numeric(X)) {
-        fitted.num <- fitted
-        fitted.lev <- NA
+  } else {
+    # with bootstraps
+    d <- x$boot$function.dataframe
+
+    effects <- alply(vars, 1, function(variable, d) {
+      # extract columns corresponding to the current variable
+      out <- d[str_detect(names(d),variable)]
+      # rename them
+      names(out) <- c(variable, "lower", "fitted", "upper")
+
+      if (is.factor(out[,variable])) {
+        # the data is padded with zeros, only keep the interesting bit
+        out <- out[1:nlevels(out[,variable]),]
+        # reorder levels as in the original data
+        out[,variable] <- factor(out[,variable], levels=levels(data[,variable]))
+        counts <- table(data[,variable])
+        zeroCounts <- counts[which(counts == 0)]
+        out[out[,variable] %in% names(zeroCounts), c("lower", "fitted", "upper")] <- NA
       } else {
-        fitted.lev <- fitted
-        fitted.num <- NA
+        # add quantiles for continuous variables
+        out$quantile <- quantile(data[,variable], probs=seq(0, 1, length.out=nrow(out)))
       }
+      return(out)
+    }, d=d)
+  }
 
-      # store in a data.frame
-      d <- rbind(d, data.frame(variable=vars[i], value, fitted.num, fitted.lev, quantile))
+  # rank variables by contribution
+  names(effects) <- vars
+  effects <- effects[names(contrib)]
+
+  # compute y-limits (same for all plot panels)
+  if ( bootstrap ) {
+    ranges <- ldply(effects, function(X) {
+      c(min(X$lower, na.rm=T), max(X$upper, na.rm=T))
+    })
+  } else {
+    ranges <- ldply(effects, function(X) {
+      range(X$fitted, na.rm=T)
+    })
+  }
+  ylim <- scale_y_continuous(limits=c(min(ranges$V1), max(ranges$V2)))
+
+  # prepare labels
+  varLabels <- str_c(names(contrib), " (", round(contrib,1), "%)")
+  names(varLabels) <- names(contrib)
+
+  # prepare plots
+  plots <- llply(effects, function(X) {
+    # base plot
+    p <- ggplot(X, aes_string(x=names(X)[1]))
+
+    # add y limits
+    p <- p + ylim
+
+    # add x label
+    p <- p + xlab(varLabels[names(X)[1]])
+
+    if (is.factor(X[,1])) {
+      # discrete variable
+      if (is.null(x$boot)) {
+        # without bootstrap
+        p <- p + geom_point(aes(y=fitted), na.rm=T, shape=15)
+      } else {
+        # with bootstrap
+        p <- p + geom_linerange(aes(ymin=lower, ymax=upper), na.rm=T)
+      }
+    } else {
+      # continuous variable
+      if (! is.null(x$boot)) {
+        # with bootstrap
+        p <- p + geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.5)
+      }
+      # with or without bootstrap
+      p <- p +
+        geom_path(aes(y=fitted), na.rm=T) +
+        geom_rug(aes(x=quantile), alpha=0.6)
     }
-    
-  # } else {
-  #   suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
-  #   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
-  # 
-  #   d <- x$boot$function.dataframe
-  #   
-  #   extract <- function(x, pattern) {
-  #     ex <- x[,str_detect(names(x), fixed(pattern))]
-  #     names(ex) <- str_replace(names(ex), fixed(pattern), "")
-  #     return(ex)      
-  #   }
-  #   
-  #   value <- extract(d, ".vals")
-  #   factors <- names(value)[laply(value, class) == "factor"]
-  # 
-  #   allFactors <- str_c(factors, collapse="|")
-  # 
-  #   dF <- d[, str_detect(names(d), allFactors)]
-  #   dN <- d[, !str_detect(names(d), allFactors)]
-  # 
-  # 
-  # 
-  #   fitted <- extract(d, ".mean")
-  #   lower <- extract(d, ".lower")
-  #   upper <- extract(d, ".upper")    
-  # }
+    return(p)
+  })
 
-  # plot
-  geoms <- list()
-  if (any(!is.na(d$fitted.num))) {
-    geoms <- list(geoms, geom_path(aes(x=value, y=fitted.num), na.rm=T))
-  }
-  if (any(!is.na(d$fitted.lev))) {
-    geoms <- list(geoms, geom_point(aes(x=value, y=fitted.lev), na.rm=T, shape=15))
-  }
-  ggplot(d) + facet_wrap(~variable, scale="free") +
-    geoms +
-    geom_rug(aes(x=quantile), alpha=0.6)
+  # print plots on a grid
+  do.call(grid.arrange, plots)
+
+  return(invisible(plots))
 }
 
 plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", ...) {
