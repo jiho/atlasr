@@ -183,17 +183,25 @@ require(gbm)
 # first get the original analysis details..
 
   gbm.call <- gbm.object$gbm.call
-  dd <- matrix(gbm.object$data$x, nrow=nrow(gbm.object$data$x.order))
+  response.name <- gbm.call$response.name
+  predictor.names <- gbm.call$predictor.names
+  dd <- data.frame(matrix(gbm.object$data$x, nrow=nrow(gbm.object$data$x.order)))
+  classes <- attr(gbm.object$Terms, "dataClasses")[predictor.names]
+  factorVars <- which(classes == "factor")
+  if (length(factorVars) > 0) {
+    for (i in as.numeric(factorVars)) {
+      levels <- as.numeric(gbm.object$var.levels[[i]]) - 1
+      dd[,i] <- factor(dd[,i], levels=levels, labels=gbm.object$var.levels[[i]])
+    }
+  }
   train.data <- data.frame(gbm.object$data$y, dd)
-  names(train.data) <- c(gbm.call$response.name, gbm.call$predictor.names)
+  names(train.data) <- c(response.name, predictor.names)
   n.obs <- nrow(train.data)
   gbm.y <- 1
   gbm.x <- 2:ncol(train.data)
   family <- gbm.call$family
   lr <- gbm.call$learning.rate
   tc <- gbm.call$tree.complexity
-  response.name <- gbm.call$response.name
-  predictor.names <- gbm.call$predictor.names
   n.preds <- length(gbm.x)
   n.trees <- gbm.call$best.trees
   weights <- gbm.object$weights
@@ -422,8 +430,8 @@ require(gbm)
 
 # now calculate values for the fitted functions
 
-  if (bootstrap.functions) {
 
+  if (bootstrap.functions) {
     function.dataframe <- as.data.frame(matrix(0,nrow=200,ncol=n.preds*4))
     for (i in 1:n.preds) {
       j <- (i * 4) - 3
