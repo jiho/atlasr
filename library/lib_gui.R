@@ -1,8 +1,9 @@
 #
 #     Customization of rpanel widgets
 #
-# (c) Copyright 2012 Jean-Olivier Irisson, Ben Raymond
-#     GNU General Public License v3
+# (c) Copyright 2012 J-O Irisson
+#                    Ben Raymond
+#     http://creativecommons.org/licenses/by/3.0/
 #
 #-----------------------------------------------------------------------------
 

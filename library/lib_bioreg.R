@@ -2,8 +2,8 @@
 #     Perform abiotic regionalisation
 #
 # (c) Copyright 2012 Ben Raymond, ben dot raymond at aad dot gov dot au
-#                    Jean-Olivier Irisson
-#     GNU General Public License v3
+#                    J-O Irisson
+#     http://creativecommons.org/licenses/by/3.0/
 #     Last-Modified: <2012-Jun-21 17:04>
 #
 #-----------------------------------------------------------------------------

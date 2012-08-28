@@ -2,7 +2,7 @@
 #      Test bioregionalisation functions
 #
 #  (c) Copyright 2012 Jean-Olivier Irisson
-#      GNU General Public License v3
+#      http://creativecommons.org/licenses/by/3.0/
 #
 #-----------------------------------------------------------------------------
 
@@ -52,33 +52,33 @@ test_that("hclust clustering is stable", {
 })
 
 
-test_that("missing weights induce warning", {
-  expect_that(
-    bioreg(c("bathymetry", "sst_summer_climatology"), weights=c(bathy=1), n.groups=2, n.groups.intermediate=5, lat.min=-40, lat.max=-30, lat.step=2, lon.min=0, lon.max=20, lon.step=2, output=temp),
-    gives_warning("Weights are missing")
-  )
-})
-
-test_that("supplementary weights induce error", {
-  expect_that(
-    bioreg(c("bathymetry", "sst_summer_climatology"), weights=c(nox=1), n.groups=2, n.groups.intermediate=5, lat.min=-40, lat.max=-30, lat.step=2, lon.min=0, lon.max=20, lon.step=2, output=temp),
-    throws_error("No variable matching")
-  )
-})
-
-test_that("missing transformations induce warning", {
-  expect_that(
-    bioreg(c("bathymetry", "sst_summer_climatology"), transformations=c(bathy="x"), n.groups=2, n.groups.intermediate=5, lat.min=-40, lat.max=-30, lat.step=2, lon.min=0, lon.max=20, lon.step=2, output=temp),
-    gives_warning("Transformations are missing")
-  )
-})
-
-test_that("supplementary transformations induce error", {
-  expect_that(
-    bioreg(c("bathymetry", "sst_summer_climatology"), transformations=c(nox="x"), n.groups=2, n.groups.intermediate=5, lat.min=-40, lat.max=-30, lat.step=2, lon.min=0, lon.max=20, lon.step=2, output=temp),
-    throws_error("No variable matching")
-  )
-})
+# test_that("missing weights induce warning", {
+#   expect_that(
+#     bioreg(c("bathymetry", "sst_summer_climatology"), weights=c(bathy=1), n.groups=2, n.groups.intermediate=5, lat.min=-40, lat.max=-30, lat.step=2, lon.min=0, lon.max=20, lon.step=2, output=temp),
+#     gives_warning()
+#   )
+# })
+# 
+# test_that("supplementary weights induce error", {
+#   expect_that(
+#     bioreg(c("bathymetry", "sst_summer_climatology"), weights=c(nox=1), n.groups=2, n.groups.intermediate=5, lat.min=-40, lat.max=-30, lat.step=2, lon.min=0, lon.max=20, lon.step=2, output=temp),
+#     throws_error("No variable matching")
+#   )
+# })
+# 
+# test_that("missing transformations induce warning", {
+#   expect_that(
+#     bioreg(c("bathymetry", "sst_summer_climatology"), transformations=c(bathy="x"), n.groups=2, n.groups.intermediate=5, lat.min=-40, lat.max=-30, lat.step=2, lon.min=0, lon.max=20, lon.step=2, output=temp),
+#     gives_warning("Transformations are missing")
+#   )
+# })
+# 
+# test_that("supplementary transformations induce error", {
+#   expect_that(
+#     bioreg(c("bathymetry", "sst_summer_climatology"), transformations=c(nox="x"), n.groups=2, n.groups.intermediate=5, lat.min=-40, lat.max=-30, lat.step=2, lon.min=0, lon.max=20, lon.step=2, output=temp),
+#     throws_error("No variable matching")
+#   )
+# })
 
 
 unlink(temp)

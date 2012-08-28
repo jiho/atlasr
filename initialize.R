@@ -1,8 +1,8 @@
 #
 #     Source all available functions and install requirements
 #
-# (c) Copyright 2012 Jean-Olivier Irisson
-#     GNU General Public License v3
+# (c) Copyright 2012 J-O Irisson
+#     http://creativecommons.org/licenses/by/3.0/
 #
 #-----------------------------------------------------------------------------
 

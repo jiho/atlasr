@@ -6,8 +6,9 @@
 #     - fully automated function
 #     - GUI interface
 #
-# (c) Copyright 2011-2012 S Mormede, J-O Irisson
-#     GNU General Public License v3
+# (c) Copyright 2011-2012 S Mormede
+#                         J-O Irisson
+#     http://creativecommons.org/licenses/by/3.0/
 #
 #-----------------------------------------------------------------------------
 

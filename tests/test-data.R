@@ -2,7 +2,7 @@
 #      Test access to data
 #
 #  (c) Copyright 2012 Jean-Olivier Irisson
-#      GNU General Public License v3
+#      http://creativecommons.org/licenses/by/3.0/
 #
 #-----------------------------------------------------------------------------
 

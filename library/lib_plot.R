@@ -4,8 +4,8 @@
 # The plot uses ggplot2 rather than base graphics, because it eases
 # the projection and mapping of colours.
 #
-# (c) Copyright 2011 Jean-Olivier Irisson
-#     GNU General Public License v3
+# (c) Copyright 2011 J-O Irisson
+#     http://creativecommons.org/licenses/by/3.0/
 #
 #-----------------------------------------------------------------------------
 
