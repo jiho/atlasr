@@ -2,7 +2,7 @@
 
 This code is licensed under a Creative Commons Attribution 3.0 Unported license (CC BY 3.0, http://creativecommons.org/licenses/by/3.0/). It allows you to use, share and remix the code as long as you cite us in the following way:
 
-> J-O Irisson, S Mormedre, B Raymond (alphabetical order). atlasr: R code for ecoregionalisation. https://github.com/jiho/atlasr.
+> J-O Irisson, S Mormede, B Raymond (alphabetical order). atlasr: R code for ecoregionalisation. https://github.com/jiho/atlasr.
 
 
 The data layers downloaded automatically by this code are under a Polar Information commons license http://polarcommons.org/ethics-and-norms-of-data-sharing.php and copyright Ben Raymond. The PIC license have similar terms to the CC BY license.
