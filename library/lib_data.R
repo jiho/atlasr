@@ -21,9 +21,9 @@
 # Ben
 # "http://webdav.data.aad.gov.au/data/environmental/derived/antarctic"
 # Bruno
-# "http://share.biodiversity.aq/GIS/Antarctic/"
+# "http://share.biodiversity.aq/GIS/antarctic"
 
-update.env.data <- function(url="http://webdav.data.aad.gov.au/data/environmental/derived/antarctic", path=getOption("atlasr.env.data")) {
+update.env.data <- function(url="http://share.biodiversity.aq/GIS/antarctic", path=getOption("atlasr.env.data")) {
   #
   # Check if the database of environmental data is present and up-to-date
   # If not, download the missing bits
