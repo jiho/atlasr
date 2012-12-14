@@ -6,5 +6,7 @@
 #
 #-----------------------------------------------------------------------------
 
-source("~/.Rprofile")
+if (file.exists("~/.Rprofile")) {
+  source("~/.Rprofile")
+}
 source("initialize.R")
