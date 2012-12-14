@@ -1153,7 +1153,7 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", .
     }
 
     # add a title
-    p = p + opts(title=paste(x$obj$gbm.call$response.name, "- BRT"))
+    p = p + ggtitle(paste(x$obj$gbm.call$response.name, "- BRT"))
 
     return(p)
   }
