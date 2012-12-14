@@ -631,7 +631,7 @@ compute.brt <- function(
         boot <- NULL
         boot <- tryCatch(
           gbm.bootstrap(obj, n.reps=n.boot.effects, verbose=FALSE),
-          # convert erros into warnings
+          # convert errors into warnings
           error=function(e) {
             warning(e)
             NULL
