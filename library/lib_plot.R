@@ -362,7 +362,7 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
     p <- p +
       # scale_x_continuous(name="", breaks=c(0)) +
       # NB: fails due to a bug in ggplot now, instead use
-      opts(axis.text.x=theme_blank(), axis.title.x=theme_blank()) +
+      theme(axis.text.x=element_blank(), axis.title.x=element_blank()) +
       scale_y_continuous(name="Latitude")
   } else if (geom == "raster") {
     p <- p + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0))

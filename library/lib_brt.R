@@ -631,7 +631,7 @@ compute.brt <- function(
         boot <- NULL
         boot <- tryCatch(
           gbm.bootstrap(obj, n.reps=n.boot.effects, verbose=FALSE),
-          # convert erros into warnings
+          # convert errors into warnings
           error=function(e) {
             warning(e)
             NULL
@@ -1153,7 +1153,7 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", .
     }
 
     # add a title
-    p = p + opts(title=paste(x$obj$gbm.call$response.name, "- BRT"))
+    p = p + ggtitle(paste(x$obj$gbm.call$response.name, "- BRT"))
 
     return(p)
   }
