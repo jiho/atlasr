@@ -736,6 +736,7 @@ brt <- function(
   quiet=FALSE,            # do not print messages when TRUE
   n.trees.fixed=ifelse(quick, 1000, 0), # if > 0, specifies the fixed number of trees to use in the BRT model. Otherwise, the number of trees is estimated by a stepwise procedure
   save=TRUE,              # save output to files
+  transformations=NULL,   # named vector of transformations applied to each variable (has to match variables)
   ...                     # passed to compute.brt()
 )
 {
@@ -792,6 +793,12 @@ brt <- function(
     preddata <- associate.env.data(prediction_grid, database)
   } else {
     preddata <- obsdata
+  }
+
+  # transform data if needed
+  if (!is.null(transformations)) {
+    obsdata[,variables] <- transform.data(obsdata[,variables], transformations)
+    preddata[,variables] <- transform.data(preddata[,variables], transformations)
   }
 
   # prepare storage for the results
@@ -1267,7 +1274,17 @@ do.brt <- function() {
       }
       return(win)
     })
-    rp.checkbox(win, var=selAllVariables, title="Select all", initval=FALSE, pos=c(2*w/3, hSel, w/3, h))
+
+    # variables transformations
+    optionsFile <- tempfile()
+    win <- rp.button(win, "Variables transformation", pos=c(2*w/3, hSel, w/3, h) , action=function(win) {
+      if (all(win$variables == "")) {
+        rp.messagebox("At least one variable must be selected", title="Warning")
+      } else {
+        do.brt.variables(variables=win$variables, file=optionsFile)
+      }
+      return(win)
+    })
 
 
     # compute vertical coordinate of the middle of the window
@@ -1329,13 +1346,18 @@ do.brt <- function() {
       }
       # print(taxa)
 
-      # print(win$variables)
-      # print(win$selAllVariables)
-      if (win$selAllVariables) {
-        variables <- allVariables
+      variables <- win$variables
+      # print(variables)
+
+      # variables transformations
+      if (file.exists(optionsFile)) {
+        # read the options in the file
+        load(optionsFile)
+        transformations <- opts$transformations
       } else {
-        variables <- win$variables
+        transformations <- NULL
       }
+      # print(transformations)
 
       # print(win$family)
       # print(win$bootstrap.effects)
@@ -1373,6 +1395,10 @@ do.brt <- function() {
         "file=", str_c(deparse(win$file, width=500), collapse=""),
         ", taxa=", str_c(deparse(taxa, width=500), collapse=""),
         ", variables=", str_c(deparse(variables, width=500), collapse=""),
+        ifelse( is.null(transformations),
+          ", transformations=NULL",
+          str_c(", transformations=", str_c("c(",str_c(names(transformations), str_c("\"", unlist(transformations),"\"") , sep="=", collapse=", "), ")"))
+        ),
         ", lat.min=", win$lat.min, ", lat.max=", win$lat.max, ", lat.step=", win$lat.step,
         ", lon.min=", win$lon.min, ", lon.max=", win$lon.max, ", lon.step=", win$lon.step,
         ", predict=", win$predict,
@@ -1399,6 +1425,81 @@ do.brt <- function() {
     return(win)
   })
 
+}
+
+do.brt.variables <- function(variables, file) {
+  #
+  # Second part of the GUI. Called from do.brt()
+  # Select variable transformations
+  #
+
+  suppressPackageStartupMessages(require("rpanel"))
+
+  # defaults
+  nVars <- length(variables)
+  transformations <- rep("x", nVars)
+  names(transformations) <- variables
+
+  # if the options file exists, read it to use the previously saved transformations
+  # TODO avoid using a file storage, we should be able to pass everything through functions and operate in memory
+  if (file.exists(file)) {
+    load(file)
+
+    # transformations and weights are stored as lists in the options file
+    # transform them back to vectors
+    opts <- lapply(opts, function(x) {
+      y <- as.character(x)
+      names(y) <- names(x)
+      return(y)
+    })
+
+    # the selected variables may have changed, use what we can from the options file (opts$***) and use defaults for the rest (***)
+    commonNames <- intersect(names(transformations), names(opts$transformations))
+    transformations[match(commonNames, names(transformations))] <- opts$transformations[match(commonNames, names(opts$transformations))]
+  }
+
+  # default dimensions (in px)
+  w <- 500          # width of the window
+  h <- 50           # height of elements
+  spacer <- 10      # height of spacer
+  varH <- nVars * 25 + spacer
+  exampleH <- 4 * 25 + spacer
+  windowH <- varH + exampleH + h
+
+  # main window
+  win <- rp.control(title="Variables", size=c(w, windowH), aschar=F)
+
+  # transformations
+  # TODO look into why with rp.textentry.immediate, the results are not all carried to the stage of the close button
+  rp.textentry(win, var=transformsBox, labels=variables, title="Transformations", initval=transformations, pos=c(0,0,w,varH), action=function(win) {
+    return(win)
+  })
+
+  # provide example transformations
+  example.transforms.labels=c("log10(x+1)","Square root","log10(-1*negative values only)", "Remove values over 300")
+  example.transforms.functions=list('"log10(x+1)"', '"sqrt(x)"', '"x[x>=0]=NA; log10(-x)"', '"x[x>300]=NA; x"')
+  rp.textentry(win, var=exampletransformBox, labels=example.transforms.labels, title="Example transformations", initval=example.transforms.functions, pos=c(0,varH,w,exampleH), action=function(win) {
+    return(win)
+  })
+
+  # close button
+  rp.button(win, title="Close", quitbutton=TRUE, pos=c(3/4*w, windowH-h, w/4, h), action=function(win) {
+    # print("Transformations")
+    # print(win$transformsBox)
+
+    # extract transformations and weights and store them in named lists
+    transformations <- as.list(win$transformsBox)
+
+    # store them in a single object
+    opts <- list(transformations=transformations)
+
+    # save this object to the options file
+    save(opts, file=file)
+
+    return(win)
+  })
+
+  return(invisible(win))
 }
 
 

@@ -33,7 +33,20 @@ Once the data file is chosen, the interface will present two lists (taxa on the 
 
 Check the taxa you want to study. BRTs will be run independently and successively for all of them. Results will also be saved independently for each taxon.
 
-Select the environmental variables you want to include in the model. This list works as a file browser: press CTRL (COMMAND on Mac OS X) to select several variables, press SHIFT to select a range. Ticking the checkbox below the list does not visually change the selection (this is an unsolvable bug) but it actually does select all variables. This can be useful as a first step but beware that several variables are repeated (in raw and interpolated forms) in the default environmental list and using variables as correlated as those makes the interpretation of effects more difficult.
+Select the environmental variables you want to include in the model. This list works as a file browser: press CTRL (COMMAND on Mac OS X) to select several variables, press SHIFT to select a range. For a first analysis, many variables can be selected, but beware that several variables are repeated (in raw and interpolated forms) in the default environmental list and using variables as correlated as those makes the interpretation of effects more difficult.
+
+Once variables are selected, the data they contain can be transformed through the "Transform variables" button. A new window allows you to specify transformations that will be applied to each variable. Transformation functions should be written as valid R expressions, using `x` as the variable name. For example:
+
+*     `log(x)` : will take a simple logarithm (base e)
+*     `log10(x)` : logarithm (base 10)
+*     `sqrt(x)` : square root
+*     `x^0.25`	: fourth-root (root-root) transform
+
+Compound expressions can also be used. For example, the bathymetry variable gives the elevation of each pixel, with negative values indicating lower than sea level. Land will have elevation values above zero. Thus, we probably want to discard positive values. This would be done by using `x[x>=0]=NA; x` : first set non-negative values to NA, then return the full vector (NB: actually, all data on land is automatically masked already).
+
+Some example transformations are included in the bottom list. You can copy and paste these into the "Transformations" list.
+
+**WARNING** Make sure to press `Return` after typing anything in a field, otherwise the input is not recorded.
 
 The options (lists and checkboxes) map to the following arguments of the command line functions, which are explained in the next paragraph :
 
@@ -71,6 +84,8 @@ The function `brt()` is the direct equivalent of the GUI. It formats the data, s
 *	`taxa`	a vector of taxa names as character strings. Those will be matched against the actual names in the input data file and can therefore be abbreviated. For example, if the taxa in the input data are "calanus", "calanus_propinquus" and "calanus_simillimus", `taxa="pro"` will match "calanus_propinquus", `taxa="cala"` will match all three, but  `taxa="calanus"` will match only "calanus" (because the name is specified completely).
 
 *	`variables`	a vector of environment variables names as character strings. Like `taxa` they can be abbreviated and will be matched against names of variables in the the environmental dataset.
+
+*	`transformations`	a list of transformations (strings) to apply to each variable. Use an empty string if no transformation is required for a given variable. e.g. `transformations=list("log10(x)","")` will apply a log10 transformation to the first variable and no transformation to the second.
 
 *	`family=c("bernoulli", "gaussian", "poisson")`	the distribution of data for each taxon. "bernoulli" is for presence/absence, "gaussian" and "poisson" are for abundances.
 
