@@ -514,14 +514,14 @@ compute.brt <- function(
     ## Run BRT model
     #-------------------------------------------------------------------------
 
-    # initial learning rate value
-    lr = 0.05
-
     # NB: gbm.plot uses eval() in the global environment to find the dataset which was used to fit the model
     #     to avoid conflicts, we use a funky name
     myFunkyDatasetNameForGbmPlot <- data
 
     if (n.trees.fixed <= 0) {
+      # initial learning rate value
+      lr = 0.05
+
       # estimate number of trees required, using gbm.step
       if ( ! quiet ) cat("   optimise BRT model ")
 
@@ -573,7 +573,7 @@ compute.brt <- function(
           gbm.y = match(resp.var, names(data)),
           tree.complexity = tree.complexity,
           verbose = FALSE,
-          learning.rate = lr,
+          learning.rate = 2/n.trees.fixed,
           n.trees = n.trees.fixed,
           family = family,
           site.weights = site.weights,
