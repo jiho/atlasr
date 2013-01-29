@@ -1463,7 +1463,7 @@ do.brt.variables <- function(variables, file) {
   h <- 50           # height of elements
   spacer <- 10      # height of spacer
   varH <- nVars * 25 + spacer
-  exampleH <- 4 * 25 + spacer
+  exampleH <- 3 * 25 + spacer
   windowH <- varH + exampleH + h
 
   # main window
@@ -1476,8 +1476,8 @@ do.brt.variables <- function(variables, file) {
   })
 
   # provide example transformations
-  example.transforms.labels=c("log10(x+1)","Square root","log10(-1*negative values only)", "Remove values over 300")
-  example.transforms.functions=list('"log10(x+1)"', '"sqrt(x)"', '"x[x>=0]=NA; log10(-x)"', '"x[x>300]=NA; x"')
+  example.transforms.labels=c("Remove small values", "Remove large values", "Remove  values based on quantiles")
+  example.transforms.functions=list('"x[x<0.01]=NA; x"', '"x[x>300]=NA; x"', '"q=quantile(x,c(0.1,0.9)); x[x<q[1]|x>q[2]]=NA; x"')
   rp.textentry(win, var=exampletransformBox, labels=example.transforms.labels, title="Example transformations", initval=example.transforms.functions, pos=c(0,varH,w,exampleH), action=function(win) {
     return(win)
   })
