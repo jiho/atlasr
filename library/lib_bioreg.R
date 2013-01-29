@@ -574,9 +574,10 @@ do.bioreg.variables <- function(variables, file) {
   suppressPackageStartupMessages(require("rpanel"))
 
   # defaults
-  weights <- rep(1,length(variables))
+  nVars <- length(variables)
+  weights <- rep(1,nVars)
   names(weights) <- variables
-  transformations <- rep("x",length(variables))
+  transformations <- rep("x",nVars)
   names(transformations) <- variables
 
   # if the options file exists, read it to use the previously saved weights and transformations
@@ -600,29 +601,30 @@ do.bioreg.variables <- function(variables, file) {
 
   # default dimensions (in px)
   w <- 1000         # width of the window
-  windowH <- 300    # height of the window
-  # TODO adapt it to the number of variables
   h <- 50           # height of elements
   spacer <- 10      # height of spacer
+  varH <- nVars * 25 + spacer
+  exampleH <- 4 * 25 + spacer
+  windowH <- varH + exampleH + h
 
   # main window
   win <- rp.control(title="Variables", size=c(w, windowH), aschar=F)
 
   # transformations
   # TODO look into why with rp.textentry.immediate, the results are not all carried to the stage of the close button
-  rp.textentry(win, var=transformsBox, labels=variables, title="Transformations", initval=transformations, pos=c(0,0,w/2,windowH/2), action=function(win) {
+  rp.textentry(win, var=transformsBox, labels=variables, title="Transformations", initval=transformations, pos=c(0,0,w/2,varH), action=function(win) {
     return(win)
   })
 
   # provide example transformations
-  example.transforms.labels=c("log10(x+1)","Square root","log10(-1*negative values only)")
-  example.transforms.functions=list('"log10(x+1)"', '"sqrt(x)"', '"x[x>=0]=NA; log10(-x)"')
-  rp.textentry(win, var=exampletransformBox, labels=example.transforms.labels, title="Example transformations", initval=example.transforms.functions, pos=c(0,windowH/2,w/2,windowH/2), action=function(win) {
+  example.transforms.labels=c("log10(x+1)","Square root","log10(-1*negative values only)", "Remove values over 300")
+  example.transforms.functions=list('"log10(x+1)"', '"sqrt(x)"', '"x[x>=0]=NA; log10(-x)"', '"x[x>300]=NA; x"')
+  rp.textentry(win, var=exampletransformBox, labels=example.transforms.labels, title="Example transformations", initval=example.transforms.functions, pos=c(0,varH,w/2,exampleH), action=function(win) {
     return(win)
   })
 
   # selection for weights associated with each variable
-  rp.textentry(win, var=weightsBox, labels=variables, title="Weighting", initval=weights,pos=c(w/2, 0, w/2, windowH/2), action=function(win) {
+  rp.textentry(win, var=weightsBox, labels=variables, title="Weighting", initval=weights,pos=c(w/2, 0, w/2, varH), action=function(win) {
     return(win)
   })
 
