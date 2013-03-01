@@ -1155,7 +1155,7 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", .
         } else {
           # presence-absence values
           # = use points (presence) and crosses (absence)
-          p <- p + geom_point(aes_string(x="lon", y="lat", shape=x$resp.var), data=x$data, alpha=0.7) + scale_shape_manual(values=c(4, 16))
+          p <- p + geom_point(aes_string(x="lon", y="lat", colour=x$resp.var, alpha=x$resp.var), data=x$data, size=1.5) + scale_colour_manual(values=c("grey20", "red")) + scale_alpha_manual(values=c(0.1, 0.9))
         }
       }
     }
