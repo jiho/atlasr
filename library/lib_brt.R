@@ -984,6 +984,7 @@ plot.effects.brt <- function(x, n=200, ...) {
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
   suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
   suppressPackageStartupMessages(require("gridExtra", quietly=TRUE))
+  suppressPackageStartupMessages(require("gbm", quietly=TRUE))
 
   # extract into from object
   vars <- x$obj$var.names
