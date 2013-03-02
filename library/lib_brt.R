@@ -1126,7 +1126,7 @@ plot.pred.brt <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", .
       mapping <- aes(fill=pred)
     } else {
       # map prediction as colour and error as transparency
-      mapping <- aes(fill=pred, alpha=CVpred)
+      mapping <- aes(fill=pred)
     }
 
     # main plot
