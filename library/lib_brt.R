@@ -1001,7 +1001,7 @@ plot.effects.brt <- function(x, n=200, ...) {
 
       # compute effects
       out <- plot.gbm(x$obj, i.var=variable, continuous.resolution = n, return.grid=TRUE)
-      out$y <- out$y - mean(out$y, na.rm=T)
+      # out$y <- out$y - mean(out$y, na.rm=T)
       out <- rename(out, c(y="fitted"))
 
       if (is.factor(out[,variable])) {
@@ -1210,16 +1210,16 @@ do.brt <- function() {
   # NB: positions are x, y, width, eight
   #     x, y are the coordinates of the top-left hand corner
 
-  rp.button(win, title="Choose file", pos=c(0, 0, w/4, h), action=function(win) {
+  rp.button(win, title="Choose file", pos=list(0, 0, w/4, h), action=function(win) {
 
     # choose the data file
-    file <- file.choose()
-    # file <- "../data/Austropallene.csv"
+    # file <- file.choose()
+    file <- "../data/euphau/euphau_cleaned.csv"
     win$file <- clean.path(file)
 
 
     # write the filename, for information
-    rp.text(win, txt=file, initval=file, pos=c(w/4, 0, 3*w/4, h))
+    rp.text(win, text=file, initval=file, pos=list(w/4, 0, 3*w/4, h))
 
     # build species list
     suppressMessages(data <- read.data(file))
@@ -1238,7 +1238,7 @@ do.brt <- function() {
 
     if (nTaxa <= nBoxes) {
       # when all taxa can fit into one column, just use this
-      rp.checkbox(win, var=taxa, labels=allTaxa, title="Taxa", initval=c(TRUE, rep(FALSE, times=nTaxa-1)), pos=c(0, h, 2*w/3, hSel), action=function(win) {
+      rp.checkbox(win, var=taxa, labels=allTaxa, title="Taxa", initval=c(TRUE, rep(FALSE, times=nTaxa-1)), pos=list(0, h, 2*w/3, hSel), action=function(win) {
         if (all(! win$taxa)) {
           rp.messagebox("At least one taxon must be selected", title="Warning")
         }
@@ -1252,13 +1252,13 @@ do.brt <- function() {
       allTaxa1 <- allTaxa[1:half]
       allTaxa2 <- allTaxa[(half+1):nTaxa]
 
-      rp.checkbox(win, var=taxa1, labels=allTaxa1, title="Taxa", initval=c(TRUE, rep(FALSE, times=half-1)), pos=c(0, h, w/3, hSel), action=function(win) {
+      rp.checkbox(win, var=taxa1, labels=allTaxa1, title="Taxa", initval=c(TRUE, rep(FALSE, times=half-1)), pos=list(0, h, w/3, hSel), action=function(win) {
         if (all(! c(win$taxa1, win$taxa2))) {
           rp.messagebox("At least one taxon must be selected", title="Warning")
         }
         return(win)
       })
-      rp.checkbox(win, var=taxa2, labels=allTaxa2, title="", initval=rep(FALSE, times=rest), pos=c(w/3, h+7, w/3, hSel-7), action=function(win) {
+      rp.checkbox(win, var=taxa2, labels=allTaxa2, title="", initval=rep(FALSE, times=rest), pos=list(w/3, h+7, w/3, hSel-7), action=function(win) {
         if (all(! c(win$taxa1, win$taxa2))) {
           rp.messagebox("At least one taxon must be selected", title="Warning")
         }
@@ -1269,7 +1269,7 @@ do.brt <- function() {
 
     # build environment variables list
     allVariables <- list.env.data()
-    rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables",  rows=nRows, cols=22, pos=c(2*w/3, h, w/3, hSel-h), action=function(win) {
+    rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables",  rows=nRows, cols=22, pos=list(2*w/3, h, w/3, hSel-h), action=function(win) {
       if (all(win$variables == "")) {
         rp.messagebox("At least one variable must be selected", title="Warning")
       }
@@ -1278,7 +1278,7 @@ do.brt <- function() {
 
     # variables transformations
     optionsFile <- tempfile()
-    win <- rp.button(win, "Variables transformation", pos=c(2*w/3, hSel, w/3, h) , action=function(win) {
+    rp.button(win, "Variables transformation", pos=list(2*w/3, hSel, w/3, h) , action=function(win) {
       if (all(win$variables == "")) {
         rp.messagebox("At least one variable must be selected", title="Warning")
       } else {
@@ -1294,49 +1294,49 @@ do.brt <- function() {
 
     # effects options
     checkH <- 4*h/5
-    rp.radiogroup(win, family, values=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=c(0, mid, w/4, checkH*2))
+    rp.radiogroup(win, family, vals=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=list(0, mid, w/4, checkH*2))
 
     # options checkboxes
-    rp.checkbox(win, bin, title="Bin input data\non 0.1 x 0.1 grid", initval=FALSE, pos=c(0, mid+checkH*2, w/4, checkH))
-    rp.checkbox(win, extrapolate.env, title="Extrapolate envi-\nronmental range", initval=FALSE, pos=c(0, mid+checkH*3, w/4, checkH))
-    rp.checkbox(win, quick, title="Quick computation\n(faster fit and plot)", initval=TRUE, pos=c(0, mid+checkH*4, w/4, checkH))
+    rp.checkbox(win, bin, labels="Bin input data\non 0.1 x 0.1 grid", initval=FALSE, pos=list(0, mid+checkH*2, w/4, checkH))
+    rp.checkbox(win, extrapolate.env, labels="Extrapolate envi-\nronmental range", initval=FALSE, pos=list(0, mid+checkH*3, w/4, checkH))
+    rp.checkbox(win, quick, labels="Quick computation\n(faster fit and plot)", initval=TRUE, pos=list(0, mid+checkH*4, w/4, checkH))
 
-    rp.checkbox(win, bootstrap.effects, title="Bootstrap effects", initval=FALSE, pos=c(w/4, mid, w/4, checkH), action=function(win) {
+    rp.checkbox(win, bootstrap.effects, labels="Bootstrap effects", initval=FALSE, pos=list(w/4, mid, w/4, checkH), action=function(win) {
       if (win$quick & win$bootstrap.effects) {
         rp.messagebox("Bootstrapping won't work with the quick computation.\nPlease disable one")
       }
       return(win)
     })
-    rp.checkbox(win, predict, title="Predict", initval=FALSE, pos=c(w/4, mid+checkH, w/4, checkH))
-    rp.checkbox(win, bootstrap.prediction, title="Bootstrap\nprediction", initval=FALSE, pos=c(w/4, mid+checkH*2, w/4, checkH), action=function(win) {
+    rp.checkbox(win, predict, labels="Predict", initval=FALSE, pos=list(w/4, mid+checkH, w/4, checkH))
+    rp.checkbox(win, bootstrap.prediction, labels="Bootstrap\nprediction", initval=FALSE, pos=list(w/4, mid+checkH*2, w/4, checkH), action=function(win) {
       if (win$quick & win$bootstrap.prediction) {
         rp.messagebox("Bootstrapping won't work with the quick computation.\nPlease disable one.")
       }
       return(win)
     })
-    rp.checkbox(win, overlay.stations, title="Overlay stations\non prediction plot", initval=FALSE, pos=c(w/4, mid+checkH*3, w/4, checkH))
-    rp.checkbox(win, save, title="Save output", initval=TRUE, pos=c(w/4, mid+checkH*4, w/4, checkH))
+    rp.checkbox(win, overlay.stations, labels="Overlay stations\non prediction plot", initval=FALSE, pos=list(w/4, mid+checkH*3, w/4, checkH))
+    rp.checkbox(win, save, labels="Save output", initval=TRUE, pos=list(w/4, mid+checkH*4, w/4, checkH))
 
     # location
-    rp.slider(win, lat.max,  from=-90, to=-30,  resolution=2,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
-    rp.slider(win, lon.min,  from=-180, to=180, resolution=5,   title="West"    , initval=-180, showvalue=TRUE, pos=c(w/2, mid+h*1, w/4, h))
-    rp.slider(win, lon.max,  from=-180, to=180, resolution=5,   title="East"    , initval=180 , showvalue=TRUE, pos=c(3*w/4, mid+h*1, w/4, h))
-    rp.slider(win, lat.min,  from=-90, to=-30,  resolution=2,   title="South"   , initval=-80 , showvalue=TRUE, pos=c(w/2+w/8, mid+h*2, w/4, h))
-    rp.slider(win, lon.step, from=0.1, to=4  ,  resolution=0.1, title="Step lon", initval=1 , showvalue=TRUE, pos=c(w/2, mid+h*3, w/4, h))
-    rp.slider(win, lat.step, from=0.1, to=4   , resolution=0.1, title="Step lat", initval=1 , showvalue=TRUE, pos=c(3*w/4, mid+h*3, w/4, h))
+    rp.slider(win, lat.max,  from=-90, to=-30,  resolution=2,   labels="North"   , initval=-30 , showvalue=TRUE, pos=list(w/2+w/8, mid    , w/4, h))
+    rp.slider(win, lon.min,  from=-180, to=180, resolution=5,   labels="West"    , initval=-180, showvalue=TRUE, pos=list(w/2, mid+h*1, w/4, h))
+    rp.slider(win, lon.max,  from=-180, to=180, resolution=5,   labels="East"    , initval=180 , showvalue=TRUE, pos=list(3*w/4, mid+h*1, w/4, h))
+    rp.slider(win, lat.min,  from=-90, to=-30,  resolution=2,   labels="South"   , initval=-80 , showvalue=TRUE, pos=list(w/2+w/8, mid+h*2, w/4, h))
+    rp.slider(win, lon.step, from=0.1, to=4  ,  resolution=0.1, labels="Step lon", initval=1 , showvalue=TRUE, pos=list(w/2, mid+h*3, w/4, h))
+    rp.slider(win, lat.step, from=0.1, to=4   , resolution=0.1, labels="Step lat", initval=1 , showvalue=TRUE, pos=list(3*w/4, mid+h*3, w/4, h))
 
 
     # action buttons
     rowY <- mid+h*4+spacer
-    rp.button(win, "Help", pos=c(0, rowY, w/4, h), action=function(win) {
+    rp.button(win, "Help", pos=list(0, rowY, w/4, h), action=function(win) {
       browseURL("https://github.com/jiho/atlasr/blob/master/documentation/HOWTO%20create%20a%20BRT%20model.md")
       return(win)
     })
-    rp.button(win, "Cancel", quitbutton=TRUE, pos=c(w/2, rowY, w/4, h) , action=function(win) {
+    rp.button(win, "Cancel", quitbutton=TRUE, pos=list(w/2, rowY, w/4, h) , action=function(win) {
       message("Aborting");
       return(win)
     })
-    rp.button(win, "Run", pos=c(3*w/4, rowY, w/4, h), action=function(win) {
+    rp.button(win, "Run", pos=list(3*w/4, rowY, w/4, h), action=function(win) {
       # print(win$file)
 
       if (nTaxa <= nBoxes) {
@@ -1438,7 +1438,7 @@ do.brt.variables <- function(variables, file) {
 
   # defaults
   nVars <- length(variables)
-  transformations <- rep("x", nVars)
+  transformations <- rep("'x'", nVars)
   names(transformations) <- variables
 
   # if the options file exists, read it to use the previously saved transformations
@@ -1457,6 +1457,8 @@ do.brt.variables <- function(variables, file) {
     # the selected variables may have changed, use what we can from the options file (opts$***) and use defaults for the rest (***)
     commonNames <- intersect(names(transformations), names(opts$transformations))
     transformations[match(commonNames, names(transformations))] <- opts$transformations[match(commonNames, names(opts$transformations))]
+    transformations <- paste("'", transformations, "'", sep="")
+    transformations <- gsub("''", "'", transformations)
   }
 
   # default dimensions (in px)
@@ -1468,23 +1470,23 @@ do.brt.variables <- function(variables, file) {
   windowH <- varH + exampleH + h
 
   # main window
-  win <- rp.control(title="Variables", size=c(w, windowH), aschar=F)
+  win <- rp.control(title="Variables", size=c(w, windowH))
 
   # transformations
   # TODO look into why with rp.textentry.immediate, the results are not all carried to the stage of the close button
-  rp.textentry(win, var=transformsBox, labels=variables, title="Transformations", initval=transformations, pos=c(0,0,w,varH), action=function(win) {
+  rp.textentry(win, var=transformsBox, labels=variables, title="Transformations", initval=transformations, pos=list(0,0,w,varH), action=function(win) {
     return(win)
   })
 
   # provide example transformations
   example.transforms.labels=c("Remove small values", "Remove large values", "Remove  values based on quantiles")
   example.transforms.functions=list('"x[x<0.01]=NA; x"', '"x[x>300]=NA; x"', '"q=quantile(x,c(0.1,0.9)); x[x<q[1]|x>q[2]]=NA; x"')
-  rp.textentry(win, var=exampletransformBox, labels=example.transforms.labels, title="Example transformations", initval=example.transforms.functions, pos=c(0,varH,w,exampleH), action=function(win) {
+  rp.textentry(win, var=exampletransformBox, labels=example.transforms.labels, title="Example transformations", initval=example.transforms.functions, pos=list(0,varH,w,exampleH), action=function(win) {
     return(win)
   })
 
   # close button
-  rp.button(win, title="Close", quitbutton=TRUE, pos=c(3/4*w, windowH-h, w/4, h), action=function(win) {
+  rp.button(win, title="Close", quitbutton=TRUE, pos=list(3/4*w, windowH-h, w/4, h), action=function(win) {
     # print("Transformations")
     # print(win$transformsBox)
 

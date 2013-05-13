@@ -8,166 +8,87 @@
 #-----------------------------------------------------------------------------
 
 
-rp.listbox.mult <- function (panel, var, vals, labels = vals, rows = length(vals), cols=NULL, initval = vals[1], parent = window, pos = NULL, title = deparse(substitute(var)), action = I, ...) {
-  #
-  # List box allowing multiple selection
-  #
+w.listbox.mult <- function(parent, title = NA, labels, rows = length(labels), initval = labels[1], action=I, pos=NULL, foreground=NULL, background="white", font=NULL, sleep = 0.01) {
+  if (is.na(title))
+     widget <- rpanel:::w.createwidget(parent, pos, background)
+  else
+     widget <- rpanel:::w.createwidget(parent, pos, background, title)
+  widget$.type <- "listbox"
 
-  suppressPackageStartupMessages(require("rpanel"))
+  if (rows < length(labels)) {
+     widget$.widget <- rpanel:::handshake(tklistbox, parent$.handle, height=rows, selectmode = "extended",
+                                 yscrollcommand = function(...) rpanel:::handshake(tkset, scr, ...))
+     scr <- rpanel:::handshake(tkscrollbar, parent$.handle, repeatinterval = 5,
+                      command=function(...) rpanel:::handshake(tkyview, widget$.widget,...))
+     rpanel:::w.appearancewidget(widget, font, foreground, background, scr)
+  }
+  else {
+     widget$.widget <- rpanel:::handshake(tklistbox, parent$.handle, height=rows, selectmode = "extended")
+     rpanel:::w.appearancewidget(widget, font, foreground, background)
+  }
 
-  varname <- deparse(substitute(var))
-  ischar <- is.character(panel)
-  if (ischar) {
-    panelname <- panel
-    panel <- rpanel:::.geval(panel)
-  } else {
-    panelname <- panel$intname
-    panelreturn <- deparse(substitute(panel))
-    rpanel:::.gassign(panel, panelname)
+  selection <- 1
+
+#  tkinsert(widget$.widget, "end", "test")
+
+  for (i in (1:length(labels))) {
+    Sys.sleep(sleep)
+    rpanel:::handshake(tkinsert, widget$.widget, "end", as.character(labels[[i]]))
+    if (labels[[i]] == initval) selection <- i - 1
   }
-  pos = rpanel:::.newpos(pos, ...)
-  inittclvalue <- rpanel:::.rp.initialise(panelname, varname, initval = initval)
-  if (rpanel:::.checklayout(pos)) {
-    # if (is.null(pos$grid)) {
-      gd = panel$window
-    # } else {
-    #   gd = rpanel:::.geval(panelname, "$", pos$grid)
-    # }
-    newlistbox <- tkwidget(gd, "labelframe", text = title)
-    # if ((is.null(pos$row)) && (is.null(pos$column))) {
-      rpanel:::.rp.layout(newlistbox, pos)
-    # } else {
-    #   if (is.null(pos$sticky)) {
-    #     pos$sticky <- "w"
-    #   }
-    #   if (is.null(pos$rowspan)) {
-    #     pos$rowspan = 1
-    #   }
-    #   if (is.null(pos$columnspan)) {
-    #     pos$columnspan = 1
-    #   }
-    #   tkgrid(newlistbox, row = pos$row, column = pos$column,
-    #     sticky = pos$sticky, `in` = gd, rowspan = pos$rowspan,
-    #     columnspan = pos$columnspan
-    #   )
-    # }
-    if (rows != length(vals)) {
-      scr <- tkscrollbar(newlistbox, repeatinterval = 5, command = function(...) tkyview(listBox, ...))
-      # if ((is.null(pos$width)) && (is.null(pos$height))) {
-      if (is.null(cols)) {
-        listBox <- tklistbox(newlistbox, height = rows, selectmode = "extended", yscrollcommand = function(...) tkset(scr, ...), background = "white")
-      } else {
-        listBox <- tklistbox(newlistbox, height = rows, width=cols, selectmode = "extended", yscrollcommand = function(...) tkset(scr, ...), background = "white")
-      }
-      # } else {
-      #   listBox <- tklistbox(newlistbox, height = rows, selectmode = "extended", yscrollcommand = function(...) tkset(scr, ...), background = "white", width = pos$width, height = pos$height)
-      # }
-    } else {
-      # if ((is.null(pos$width)) && (is.null(pos$height))) {
-      if (is.null(cols)) {
-        listBox <- tklistbox(newlistbox, height = rows, selectmode = "extended", background = "white")
-      } else {
-        listBox <- tklistbox(newlistbox, height = rows, width=cols, selectmode = "extended", background = "white")
-      }
-      # } else {
-      #   listBox <- tklistbox(newlistbox, height = rows, selectmode = "extended", background = "white", width = pos$width, height = pos$height)
-      # }
-    }
-    if (rows != length(vals)) {
-      tkgrid(listBox, scr)
-      tkgrid.configure(scr, rowspan = length(vals), sticky = "nsw")
-    } else {
-      tkgrid(listBox)
-    }
-    selected <- 0
-    for (i in (1:length(vals))) {
-      tkinsert(listBox, "end", labels[i])
-      if (inittclvalue == vals[i])
-        selected <- i
-    }
-    tkselection.set(listBox, selected - 1)
-    tkbind(listBox, "<ButtonRelease-1>", function(...) {
-      rpanel:::.geval(panelname, "$", varname, " <- c('", paste(vals[as.numeric(tkcurselection(listBox)) + 1], collapse="','"),"')")
-      panel <- action(rpanel:::.geval(panelname))
-      if (!is.null(panel$intname)) {
-        rpanel:::.gassign(panel, panelname)
-      } else {
-        stop("The panel was not passed back from the action function.")
-      }
-    })
-  }
-  if (ischar) {
-    invisible(panelname)
-  } else {
-    assign(panelreturn, rpanel:::.geval(panelname), envir = parent.frame())
-  }
+
+  rpanel:::handshake(tkselection.set, widget$.widget, selection)
+
+  f <- function(...) action(labels[as.numeric(rpanel:::handshake(tkcurselection, widget$.widget)) + 1])
+
+  rpanel:::handshake(tkbind, widget$.widget, "<ButtonRelease-1>", f)
+
+  invisible(widget)
 }
 
 
-rp.text <- function (panel, txt="", parent = window, pos = NULL, ...) {
-  #
-  # Simple text-displaying panel
-  #
-  # BR April 2012
+rp.listbox.mult <- function(panel, variable, vals, labels = vals, rows = length(labels), initval = vals[1], pos = NULL, title = deparse(substitute(variable)), action = I,  foreground = NULL, background = NULL, font = NULL, parentname = deparse(substitute(panel)), sleep = 0.01, name = paste("listbox", rpanel:::.nc(), sep = ""), ...) {
 
-  suppressPackageStartupMessages(require("rpanel"))
+  if (!exists(panel$panelname, rpanel:::.rpenv, inherits = FALSE)) { # if the panelname is not set then
+     panelname <- deparse(substitute(panel)) # the panel name should be the panel deparse subst'ed
+     # 13/03/2012 these lines are not commented out in previous version
+     #    panel <- rp.control.get(panelname, panel) # now get the panel
+     #    panel$panelname = panelname # now set the panelname properly
+     #    assign(panelname, panel, envir=.rpenv) # now send back the panel
+  }
+  else
+    panelname <- panel$panelname
+    # 13/03/2012 these lines are not commented out in previous version
+    #    panel <- rp.control.get(panelname, panel) # now get the panel
 
-  ischar <- is.character(panel)
-  if (ischar) {
-    panelname <- panel
-    panel <- rpanel:::.geval(panel)
-  } else {
-    panelname <- panel$intname
-    panelreturn <- deparse(substitute(panel))
-    rpanel:::.gassign(panel, panelname)
+  varname <- deparse(substitute(variable))
+  if (!rpanel:::rp.isnull(panelname, varname))
+     variable = rpanel:::rp.var.get(panelname, varname)
+  else
+     variable = initval; rpanel:::rp.var.put(panelname, varname, variable)
+
+  if (is.null(pos) && length(list(...)) > 0) pos <- list(...)
+
+  f <- function(val) {
+     rpanel:::rp.var.put(panelname, varname, val)
+     panel <- rpanel:::rp.control.get(panelname)
+     panel <- action(panel)
+     rpanel:::rp.control.put(panelname, panel)
   }
-  pos = rpanel:::.newpos(pos, ...)
-  f <- function(...) {
-    panel <- action(rpanel:::.geval(panelname))
-    if (!is.null(panel$intname)) {
-      rpanel:::.gassign(panel, panelname)
-    } else {
-      stop("The panel was not passed back from the action function.")
-    }
-  }
-  if (rpanel:::.checklayout(pos)) {
-    if ((!is.list(pos)) || (is.null(pos$row))) {
-      newbutton <- tktext(panel$window, borderwidth=0, fg="black", bg="grey85", wrap="char")
-      tkinsert(newbutton,"end",txt)
-      rpanel:::.rp.layout(newbutton, pos)
-    } else {
-      if (is.null(pos$grid)) {
-        gd = panel$window
-      } else {
-        gd = rpanel:::.geval(panelname, "$", pos$grid)
-      }
-      if ((is.null(pos$width)) && (is.null(pos$height))) {
-        newbutton <- tktext(panel$window)
-      } else {
-        newbutton <- tktext(panel$window, width = pos$width, height = pos$height)
-      }
-      tkinsert(newbutton,"end",txt)
-      if (is.null(pos$sticky)) {
-        pos$sticky <- "w"
-      }
-      if (is.null(pos$rowspan)) {
-        pos$rowspan = 1
-      }
-      if (is.null(pos$columnspan)) {
-        pos$columnspan = 1
-      }
-      tkgrid(newbutton, row = pos$row, column = pos$column,
-         sticky = pos$sticky, `in` = gd, rowspan = pos$rowspan,
-         columnspan = pos$columnspan
-      )
-    }
-  }
-  if (ischar) {
-    invisible(panelname)
-  } else {
-    assign(panelreturn, rpanel:::.geval(panelname), envir = parent.frame())
-  }
+
+  if (rpanel:::rp.widget.exists(panelname, parentname))
+     parent <- rpanel:::rp.widget.get(panelname, parentname)
+  else
+     parent <- panel
+  if (is.list(pos) && !is.null(pos$grid)) parent <- rp.widget.get(panelname, pos$grid)
+
+  widget <- w.listbox.mult(parent, title, labels, rows, initval = variable, action=f, pos,
+                      foreground, background, font, sleep)
+  rpanel:::rp.widget.put(panelname, name, widget)
+  if (rpanel:::.rpenv$savepanel) rp.control.put(panelname, panel) # put the panel back into the environment
+  invisible(panelname)
 }
+
 
 rp.textentry.immediate <- function (panel, var, action = I, labels = NA, names = labels, title = NA, initval = NA, parent = window, pos = NULL, ...) {
   #

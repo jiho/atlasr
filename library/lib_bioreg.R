@@ -420,21 +420,21 @@ do.bioreg <- function() {
   spacer <- 10      # height of spacer
 
   # main window
-  win <- rp.control(title="Run regionalisation analysis", size=c(w, windowH), aschar=F)
+  win <- rp.control(title="Run regionalisation analysis", size=c(w, windowH))
 
   # NB: positions are x, y, width, eight
   #     x, y are the coordinates of the top-left hand corner
 
   # destination directory for output files and then proceed to second GUI panel
   win$output.dir <- NULL
-  rp.button(win, title="Choose output\ndirectory", pos=c(0, 0, w/4, h), action=function(win) {
+  rp.button(win, title="Choose output\ndirectory", pos=list(0, 0, w/4, h), action=function(win) {
 
     # choose the data file
     win$output.dir <- tk_choose.dir(getwd(), "Choose a suitable folder for the output files")
     # tkdestroy(win$window)
 
     # write the filename, for information
-    rp.text(win, txt=win$output.dir, initval=win$output.dir, pos=c(w/4, 0, 3*w/4, h))
+    rp.text(win, text=win$output.dir, initval=win$output.dir, pos=list(w/4, 0, 3*w/4, h))
 
     return(win)
   })
@@ -445,9 +445,9 @@ do.bioreg <- function() {
   # dimensions
   listWcols <- 72   # compatible with 600px window
   listH <- 380
-  listHrows <- 24   # fits in 380px height
+  listHrows <- 23   # fits in 380px height
 
-  rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables to use in the regionalisation", rows=listHrows, cols=listWcols, initval="", pos=c(0, h, w, listH), aschar=F, action=function(win) {
+  rp.listbox.mult(win, var=variables, vals=allVariables, title="Variables to use in the regionalisation", rows=listHrows, cols=listWcols, initval="", pos=list(0, h, w, listH), aschar=F, action=function(win) {
     return(win)
   })
 
@@ -458,7 +458,7 @@ do.bioreg <- function() {
   optionsFile <- tempfile()
 
   # variables transformation
-  win <- rp.button(win, "Variables transformation", pos=c(0, mid, w/2, h) , action=function(win) {
+  rp.button(win, "Variables transformation", pos=list(0, mid, w/2, h) , action=function(win) {
     if (length(win$variables) < 2) {
       rp.messagebox("At least two variables must be selected", title="Warning")
     } else {
@@ -470,30 +470,30 @@ do.bioreg <- function() {
 
   # quality of run
   # better quality is slower, which can be painful at the exploratory stage
-  rp.radiogroup(win, quick, values=c('Exploratory run (faster)','Final run (better quality)'), title="Analysis type", pos=c(0, mid+h, w/2, h*2))
+  rp.radiogroup(panel=win, variable=quick, vals=c('Exploratory run (faster)','Final run (better quality)'), title="Analysis type", pos=list(0, mid+h, w/2, h*2))
 
   # number of clusters
-  rp.slider(win, n.groups,  from=2, to=40,  resolution=1,   title="Number of clusters", initval=12 , showvalue=TRUE, pos=c(0, mid+3*h, w/2, h))
+  rp.slider(win, n.groups,  from=2, to=40,  resolution=1,   labels="Number of clusters", initval=12 , showvalue=TRUE, pos=list(0, mid+3*h, w/2, h))
 
   # location
-  rp.slider(win, lat.max,  from=-90, to=-30,  resolution=2,   title="North"   , initval=-30 , showvalue=TRUE, pos=c(w/2+w/8, mid    , w/4, h))
-  rp.slider(win, lon.min,  from=-180, to=180, resolution=5,   title="West"    , initval=-180,  showvalue=TRUE, pos=c(w/2, mid+h*1, w/4, h))
-  rp.slider(win, lon.max,  from=-180, to=180, resolution=5,   title="East"    , initval=180 , showvalue=TRUE, pos=c(3*w/4, mid+h*1, w/4, h))
-  rp.slider(win, lat.min,  from=-90, to=-30,  resolution=2,   title="South"   , initval=-80 , showvalue=TRUE, pos=c(w/2+w/8, mid+h*2, w/4, h))
-  rp.slider(win, lon.step, from=0.1, to=4,    resolution=0.1, title="Step lon", initval=1 ,     showvalue=TRUE, pos=c(w/2, mid+h*3, w/4, h))
-  rp.slider(win, lat.step, from=0.1, to=4,    resolution=0.1, title="Step lat", initval=1 ,     showvalue=TRUE, pos=c(3*w/4, mid+h*3, w/4, h))
+  rp.slider(win, lat.max,  from=-90, to=-30,  resolution=2,   labels="North"   , initval=-30 , showvalue=TRUE, pos=list(w/2+w/8, mid    , w/4, h))
+  rp.slider(win, lon.min,  from=-180, to=180, resolution=5,   labels="West"    , initval=-180,  showvalue=TRUE, pos=list(w/2, mid+h*1, w/4, h))
+  rp.slider(win, lon.max,  from=-180, to=180, resolution=5,   labels="East"    , initval=180 , showvalue=TRUE, pos=list(3*w/4, mid+h*1, w/4, h))
+  rp.slider(win, lat.min,  from=-90, to=-30,  resolution=2,   labels="South"   , initval=-80 , showvalue=TRUE, pos=list(w/2+w/8, mid+h*2, w/4, h))
+  rp.slider(win, lon.step, from=0.1, to=4,    resolution=0.1, labels="Step lon", initval=1 ,     showvalue=TRUE, pos=list(w/2, mid+h*3, w/4, h))
+  rp.slider(win, lat.step, from=0.1, to=4,    resolution=0.1, labels="Step lat", initval=1 ,     showvalue=TRUE, pos=list(3*w/4, mid+h*3, w/4, h))
 
   # action buttons
   rowY <- mid+h*4+spacer
-  rp.button(win, "Help", pos=c(0, rowY, w/4, h), action=function(win) {
+  rp.button(win, "Help", pos=list(0, rowY, w/4, h), action=function(win) {
     browseURL("https://github.com/jiho/atlasr/blob/master/documentation/HOWTO%20run%20a%20regionalisation%20analysis.md")
     return(win)
   })
-  rp.button(win, "Cancel", quitbutton=TRUE, pos=c(w/2, rowY, w/4, h) , action=function(win) {
+  rp.button(win, "Cancel", quitbutton=TRUE, pos=list(w/2, rowY, w/4, h) , action=function(win) {
     message("Aborting");
     return(win)
   })
-  rp.button(win, "Run", pos=c(3*w/4, rowY, w/4, h), action=function(win) {
+  rp.button(win, "Run", pos=list(3*w/4, rowY, w/4, h), action=function(win) {
 
     # variables
     # print(win$variables)
@@ -577,7 +577,7 @@ do.bioreg.variables <- function(variables, file) {
   nVars <- length(variables)
   weights <- rep(1,nVars)
   names(weights) <- variables
-  transformations <- rep("x",nVars)
+  transformations <- rep("'x'",nVars)
   names(transformations) <- variables
 
   # if the options file exists, read it to use the previously saved weights and transformations
@@ -596,6 +596,8 @@ do.bioreg.variables <- function(variables, file) {
     # the selected variables may have changed, use what we can from the options file (opts$***) and use defaults for the rest (***)
     commonNames <- intersect(names(transformations), names(opts$transformations))
     transformations[match(commonNames, names(transformations))] <- opts$transformations[match(commonNames, names(opts$transformations))]
+    transformations <- paste("'", transformations, "'", sep="")
+    transformations <- gsub("''", "'", transformations)
     weights[match(commonNames, names(weights))] <- opts$weights[match(commonNames, names(opts$weights))]
   }
 
@@ -608,28 +610,29 @@ do.bioreg.variables <- function(variables, file) {
   windowH <- varH + exampleH + h
 
   # main window
-  win <- rp.control(title="Variables", size=c(w, windowH), aschar=F)
+  win <- rp.control(title="Variables", size=c(w, windowH))
 
   # transformations
   # TODO look into why with rp.textentry.immediate, the results are not all carried to the stage of the close button
-  rp.textentry(win, var=transformsBox, labels=variables, title="Transformations", initval=transformations, pos=c(0,0,w/2,varH), action=function(win) {
+  # browser()
+  rp.textentry(win, variable=transformsBox, labels=variables, title="Transformations", initval=transformations, pos=list(0,0,w/2,varH), action=function(win) {
     return(win)
   })
 
   # provide example transformations
   example.transforms.labels=c("log10(x+1)","Square root","log10(-1*negative values only)", "Remove values over 300")
-  example.transforms.functions=list('"log10(x+1)"', '"sqrt(x)"', '"x[x>=0]=NA; log10(-x)"', '"x[x>300]=NA; x"')
-  rp.textentry(win, var=exampletransformBox, labels=example.transforms.labels, title="Example transformations", initval=example.transforms.functions, pos=c(0,varH,w/2,exampleH), action=function(win) {
+  example.transforms.functions=list("'log10(x+1)'", "'sqrt(x)'", "'x[x>=0]=NA; log10(-x)'", "'x[x>300]=NA; x'")
+  rp.textentry(win, var=exampletransformBox, labels=example.transforms.labels, title="Example transformations", initval=example.transforms.functions, pos=list(0,varH,w/2,exampleH), action=function(win) {
     return(win)
   })
 
   # selection for weights associated with each variable
-  rp.textentry(win, var=weightsBox, labels=variables, title="Weighting", initval=weights,pos=c(w/2, 0, w/2, varH), action=function(win) {
+  rp.textentry(win, var=weightsBox, labels=variables, title="Weighting", initval=weights,pos=list(w/2, 0, w/2, varH), action=function(win) {
     return(win)
   })
 
   # close button
-  rp.button(win, title="Close", quitbutton=TRUE, pos=c(3/4*w, windowH-h, w/4, h), action=function(win) {
+  rp.button(win, title="Close", quitbutton=TRUE, pos=list(3/4*w, windowH-h, w/4, h), action=function(win) {
     # print("Transformations")
     # print(win$transformsBox)
     # print("Weights")
