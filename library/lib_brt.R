@@ -1213,8 +1213,8 @@ do.brt <- function() {
   rp.button(win, title="Choose file", pos=list(0, 0, w/4, h), action=function(win) {
 
     # choose the data file
-    # file <- file.choose()
-    file <- "../data/euphau/euphau_cleaned.csv"
+    file <- file.choose()
+    # file <- "../data/euphau/euphau_cleaned.csv"
     win$file <- clean.path(file)
 
 
