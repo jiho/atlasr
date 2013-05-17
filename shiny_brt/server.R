@@ -63,8 +63,8 @@ shinyServer(function(input, output) {
 
     # interpolate environmental data at data points
     dmess("read and mask env data")
-    env <- read.env.data(input$vars, verbose=FALSE)
-    env <- mask.env.data(env)
+    env <- read.env.data(input$vars, path="../../env_data", verbose=FALSE)
+    env <- mask.env.data(env, path="../../env_data")
 
     dmess("associate env data with input data")
     d <- associate.env.data(d, env)
@@ -117,7 +117,7 @@ shinyServer(function(input, output) {
   # list of variables depending on options chosen above in the UI
   output$variablesList <- renderUI({
     dmess("render variables list")
-    vars <- list.env.data()
+    vars <- list.env.data(path="../../env_data")
 
     # selected interpolated or non-interpolated variables
     interpolatedVersion <- vars[str_detect(vars, "interpolated")]
