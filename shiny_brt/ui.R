@@ -115,17 +115,19 @@ shinyUI(pageWithSidebar(
 
   # Render the result
   mainPanel(
-    tabsetPanel(
-      tabPanel("Summary", verbatimTextOutput("modelSummary")),
-      tabPanel("Effects", plotOutput("modelPlot")),
-      tabPanel("Prediction", plotOutput("predPlot"))
-    )
-    # h5("Model summary"),
-    # verbatimTextOutput("modelSummary"),
-    # h5("Model effects"),
-    # plotOutput("modelPlot"),
-    # h5("Model prediction"),
-    # plotOutput("predPlot")
+    # tabsetPanel(
+    #   tabPanel("Summary", verbatimTextOutput("modelSummary")),
+    #   tabPanel("Effects", plotOutput("modelPlot")),
+    #   tabPanel("Prediction", plotOutput("predPlot"))
+    # )
+    h5("Model summary"),
+    verbatimTextOutput("modelSummary"),
+
+    h5("Model effects"),
+    plotOutput("modelPlot"),
+
+    h5("Model prediction"),
+    plotOutput("predPlot", height="700px")
   )
 
 ))
