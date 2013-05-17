@@ -1297,9 +1297,9 @@ do.brt <- function() {
     rp.radiogroup(win, family, vals=c("bernoulli", "gaussian", "poisson"), title="Distribution", pos=list(0, mid, w/4, checkH*2))
 
     # options checkboxes
-    rp.checkbox(win, bin, labels="Bin input data\non 0.1 x 0.1 grid", initval=FALSE, pos=list(0, mid+checkH*2, w/4, checkH))
-    rp.checkbox(win, extrapolate.env, labels="Extrapolate envi-\nronmental range", initval=FALSE, pos=list(0, mid+checkH*3, w/4, checkH))
-    rp.checkbox(win, quick, labels="Quick computation\n(faster fit and plot)", initval=TRUE, pos=list(0, mid+checkH*4, w/4, checkH))
+    rp.checkbox(win, bin, labels="Bin input data\non 0.1 x 0.1 grid", initval=FALSE, pos=list(0, mid+checkH*2, w/4, checkH), doaction=TRUE)
+    rp.checkbox(win, extrapolate.env, labels="Extrapolate envi-\nronmental range", initval=FALSE, pos=list(0, mid+checkH*3, w/4, checkH), doaction=TRUE)
+    rp.checkbox(win, quick, labels="Quick computation\n(faster fit and plot)", initval=TRUE, pos=list(0, mid+checkH*4, w/4, checkH), doaction=TRUE)
 
     rp.checkbox(win, bootstrap.effects, labels="Bootstrap effects", initval=FALSE, pos=list(w/4, mid, w/4, checkH), action=function(win) {
       if (win$quick & win$bootstrap.effects) {
@@ -1337,7 +1337,26 @@ do.brt <- function() {
       return(win)
     })
     rp.button(win, "Run", pos=list(3*w/4, rowY, w/4, h), action=function(win) {
+
+      # Debug
+      str(win, 1)
       # print(win$file)
+      # print(win$variables)
+      # print(win$family)
+      # print(win$bootstrap.effects)
+      # print(win$predict)
+      # print(win$bootstrap.prediction)
+      # print(win$lat.max)
+      # print(win$lat.min)
+      # print(win$lat.step)
+      # print(win$lon.max)
+      # print(win$lon.min)
+      # print(win$lon.step)
+      # print(win$quick)
+      # print(win$extrapolate.env)
+      # print(win$overlay.stations)
+      # print(win$bin)
+      # print(win$save)
 
       if (nTaxa <= nBoxes) {
         taxa <- names(win$taxa)[win$taxa]
@@ -1345,10 +1364,8 @@ do.brt <- function() {
         taxa <- names(win$taxa1)[win$taxa1]
         taxa <- c(taxa, names(win$taxa2)[win$taxa2])
       }
-      # print(taxa)
 
       variables <- win$variables
-      # print(variables)
 
       # variables transformations
       if (file.exists(optionsFile)) {
@@ -1358,37 +1375,21 @@ do.brt <- function() {
       } else {
         transformations <- NULL
       }
-      # print(transformations)
 
-      # print(win$family)
-      # print(win$bootstrap.effects)
+      print(taxa)
+      print(transformations)
+
       if(win$bootstrap.effects) {
         n.boot.effects <- 200
       } else {
         n.boot.effects <- 0
       }
 
-      # print(win$predict)
-      # print(win$bootstrap.prediction)
       if(win$bootstrap.prediction) {
         n.boot.pred <- 200
       } else {
         n.boot.pred <- 0
       }
-
-      # print(win$lat.max)
-      # print(win$lat.min)
-      # print(win$lat.step)
-      # print(win$lon.max)
-      # print(win$lon.min)
-      # print(win$lon.step)
-
-      # print(win$quick)
-      # print(win$extrapolate.env)
-      # print(win$overlay.stations)
-      # print(win$bin)
-      # print(win$save)
-
 
       # build the function call
       message("Command:")
