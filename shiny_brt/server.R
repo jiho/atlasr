@@ -12,6 +12,7 @@ library("gbm")
 library("plyr")
 library("stringr")
 library("ggplot2")
+library("Cairo")
 
 source("../library/lib_data.R")
 source("../library/lib_plot.R")
@@ -216,17 +217,12 @@ shinyServer(function(input, output) {
   output$predPlot <- renderPlot({
     if (input$run > 0) {
       isolate({
-
         m <- fit.model()
-
-        source("library/lib_plot.R")
-        if (input$quick) {
-          geom="raster"
+        if (is.null(m$prediction)) {
+          stop("No prediction in this model")
         } else {
-          geom="tile"
+          print(polar.ggplot(m$prediction, aes(fill=proba), path="../../env_data/", scale=0.7) + scale_fill_gradientn(colours=continuous.colourmap(), limits=c(0,1)))
         }
-
-        print(polar.ggplot(m$prediction, aes(fill=proba), geom=geom) + scale_fill_gradientn(colours=continuous.colourmap(), limits=c(0,1)))
       })
     }
   })
