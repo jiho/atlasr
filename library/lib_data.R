@@ -363,7 +363,7 @@ interp.nn <- function(x, coord) {
 ## Observation data
 #-----------------------------------------------------------------------------
 
-read.data <- function(file, ...) {
+read.data <- function(file, filetype="guess", ...) {
   #
   # Detect the format of a data file and read it
   #
@@ -375,21 +375,25 @@ read.data <- function(file, ...) {
     stop("Read only one file at a time")
   }
 
+  filetype <- match.arg(filetype, c("guess", "xls", "csv", "txt"))
+
   file <- clean.path(file, ...)
 
   fileName <- basename(file)
   message("-> Read input data in ", file)
 
-  # get file extension
-  extension <- strsplit(fileName, split=".", fixed=T)[[1]]
-  extension <- extension[length(extension)]
+  if (filetype == "guess") {
+    # get file extension
+    extension <- strsplit(fileName, split=".", fixed=T)[[1]]
+    filetype <- extension[length(extension)]
+  }
 
-  if (extension == "xls") {
+  if (filetype == "xls") {
     suppressPackageStartupMessages(require("gdata"))
     d <- read.xls(xls=file, ...)
-  } else if (extension == "csv") {
+  } else if (filetype == "csv") {
     d <- read.csv(file=file, ...)
-  } else if (extension == "txt") {
+  } else if (filetype == "txt") {
     d <- read.table(file=file, header=TRUE, ...)
   } else {
     stop("Unknown file type")
