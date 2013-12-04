@@ -23,7 +23,7 @@ y <- d$Angaus
 x <- d[,-which(names(d)=="Angaus")]
 
 
-brt.fit <- function(x, y, n.trees=NULL, min.n.trees=3000, n.boot=0, verbose=FALSE, ...) {
+brt.fit <- function(x, y, n.trees=NULL, min.n.trees=3000, n.boot=0, verbose=FALSE, shrinkage=0.01, ...) {
    #
    # Fit a Boosted Regression Tree model with optimization of number of trees and bootstraps
    #
@@ -67,7 +67,7 @@ brt.fit <- function(x, y, n.trees=NULL, min.n.trees=3000, n.boot=0, verbose=FALS
       if ( verbose ) message("Optimising shrinkage and number of trees")
 
       # start with some defaults
-      shrinkage <- 0.02    # NB: will be reduced before the first model
+      shrinkage <- shrinkage * 1/0.75   # NB: will be reduced before the first model
       best.iter <- 0
       step.n.trees <- 100
 
@@ -105,16 +105,90 @@ brt.fit <- function(x, y, n.trees=NULL, min.n.trees=3000, n.boot=0, verbose=FALS
    # fit the final model with cross validation and get a better, final, estimate of the actual optimal number of trees
    if ( verbose ) message("Cross-validating final model (", cv.fold, " folds)")
    m <- gbm(response ~ . , data=d, shrinkage=shrinkage, n.trees=n.trees, cv.fold=cv.fold, ...)
-   best.iter <- gbm.perf(m, method="cv", plot.it=verbose)
-   if (verbose) message("  shrinkage : ", round(shrinkage, 4), " | trees : ", best.iter, " / ", m$n.trees)
+   m$best.iter <- gbm.perf(m, method="cv", plot.it=verbose)
+   if (verbose) message("  shrinkage : ", round(shrinkage, 4), " | trees : ", m$best.iter, " / ", m$n.trees)
 
    return(m)
 }
 
 m <- brt.fit(x, y, distribution="bernoulli", interaction.depth=4, verbose=TRUE)
+AUC <- function(y, p) {
+   #
+   # Code derived from the .roc function by Elith
+   # This is the non-parametric calculation for area under the ROC curve, using the fact that a MannWhitney U statistic is closely related to the area
+   #
+   # y   observed data (pres=1, abs=0)
+   # p   predicted probabilities
+   #
 
+   if ( length(y) != length(p) ) {
+      stop("y and p must be the same length")
+   }
+   n.0 <- sum(y==0)
+   n.1 <- sum(y==1)
+   pOrder <- c(p[y==0], p[y==1])
+   pRank <- rank(pOrder)
 
+   U <- ( n.0 * n.1  +  n.0 * (n.0 + 1) / 2  -  sum(pRank[1:n.0]) ) / ( n.0 * n.1 )
 
+   return(U)
+}
+
+ilogit <- function(x) {
+   # Inverse logit function
+   1 / (1 + exp(-x))
+}
+
+summary.gbm <- function(m, n.trees=m$best.iter, ...) {
+
+   if (m$distribution$name != "bernoulli") {
+      stop("Summary statistics only implemented for Bernoulli distribution")
+   }
+
+   # percentage of deviance explained
+   y <- m$data$y
+   w <- m$data$w
+   # null hypothesis proba and associated null deviance
+   p <- sum(y * w) / sum(w)
+   logLikelihood <- sum( (y * log(p) + (1-y) * log(1 - p)) * w )
+   nullDeviance <- -2 * logLikelihood
+   nullDeviance <- nullDeviance / length(y)
+   # explained deviance (remaining deviance is m$train.error)
+   explainedDevianceTrain <- 1 - m$train.error[n.trees] / nullDeviance
+   explainedDevianceCV    <- 1 - m$cv.error[n.trees]    / nullDeviance
+
+   # AUC
+   AUC <- AUC(y, ilogit(m$cv.fitted))
+
+   # performance
+   if (AUC < 0.7) {
+      performance <- "poor"
+   } else if ( AUC < 0.8) {
+      performance <- "OK"
+   } else if ( AUC < 0.9) {
+      performance <- "good"
+   } else if ( AUC > 0.9) {
+      performance <- "great !"
+   }
+
+   # relative influence of variables
+   rel.inf <- relative.influence(m, m$best.iter)
+   rel.inf <- 100 * rel.inf/sum(rel.inf)
+   rel.inf <- sort(rel.inf, decreasing=TRUE)
+
+   cat("A gradient boosted model with bernoulli loss function.\n")
+   cat(m$n.trees,"iterations were performed\n")
+   cat("The best cross-validated iteration was",m$best.iter,"\n")
+   cat("Predictors contributions:\n")
+   print(rel.inf)
+   cat("Explained deviance (on training set) =", round(explainedDevianceTrain * 100, 1), "%\n")
+   cat("Cross-validated explained deviance =", round(explainedDevianceCV * 100, 1), "%, AUC =", round(AUC, 2), "\n")
+   cat("Predictive performance of the model is", performance, "\n")
+
+   return(invisible(rel.inf))
+}
+
+summary(m)
 
 
 
