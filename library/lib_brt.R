@@ -982,6 +982,7 @@ plot.effects.brt <- function(x, n=200, ...) {
 
   suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
   suppressPackageStartupMessages(require("reshape2", quietly=TRUE))
   suppressPackageStartupMessages(require("gridExtra", quietly=TRUE))
   suppressPackageStartupMessages(require("gbm", quietly=TRUE))
