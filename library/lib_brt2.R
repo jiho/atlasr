@@ -194,7 +194,7 @@ ilogit <- function(x) {
    1 / (1 + exp(-x))
 }
 
-summary.gbm <- function(m, n.trees=m$best.iter, ...) {
+summary.brt <- function(m, n.trees=m$best.iter, ...) {
 
    if (m$distribution$name != "bernoulli") {
       stop("Summary statistics only implemented for Bernoulli distribution")
@@ -217,13 +217,13 @@ summary.gbm <- function(m, n.trees=m$best.iter, ...) {
 
    # performance
    if (AUC < 0.7) {
-      performance <- "poor"
+      performance <- "poor :-("
    } else if ( AUC < 0.8) {
-      performance <- "OK"
+      performance <- "acceptable :-/"
    } else if ( AUC < 0.9) {
-      performance <- "good"
+      performance <- "good :-)"
    } else if ( AUC > 0.9) {
-      performance <- "great !"
+      performance <- "great :-D !"
    }
 
    # relative influence of variables
@@ -234,7 +234,7 @@ summary.gbm <- function(m, n.trees=m$best.iter, ...) {
    cat("A gradient boosted model with bernoulli loss function.\n")
    cat(m$n.trees,"iterations were performed\n")
    cat("The best cross-validated iteration was",m$best.iter,"\n")
-   cat("Predictors contributions:\n")
+   cat("Predictors contributions in % of total influence :\n")
    print(rel.inf)
    cat("Explained deviance (on training set) =", round(explainedDevianceTrain * 100, 1), "%\n")
    cat("Cross-validated explained deviance =", round(explainedDevianceCV * 100, 1), "%, AUC =", round(AUC, 2), "\n")
