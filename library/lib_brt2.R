@@ -12,18 +12,8 @@
 #
 #-----------------------------------------------------------------------------
 
-library("dismo")
-data(Anguilla_train)
-d <- Anguilla_train
-d <- d[,-1]
-d <- d[1:200,]
-# d <- d[,-which(names(d) %in% "Method")]
-data <- d
-y <- d$Angaus
-x <- d[,-which(names(d)=="Angaus")]
 
-
-brt.fit <- function(x, y, n.trees=NULL, min.n.trees=3000, n.boot=0, verbose=FALSE, shrinkage=0.01, ...) {
+brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.01, min.n.trees=3000, n.boot=0, verbose=FALSE, ...) {
    #
    # Fit a Boosted Regression Tree model with optimization of number of trees and bootstraps
    #
@@ -31,17 +21,23 @@ brt.fit <- function(x, y, n.trees=NULL, min.n.trees=3000, n.boot=0, verbose=FALS
    # y            vector of responses
    # n.trees      number of trees
    #              if NULL, the number of trees and shrinkage are estimated
-   # min.n.trees  minimum number of trees to be reached in the optimization of shrinkage and number of trees
+   # shrinkage    shrinkage value for fixed number of trees or starting value for
+   #              the optimization of shrinkage and number of trees
+   # min.n.trees  minimum number of trees to be reached in the optimization of
+   #              shrinkage and number of trees
    # n.boot       number of bootstraps (should be at least 100)
-   #
-   
-   library("gbm")
-   
+   # continuous.resolution number of equally space points at which to
+   #              evaluate continuous predictors
+
+   suppressPackageStartupMessages(library("gbm", quietly=TRUE))
+   suppressPackageStartupMessages(library("plyr", quietly=TRUE))
+
    # sanity checks
+   #--------------------------------------------------------------------------
    if ( ! is.vector(y) ) {
       stop("Need only one response variable, y should be a vector")
    }
-   
+
    if (nrow(x) != length(y)) {
       stop("Predictors and response variable must be the same length")
    }
@@ -49,7 +45,12 @@ brt.fit <- function(x, y, n.trees=NULL, min.n.trees=3000, n.boot=0, verbose=FALS
    if (is.matrix(x)) {
       x <- data.frame(x)
    }
-      
+
+   if ( n.boot != 0 & n.boot < 100 ) {
+      warning("Less than 100 bootstraps is useless. Forcing n.boot=100")
+      n.boot <- 100
+   }
+
    # compute good CV fold (at least n.per.fold observations per fold)
    n.per.fold <- 30
    cv.fold <- length(y) %/% n.per.fold
@@ -57,11 +58,15 @@ brt.fit <- function(x, y, n.trees=NULL, min.n.trees=3000, n.boot=0, verbose=FALS
       stop("Not enough data to correctly fit a model. Need at least ", n.per.fold * 2, " data points")
    }
    cv.fold <- min(cv.fold, 10)
-   
+
    # add response variable to the data.frame
    d <- x
    d$response <- y
-   
+
+
+   # fit model
+   #--------------------------------------------------------------------------
+
    # optimise shrinkage and number of trees if the number of trees is not forced
    if ( is.null(n.trees) ) {
       if ( verbose ) message("Optimising shrinkage and number of trees")
@@ -100,18 +105,68 @@ brt.fit <- function(x, y, n.trees=NULL, min.n.trees=3000, n.boot=0, verbose=FALS
       }
       n.trees <- m$n.trees
    }
-   
 
    # fit the final model with cross validation and get a better, final, estimate of the actual optimal number of trees
-   if ( verbose ) message("Cross-validating final model (", cv.fold, " folds)")
+   if ( verbose ) message("Cross-validating model (", cv.fold, " folds)")
    m <- gbm(response ~ . , data=d, shrinkage=shrinkage, n.trees=n.trees, cv.fold=cv.fold, ...)
    m$best.iter <- gbm.perf(m, method="cv", plot.it=verbose)
    if (verbose) message("  shrinkage : ", round(shrinkage, 4), " | trees : ", m$best.iter, " / ", m$n.trees)
 
+
+   # bootstraps
+   #--------------------------------------------------------------------------
+
+   if (n.boot > 0) {
+
+      if ( verbose ) message("Bootstrapping model (", n.boot, " bootstraps)")
+
+      boot.brt <- function(i, d, n.trees, shrinkage, ...) {
+         # i            bootstrap number
+         # d            original data
+         # n.trees      number of trees to use: optimal number of trees in the original model
+         # shrinkage    shrinkage of the original model
+
+         # resampe original data with replacement
+         dd <- d[sample.int(nrow(d), replace=TRUE),]
+
+         # fit model on this resampled dataset
+         library("gbm")
+         mb <- gbm(response ~ . , data=d, shrinkage=shrinkage, n.trees=n.trees, keep.data=FALSE, ...)
+
+         return(mb)
+      }
+
+      # parallel computation takes too much memory, probably because of a problem with gbm
+      # disable it for now because it takes almost as much time and way more memory
+      parallel <- FALSE
+      if ( parallel ) {
+         # try to parallelise bootstraps
+         suppressPackageStartupMessages(library("parallel", quietly=TRUE))
+         n <- detectCores()
+
+         # parallel
+         cl <- makeCluster(n)
+         if (verbose) message("  parallel computation on ", n, " cores")
+         m$boot <- clusterApply(cl=cl, x=1:n.boot, fun=boot.brt, d=d, n.trees=m$best.iter, shrinkage=shrinkage, ...)
+         stopCluster(cl)
+
+         # # foreach (a bit worse regarding memory management)
+         # library("doParallel")
+         # registerDoParallel(cores=n)
+         # m$boot <- alply(1:n.boot, 1, .fun=boot.brt, d=d, n.trees=m$best.iter, shrinkage=shrinkage, .progress="text", .parallel=T, ...)
+
+      } else {
+         m$boot <- alply(1:n.boot, 1, .fun=boot.brt, d=d, n.trees=m$best.iter, shrinkage=shrinkage, .progress="text", ...)
+      }
+   }
+
+   # create a specific class
+   class(m) <- c("brt", class(m))
+
    return(m)
 }
 
-m <- brt.fit(x, y, distribution="bernoulli", interaction.depth=4, verbose=TRUE)
+
 AUC <- function(y, p) {
    #
    # Code derived from the .roc function by Elith
