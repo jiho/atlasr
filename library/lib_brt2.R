@@ -26,8 +26,6 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.01, min.n.trees=3000, n.boot
    # min.n.trees  minimum number of trees to be reached in the optimization of
    #              shrinkage and number of trees
    # n.boot       number of bootstraps (should be at least 100)
-   # continuous.resolution number of equally space points at which to
-   #              evaluate continuous predictors
 
    suppressPackageStartupMessages(library("gbm", quietly=TRUE))
    suppressPackageStartupMessages(library("plyr", quietly=TRUE))
@@ -243,7 +241,96 @@ summary.brt <- function(m, n.trees=m$best.iter, ...) {
    return(invisible(rel.inf))
 }
 
-summary(m)
+effects.brt <- function(m, continuous.resolution=100, ...) {
+   #
+   # Compute marginal effects of each variable in a BRT model
+   #
+   # m      model resulting frm brt.fit
+   # continuous.resolution number of equally space points at which to
+   #        evaluate continuous predictors
+
+   if ( continuous.resolution < 10 ) {
+      warning("continuous.resolution must be > 10 for effects plots to be readable. Increasing it to 10.")
+      continuous.resolution <- 10
+   }
+
+   # When the model has bootstraps, for model effects to be on the same scale for all bootstraps, we need to precompute the output range for each predictor and pass that to a modified version of gbm::plot.gbm
+   data.ranges <- llply(m$var.levels, function(x, n) {
+      if (class(x) == "character") {
+         out <- factor(x)
+      } else {
+         out <- seq(x[1], x[10], length.out=n)
+      }
+      return(out)
+   }, n=continuous.resolution)
+   names(data.ranges) <- m$var.names
 
 
+   # compute marginal effects of this model *on the total data range*
+   get.response <- function(var.name, model, data.ranges, n.trees) {
+      resp <- plot.gbm(model, i.var=var.name,
+                              n.trees=n.trees,
+                              grid.levels=data.ranges[[var.name]], return.grid=TRUE,
+                              type="response"
+      )
+      return(resp$y)
+   }
 
+   if ( is.null(m$boot) ) {
+      # no bootstraps, just get the effects for all variables
+      effects <- llply(m$var.names, get.response, model=m, data.ranges=data.ranges, n.trees=m$best.iter)
+      names(effects) <- m$var.names
+
+      # convert the result to a data.frame, to be consistent with the case with bootstraps and to make plotting easier
+      effects <- llply(m$var.names, function(var.name, effects, data.ranges) {
+         resp <- data.frame(variable=var.name, value=data.ranges[[var.name]], proba=effects[[var.name]])
+         return(resp)
+      }, effects=effects, data.ranges=data.ranges)
+      names(effects) <- m$var.names
+
+   } else {
+      # bootstraps, get the effects for each bootstrap
+      effects <- llply(m$boot, function(mb, data.ranges, n.trees) {
+         effects <- alply(mb$var.names, 1, get.response, model=mb, data.ranges=data.ranges, n.trees=n.trees)
+         names(effects) <- m$var.names
+         return(effects)
+      }, data.ranges=data.ranges, n.trees=m$best.iter, .progress="text")
+
+      # compute average, quantiles etc. of effects for each variable
+      effects <- llply(m$var.names, function(var.name, effects, data.ranges) {
+
+         # extract marginal effects for the current variable, in a matrix
+         resp <- laply(effects, `[[`, var.name)
+         range <- data.ranges[[var.name]]
+
+         # compute descriptive statistics
+         desc <- adply(resp, 2, function(x) {
+            # quantiles
+            p <- c(5, 25, 75, 95)
+            q <- quantile(x, p/100)
+            q <- data.frame(t(q))
+            names(q) <- paste("q", p, sep=".")
+
+            # other location and dispersion measures
+            out <- data.frame(
+               proba = mean(x),
+               # min = min(x),
+               # max = max(x),
+               # sd = sd(x),
+               q
+            )
+            return(out)
+         })
+
+         # add data range
+         desc$value <- range
+         # add variable name
+         desc$variable <- var.name
+
+         return(desc[,-1])
+      }, effects=effects, data.ranges=data.ranges)
+      names(effects) <- m$var.names
+   }
+
+   return(effects)
+}
