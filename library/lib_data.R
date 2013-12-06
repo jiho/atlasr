@@ -325,7 +325,7 @@ clean.path <- function(file, ...) {
   return(file)
 }
 
-read.data <- function(file, verbose=FALSE, ...) {
+read.data <- function(file, verbose=FALSE, filetype="guess", ...) {
   #
   # Detect the format of a data file and read it
   #
@@ -340,6 +340,7 @@ read.data <- function(file, verbose=FALSE, ...) {
     warning("Can only read only one file at a time. Using the first element")
     file <- file[1]
   }
+  filetype <- match.arg(filetype, c("guess", "xls", "csv", "txt"))
 
   # ensure windows/unix interoperability and more
   file <- clean.path(file)
@@ -349,25 +350,27 @@ read.data <- function(file, verbose=FALSE, ...) {
     stop("Cannot find file: ", file)
   }
 
-
   if ( verbose ) {
     fileName <- basename(file)
     message("Read data in ", fileName)
   }
 
-  # get file extension
-  ext <- file_ext(file)
+  if (filetype == "guess") {
+    # get file extension
+    filetype <- file_ext(file)
+  }
 
-  # choose reading method according to extension
-  if (ext == "xls") {
+  if (filetype == "xls") {
     suppressPackageStartupMessages(require("gdata"))
     d <- read.xls(xls=file, ...)
-  } else if (ext == "csv") {
+  } else if (filetype == "csv") {
     d <- read.csv(file=file, ...)
-  } else if (ext == "txt") {
+  } else if (filetype == "txt") {
     d <- read.table(file=file, header=TRUE, ...)
+
   } else {
-    stop("Unknown file type")
+     stop("Unknown file type")
+
   }
 
   # give some flexibility in naming lat and lon
