@@ -1,11 +1,8 @@
 #
-#     Plot data viewed from the South Pole
+#      Useful functions for plots of models from an Antarctic perspective
 #
-# The plot uses ggplot2 rather than base graphics, because it eases
-# the projection and mapping of colours.
-#
-# (c) Copyright 2011 J-O Irisson
-#     http://creativecommons.org/licenses/by/3.0/
+#  (c) Copyright 2011-2013 Jean-Olivier Irisson
+#      http://creativecommons.org/licenses/by/3.0/
 #
 #-----------------------------------------------------------------------------
 
