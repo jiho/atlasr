@@ -412,7 +412,7 @@ plot.effects.brt <- function(m, ...) {
 }
 
 
-# Model visualisation
+# Model predictions
 predict.brt <- function(m, newdata=NULL, type="response", ...) {
    #
    # Predict response of a BRT model
