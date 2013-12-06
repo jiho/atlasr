@@ -368,3 +368,81 @@ predict.brt <- function(m, type="response", ...) {
    return(pred)
 }
 
+plot.effects.brt <- function(m, ...) {
+
+   suppressPackageStartupMessages(library("ggplot2", quietly=TRUE))
+   suppressPackageStartupMessages(library("gridExtra", quietly=TRUE))
+
+   d <- effects.brt(m, ...)
+
+   # order predictors according to their effect
+   infl <- sort(relative.influence(m, n.trees=m$best.iter), decreasing=TRUE)
+   infl <- infl * 100 / sum(infl)
+   d <- d[names(infl)]
+
+   if (all(attr(m$Terms, "dataClasses") == "numeric")) {
+      # all numerical = combine results in a single data.frame and use facets
+
+      # combine all results
+      d <- do.call(rbind, d)
+
+      # add percentage of influence to variable name
+      d$variable <- paste(d$variable, " (", round(infl[d$variable]), "%)", sep="")
+
+      # force variable order
+      d$variable <- factor(d$variable, levels=unique(d$variable))
+
+      # prepare plot
+      p <- ggplot(d, aes(x=value)) + ylab("Predicted proba")
+      # plot uncertainty when bootstraps provided it
+      if ( ! is.null(m$boot) ) {
+         p <- p + geom_ribbon(aes(ymin=q.5, ymax=q.95), alpha=0.3) + geom_ribbon(aes(ymin=q.25, ymax=q.75), alpha=0.5)
+      }
+      # plot effect
+      p <- p + geom_path(aes(y=proba))
+      # facet per variable
+      p <- p + facet_wrap(~variable, scale="free_x")
+
+      print(p)
+
+   } else {
+      # some categorical = compute separate plots and combine them on the same page with grid.arrange
+
+      # compute common y-scale = get maximum
+      dd <- ldply(d, `[`, ifelse(is.null(m$boot), "proba", "q.95"))
+      pMax <- max(dd[,2])
+      pMax <- round_any(pMax, 0.02, ceiling)
+
+      p <- llply(d, function(x, pMax, infl) {
+
+         # compute nice x-axis label
+         var.name <- as.character(x$variable[1])
+         label <- paste(var.name, " (", round(infl[var.name]), "%)", sep="")
+
+         # base plot
+         p <- ggplot(x, aes(x=value)) + ylim(0, pMax) + ylab(expression(paste("Predicted ", italic("p")))) + xlab(label)
+
+         if ( is.factor(x$value) ) {
+            # points or boxplot-like for factors
+            if (! is.null(m$boot) ) {
+               p <- p + geom_crossbar(aes(y=proba, ymin=q.5, ymax=q.95), fill="grey20", alpha=0.3) + geom_crossbar(aes(y=proba, ymin=q.25, ymax=q.75), fill="grey20", alpha=0.5, colour=NA)
+            }
+            p <- p + geom_point(aes(y=proba))
+
+         } else {
+            # line and interval for continuous variables
+            if (! is.null(m$boot) ) {
+               p <- p + geom_ribbon(aes(ymin=q.5, ymax=q.95), alpha=0.3) + geom_ribbon(aes(ymin=q.25, ymax=q.75), alpha=0.5)
+            }
+            p <- p + geom_path(aes(y=proba))
+         }
+         return(p)
+      }, pMax=pMax, infl=infl)
+
+      # l_ply(plots, print)
+      do.call(grid.arrange, p)
+   }
+
+   return(invisible(p))
+}
+
