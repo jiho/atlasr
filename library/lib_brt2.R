@@ -450,3 +450,59 @@ plot.effects.brt <- function(m, ...) {
    return(invisible(p))
 }
 
+plot.pred.brt <- function(m, quick=TRUE, ...) {
+   #
+   # Plot predictions
+   #
+
+   d <- predict(m, ...)
+
+   suppressPackageStartupMessages(require("ggplot2"))
+
+  # check wether CV error is computed from bootstraps
+  if (all(is.na(d$CV))) {
+    # map only prediction
+    mapping <- aes(fill=proba)
+  } else {
+    # map prediction as colour and error as transparency
+    mapping <- aes(fill=proba)
+  }
+
+  # main plot
+  if (quick) {
+    # subsample the plot and plot a raster
+    geom <- "raster"
+    d <- regrid(d, lat.step=1, lon.step=2)
+  } else {
+     geom <- "auto"
+  }
+  p <- polar_ggplot(d, mapping=mapping, geom=geom, ...) + layer_land(d) + south_pole_proj()
+
+  # # overlay stations
+  # if (overlay.stations) {
+  #   if (!all(c("lat", "lon") %in% names(x$data))) {
+  #     warning("Cannot overlay data points because the coordinates were not in the original dataset", immediate.=TRUE)
+  #   } else {
+  #     # make the plot
+  #     if (is.numeric(x$data[,x$resp.var])) {
+  #       # numerical values (abundances)
+  #       # = use coloured points with white outline
+  #       p <- p + geom_point(aes_string(x="lon", y="lat", size=x$resp.var), data=x$data, alpha=0.5) + scale_size_continuous(range=0.5, 4)
+  #     } else {
+  #       # presence-absence values
+  #       # = use points (presence) and crosses (absence)
+  #       p <- p + geom_point(aes_string(x="lon", y="lat", colour=x$resp.var, alpha=x$resp.var), data=x$data, size=1.5) + scale_colour_manual(values=c("grey20", "red")) + scale_alpha_manual(values=c(0.1, 0.9))
+  #     }
+  #   }
+  # }
+  # 
+  # # add a title
+  # p = p + ggtitle(paste(x$obj$gbm.call$response.name, "- BRT"))
+
+  return(p)
+
+}
+
+
+
+
