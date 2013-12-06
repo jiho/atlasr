@@ -192,8 +192,8 @@ south_pole_proj <- function(projection="stereographic", orientation=c(-90,0,0)) 
       # polar projection
       coord_map(projection=projection, orientation=orientation),
       # simpler scales (because polar projection screws up longitude scales)
-      theme(axis.text.x=element_blank(),axis.title.x=element_blank()),
-      scale_y_continuous(name="Latitude")
+      theme(axis.text.x=element_blank(),axis.title.x=element_blank())#,
+      # scale_y_continuous(name="Latitude")
    )
 
    return(out)
