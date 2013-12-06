@@ -44,9 +44,9 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.01, min.n.trees=3000, n.boot
       x <- data.frame(x)
    }
 
-   if ( n.boot != 0 & n.boot < 100 ) {
-      warning("Less than 100 bootstraps is useless. Forcing n.boot=100")
-      n.boot <- 100
+   if ( n.boot != 0 & n.boot < 50 ) {
+      warning("Less than 50 bootstraps is useless. Forcing n.boot=50")
+      n.boot <- 50
    }
 
    # compute good CV fold (at least n.per.fold observations per fold)
