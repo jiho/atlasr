@@ -459,24 +459,28 @@ plot.pred.brt <- function(m, quick=TRUE, ...) {
 
    suppressPackageStartupMessages(require("ggplot2"))
 
-  # check wether CV error is computed from bootstraps
-  if (all(is.na(d$CV))) {
-    # map only prediction
-    mapping <- aes(fill=proba)
-  } else {
-    # map prediction as colour and error as transparency
-    mapping <- aes(fill=proba)
-  }
+   # check wether CV error is computed from bootstraps
+   if ( all(is.na(d$CV)) ) {
+     # map only prediction
+     mapping <- aes(fill=proba)
+   } else {
+     # map prediction as colour and error as transparency
+     mapping <- aes(fill=proba, alpha=sd)
+   }
 
   # main plot
-  if (quick) {
+  if ( quick ) {
     # subsample the plot and plot a raster
-    geom <- "raster"
     d <- regrid(d, lat.step=1, lon.step=2)
+    geom <- "raster"
   } else {
      geom <- "auto"
   }
-  p <- polar_ggplot(d, mapping=mapping, geom=geom, ...) + layer_land(d) + south_pole_proj()
+
+  p <- polar_ggplot(d, mapping=aes(fill=proba), geom=geom, ...) + layer_land(d)
+  if ( ! quick ) {
+    p <- p + south_pole_proj()
+  }
 
   # # overlay stations
   # if (overlay.stations) {
