@@ -1,14 +1,8 @@
 #
 #     Boosted Regression Trees
 #
-#     - bootstrapping functions (complement those in package dismo)
-#     - wrap around BRT function which does model, effects, bootstraps, predictions
-#     - fully automated function
-#     - GUI interface
-#
-# (c) Copyright 2011-2012 S Mormede
-#                         J-O Irisson
-#     http://creativecommons.org/licenses/by/3.0/
+#  (c) Copyright 2013 Jean-Olivier Irisson
+#      http://creativecommons.org/licenses/by/3.0/
 #
 #-----------------------------------------------------------------------------
 
