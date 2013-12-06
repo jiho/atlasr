@@ -157,7 +157,7 @@ list.env.data <- function(variables="", path=getOption("atlasr.env.data"), full=
   # variables   only output variables matching this (matches all when "")
   # path        where to look for netCDF files
   # full        when TRUE, return the full path to the files, otherwise only return the variable name
-  # ...         passed to match.vars() (in particular to use quiet)
+  # ...         passed to partial.match() (in particular to use quiet)
   #
 
   suppressPackageStartupMessages(require("stringr", quietly=TRUE))
@@ -175,7 +175,7 @@ list.env.data <- function(variables="", path=getOption("atlasr.env.data"), full=
   ncVariables <- str_replace(ncVariables, fixed(".nc"), "")
 
   # possibly match and expand variable names
-  ncVariablesMatched <- match.vars(variables, ncVariables, ...)
+  ncVariablesMatched <- partial.match(variables, ncVariables, ...)
 
   # get corresponding file names (in the same order!)
   ncFilesMatched <- ncFiles[match(ncVariablesMatched, ncVariables)]
@@ -433,10 +433,10 @@ build.grid <- function(lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon
 ## Utility functions
 #-----------------------------------------------------------------------------
 
-match.vars <- function(vars, choices, quiet=TRUE) {
+partial.match <- function(pattern, choices, quiet=TRUE) {
   # Match abbreviated or partial variable names
   #
-  # vars    variable names to match
+  # pattern pattern to match in choices
   # choices list of matching possibilities
   # quiet   wether to provide a message about matches
   #
@@ -446,12 +446,12 @@ match.vars <- function(vars, choices, quiet=TRUE) {
   var.index = c()
   choice.index = c()
 
-  for (i in seq(along=vars)) {
+  for (i in seq(along=pattern)) {
     # try exact matches first
-    idx = grep(paste("^",vars[i],"$",sep=""), choices)
+    idx = grep(paste("^",pattern[i],"$",sep=""), choices)
     if (length(idx) == 0) {
       # then try partial matches if needed
-      idx = grep(vars[i], choices)
+      idx = grep(pattern[i], choices)
 
       # if no variable can be matched, issue a warning
       if (length(idx) == 0) {
@@ -461,7 +461,7 @@ match.vars <- function(vars, choices, quiet=TRUE) {
         } else {
           possibilities <- paste(choices, collapse="\n    ")
         }
-        stop("No variable matching \"", vars[i], "\" could be found.\n  The possibilities were:\n    ", possibilities)
+        stop("No name matching \"", pattern[i], "\" could be found.\n  The possibilities were:\n    ", possibilities)
       }
     }
     # store all matches for all variables
@@ -471,8 +471,8 @@ match.vars <- function(vars, choices, quiet=TRUE) {
     var.index = c(var.index, rep(i, length(matches)))
 
     # issue a message when an expansion match occurred
-    if (! quiet & any(matches != vars[i])) {
-      messageText = paste("   ", vars[i], " expanded to ", sep="")
+    if (! quiet & any(matches != pattern[i])) {
+      messageText = paste("   ", pattern[i], " expanded to ", sep="")
       # compute the amount of padding to get a nicely aligned list
       padding = paste(rep(" ", times=nchar(messageText)), collapse="")
       # inform about the expansion
@@ -494,15 +494,15 @@ weight.data <- function(x, weights, warn=TRUE) {
   #
   # x         data.frame to be weighted
   # weights   named vector of weights
-  #           names will be expanded using match.vars and the final set of names must match the names of x
+  #           names will be expanded using partial.match and the final set of names must match the names of x
   #           numeric values will be scaled to a maximum of 1
   # warn      wether to warn when weights are missing for some of the columns
   #
 
   # expand each element of weights by name
   # this allows to specify something like weights=c(nox=2) and have *all* nox variables double weighted
-  expandedNames <- match.vars(names(weights), names(x), quiet=TRUE)
-  # NB: we expand based in what is in x. If the name of an element in weights does not match, match.vars will throw an error
+  expandedNames <- partial.match(names(weights), names(x), quiet=TRUE)
+  # NB: we expand based in what is in x. If the name of an element in weights does not match, partial.match will throw an error
 
   # if name expansion resulted in more weights, replicate the weight values appropriately
   if (length(expandedNames) > length(weights)) {
@@ -577,14 +577,14 @@ transform.data <- function(x, transformations, warn=TRUE) {
   #
   # x                 data.frame to be transformed
   # transformations   named vector of transformations
-  #                   names will be expanded using match.vars and the final set of names must match the names of x
+  #                   names will be expanded using partial.match and the final set of names must match the names of x
   # warn              wether to warn when transformations are missing for some of the columns
   #
 
   # NB: see weight.data, which is very similar, for more detailed comments
 
   # expand each element of transformations by name
-  expandedNames <- match.vars(names(transformations), names(x), quiet=TRUE)
+  expandedNames <- partial.match(names(transformations), names(x), quiet=TRUE)
 
   # replicate transformations appropriately
   if (length(expandedNames) > length(transformations)) {

@@ -752,7 +752,7 @@ brt <- function(
   }
   # get selected taxa
   allTaxa <- setdiff(names(input_data), c("lat", "lon"))
-  taxa <- match.vars(taxa, allTaxa, quiet=FALSE)
+  taxa <- partial.match(taxa, allTaxa, quiet=FALSE)
   input_data <- input_data[, c("lat", "lon", taxa)]
 
   # bin observation data

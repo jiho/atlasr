@@ -13,17 +13,17 @@ context("Access to environment data")
 
 test_that("error when matching non existent variables", {
   expect_that(
-    match.vars(vars="foo", choices=c("bar", "bob"), quiet=TRUE),
+    partial.match(vars="foo", choices=c("bar", "bob"), quiet=TRUE),
     throws_error("No variable matching")
   )
 })
 
 test_that("variable name expansion works", {
-  expect_that( match.vars("foo", "foobar", quiet=TRUE), matches("foobar") )
+  expect_that( partial.match("foo", "foobar", quiet=TRUE), matches("foobar") )
 })
 
 test_that("variable name expansion issues a message when asked for", {
-  expect_that( match.vars("foo", "foobar", quiet=FALSE), shows_message("foobar") )
+  expect_that( partial.match("foo", "foobar", quiet=FALSE), shows_message("foobar") )
 })
 
 # make sure that the path to the env_data folder works when it is relative

@@ -140,7 +140,7 @@ bioreg <- function(
     allVariables <- list.env.data(path=path)
 
     # expand variable names
-    variables <- match.vars(variables, allVariables, quiet=FALSE)
+    variables <- partial.match(variables, allVariables, quiet=FALSE)
 
     # check that there are enought variables
     if (length(variables) < 2) {

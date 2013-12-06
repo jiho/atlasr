@@ -151,7 +151,7 @@ gdm <- function(
 
   # get the names of the taxa of interest
   allTaxa <- names(input_data[,!names(input_data) %in% c("lat", "lon")])
-  resp.vars <- match.vars(taxa, allTaxa)
+  resp.vars <- partial.match(taxa, allTaxa)
 
   # keep only those taxa
   input_data <- input_data[,c("lat", "lon", resp.vars)]
