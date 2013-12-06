@@ -774,7 +774,6 @@ write.shapefile <- function(x, name, variables=NULL) {
   #
 
   suppressPackageStartupMessages(require("maptools", quietly=TRUE))
-  suppressPackageStartupMessages(require("stringr", quietly=TRUE))
 
   # make sure x is a data.frame
   x <- as.data.frame(x)
