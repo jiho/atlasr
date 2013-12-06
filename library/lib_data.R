@@ -187,33 +187,30 @@ list.env.data <- function(variables="", path=getOption("atlasr.env.data"), full=
   }
 }
 
-read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) {
+read.env.data <- function(variables="", path=getOption("atlasr.env.data"), verbose=FALSE) {
   # Read data from the netCDF files
   #
   # variables   only output variables matching this (matches all when "")
   # path        path to the location of netCDF files
-  # ...         passed to list.env.data()
   #
   # NB: previously we saved the database in a RData file, but it is actually quicker to read it directly from the netCDF files
 
-  # functions to access netCDF files
   suppressPackageStartupMessages(require("ncdf"))
-  # functions to automate loops and split-apply functions
   suppressPackageStartupMessages(require("plyr"))
 
-  if (!file.exists(path)) {
+  if ( ! file.exists(path) ) {
     stop("Environment database not found in ", path)
   }
 
-  message("-> Read environment data")
+  if ( verbose ) message("Read environment data")
 
   # select which netCDF files to read
-  ncFiles = list.env.data(variables, path, full=T, quiet=FALSE)
-  ncVariables = list.env.data(variables, path, quiet=TRUE)
-  # NB: inform about variable names expansion only for the first pass
+  ncFiles = list.env.data(variables, path, full=T, verbose=verbose)
+  ncVariables = list.env.data(variables, path, verbose=FALSE)
+  # NB: possibly inform about variable names expansion only for the first pass
 
   # read data inside each file
-  database <- alply(ncFiles, 1, function(ncFile) {
+  database <- llply(ncFiles, function(ncFile) {
 
     # open netCDF file
     ncid <- open.ncdf(ncFile)
@@ -250,15 +247,15 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) 
     return(dat)
   }, .progress=ifelse(length(ncFiles) > 5,"text","none"))  # get a nice progress bar when there are several files to read
 
-  # remove plyr attributes (useless here)
-  attributes(database) <- list()
+  # # remove plyr attributes (useless here)
+  # attributes(database) <- list()
 
   # name elements of the list
   # NB: sometimes the data names in the netCDF files are the same across several files, we will instead use a name derived from the file
   names(database) <- ncVariables
 
   # treat geomorphology as a factor
-  if (!is.null(database$geomorphology)) {
+  if ( ! is.null(database$geomorphology) ) {
     z <- factor(database$geomorphology$z)
     dim(z) <- dim(database$geomorphology$z)
     database$geomorphology$z <- z
@@ -291,7 +288,7 @@ mask.env.data <- function(database, ...) {
 }
 
 
-associate.env.data <- function(dataset, database, lon.name="lon", lat.name="lat") {
+get.env.data <- function(lon, lat, database, verbose=FALSE) {
   # Associate the environmental data from `database` to the points specified in `dataset`
   #
   # dataset     data.frame with at least lon and lat columns
@@ -299,20 +296,15 @@ associate.env.data <- function(dataset, database, lon.name="lon", lat.name="lat"
   # lon/lat.name  names (or numbers) of the lon and lat columns in the dataset
   #
 
-  message("-> Fetch environment data for points in ", deparse(substitute(dataset)))
+  if ( verbose ) message("Fetch environment data for observed points")
 
   # bilinear interpolation
   # NB: if we extract points that are exactly on the grid, we do not interpolate anything and this method is quite fast
   # TODO test if we can be faster by skipping the interpolation if we are always exactly on the grid
   suppressPackageStartupMessages(require("fields"))
-  # contains function rename
-  suppressPackageStartupMessages(require("plyr"))
 
   # rename lon and lat to ensure consistency in the following
-  names(dataset)[which(names(dataset) == lon.name)] <- "lon"
-  names(dataset)[which(names(dataset) == lat.name)] <- "lat"
-  # extract lon and lat from the dataset
-  coord <- dataset[,c("lon","lat")]
+  coord <- data.frame(lon, lat)
 
   # extract/interpolate the environmental data at the locations specified in the dataset
   envData <- as.data.frame(lapply(database, function(x) {
@@ -323,16 +315,7 @@ associate.env.data <- function(dataset, database, lon.name="lon", lat.name="lat"
     }
   }))
 
-  # store everthing in the original dataset
-  dataset <- cbind(dataset, envData)
-
-  # remove points where all environmental data is Non-Available
-  # NB: these are usually points on land
-  # allNA <- aaply(envData, .margin=1, .fun=function(x) {all(is.na(x)) }, .expand=FALSE)
-  allNA <- rowSums(is.na(envData)) == ncol(envData) # NB: faster implementation in this particular case
-  dataset <- dataset[!allNA,]
-
-  return(dataset)
+  return(envData)
 }
 
 closest.index <- function(x, y) {
@@ -363,7 +346,7 @@ interp.nn <- function(x, coord) {
 ## Observation data
 #-----------------------------------------------------------------------------
 
-read.data <- function(file, ...) {
+read.data <- function(file, verbose=FALSE, ...) {
   #
   # Detect the format of a data file and read it
   #
@@ -371,25 +354,36 @@ read.data <- function(file, ...) {
   # ...   passed to the method used for reading the file: gdata::read.xls, read.csv, read.txt
   #
 
-  if (length(file) > 1) {
-    stop("Read only one file at a time")
+  # checks
+  if ( length(file) > 1 ) {
+    warning("Can only read only one file at a time. Using the first element")
+    file <- file[1]
   }
 
-  file <- clean.path(file, ...)
+  # ensure windows/unix interoperability and more
+  file <- clean.path(file)
 
-  fileName <- basename(file)
-  message("-> Read input data in ", file)
+  # check file existence
+  if ( ! file.exists(file) ) {
+    stop("Cannot find file: ", file)
+  }
+
+
+  if ( verbose ) {
+    fileName <- basename(file)
+    message("Read data in ", fileName)
+  }
 
   # get file extension
-  extension <- strsplit(fileName, split=".", fixed=T)[[1]]
-  extension <- extension[length(extension)]
+  ext <- file_ext(file)
 
-  if (extension == "xls") {
+  # choose reading method according to extension
+  if (ext == "xls") {
     suppressPackageStartupMessages(require("gdata"))
     d <- read.xls(xls=file, ...)
-  } else if (extension == "csv") {
+  } else if (ext == "csv") {
     d <- read.csv(file=file, ...)
-  } else if (extension == "txt") {
+  } else if (ext == "txt") {
     d <- read.table(file=file, header=TRUE, ...)
   } else {
     stop("Unknown file type")
@@ -399,11 +393,16 @@ read.data <- function(file, ...) {
   names(d)[tolower(names(d)) %in% c("latitude","lat")] = "lat"
   names(d)[tolower(names(d)) %in% c("longitude","lon","long")] = "lon"
 
+  # check that lat and lon are present
+  if (! all(c("lat","lon") %in% names(d)) ) {
+    stop("Need latitude and longitude in the input data")
+  }
+
   # check consistency of lat and lon
-  bizarreLatLon <- d$lat < -90 | d$lat > 90 | d$lon < -180 | d$lon > 180
-  if (any(bizarreLatLon)) {
-    # TODO format the bizarre ones and print them in the warning message
+  bizarreCoord <- which(d$lat < -90 | d$lat > 90 | d$lon < -180 | d$lon > 180)
+  if ( length(bizarreCoord) > 0 ) {
     warning("Some coordinates look funny in your input file. Please check you data")
+    print(x[bizarreCoord, c("lon", "lat")])
   }
 
   return(d)
@@ -433,7 +432,7 @@ build.grid <- function(lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon
 ## Utility functions
 #-----------------------------------------------------------------------------
 
-partial.match <- function(pattern, choices, quiet=TRUE) {
+partial.match <- function(pattern, choices, verbose=FALSE) {
   # Match abbreviated or partial variable names
   #
   # pattern pattern to match in choices
@@ -471,8 +470,8 @@ partial.match <- function(pattern, choices, quiet=TRUE) {
     var.index = c(var.index, rep(i, length(matches)))
 
     # issue a message when an expansion match occurred
-    if (! quiet & any(matches != pattern[i])) {
-      messageText = paste("   ", pattern[i], " expanded to ", sep="")
+    if ( verbose & any(matches != pattern[i])) {
+      messageText = paste(pattern[i], " expanded to ", sep="")
       # compute the amount of padding to get a nicely aligned list
       padding = paste(rep(" ", times=nchar(messageText)), collapse="")
       # inform about the expansion
