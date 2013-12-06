@@ -15,14 +15,12 @@
 #-----------------------------------------------------------------------------
 
 
-## Environment database
-#-----------------------------------------------------------------------------
+##{ Access to data --------------------------------------------------------
 
 # Ben
 # "http://webdav.data.aad.gov.au/data/environmental/derived/antarctic"
 # Bruno
 # "http://share.biodiversity.aq/GIS/antarctic"
-
 update.env.data <- function(url="http://share.biodiversity.aq/GIS/antarctic", path=getOption("atlasr.env.data")) {
   #
   # Check if the database of environmental data is present and up-to-date
@@ -149,7 +147,6 @@ update.env.data <- function(url="http://share.biodiversity.aq/GIS/antarctic", pa
   return(invisible(path))
 }
 
-
 list.env.data <- function(variables="", path=getOption("atlasr.env.data"), full=FALSE, ...) {
   #
   # List available environment variables
@@ -264,7 +261,6 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), verbo
   return(database)
 }
 
-
 mask.env.data <- function(database, ...) {
   #
   # Mask points which are on land in the environmental data
@@ -286,7 +282,6 @@ mask.env.data <- function(database, ...) {
 
   return(database)
 }
-
 
 get.env.data <- function(lon, lat, database, verbose=FALSE) {
   # Associate the environmental data from `database` to the points specified in `dataset`
@@ -318,33 +313,17 @@ get.env.data <- function(lon, lat, database, verbose=FALSE) {
   return(envData)
 }
 
-closest.index <- function(x, y) {
+
+clean.path <- function(file, ...) {
   #
-  #	Find the indexes of x such as the corresponding elements are closest to the values in y
+  # Clean file paths
   #
-	round(approx(x,1:length(x),y)$y)
+  # file    file path to convert
+
+  file <- normalizePath(file, winslash="/", mustWork=FALSE)
+
+  return(file)
 }
-
-interp.nn <- function(x, coord) {
-  #
-  # Nearest neigbour interpolation
-  #
-  # x     list with components, x, y and z
-  # coord x,y coordinates to interpolate to
-  #
-
-  # find the closest grid points in x and y
-  xIdx <- closest.index(x$x, coord[,1])
-  yIdx <- closest.index(x$y, coord[,2])
-
-  # fetch the value at those grid points
-  idx <- cbind(xIdx, yIdx)
-  apply(idx, 1, function(id, z) { z[id[1],id[2]] }, z=x$z)
-}
-
-
-## Observation data
-#-----------------------------------------------------------------------------
 
 read.data <- function(file, verbose=FALSE, ...) {
   #
@@ -410,29 +389,10 @@ read.data <- function(file, verbose=FALSE, ...) {
   return(d)
 }
 
-
-## Prediction data
-#-----------------------------------------------------------------------------
-
-build.grid <- function(lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, ...) {
-  # Define the grid on which we extract the environmental data
-  #
-  # lat/lon.lim   vector with the minimum and maximum coordinates
-  # lat/lon.step  step in degrees
-  #
-
-  # compute coordinates
-  lat = seq(from=lat.min, to=lat.max, by=lat.step)
-  lon = seq(from=lon.min, to=lon.max, by=lon.step)
-
-  # compute the full grid
-  return(expand.grid(lon=lon, lat=lat))
-}
+# }
 
 
-
-## Utility functions
-#-----------------------------------------------------------------------------
+##{ String manipulation ---------------------------------------------------
 
 partial.match <- function(pattern, choices, verbose=FALSE) {
   # Match abbreviated or partial variable names
@@ -488,7 +448,27 @@ partial.match <- function(pattern, choices, verbose=FALSE) {
   return(res)
 }
 
-# Subsample data at a given precision
+# }
+
+
+##{ Grid utilities --------------------------------------------------------
+
+build.grid <- function(lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, ...) {
+  # Define the grid on which we extract the environmental data
+  #
+  # lat/lon.lim   vector with the minimum and maximum coordinates
+  # lat/lon.step  step in degrees
+  #
+
+  # compute coordinates
+  lat = seq(from=lat.min, to=lat.max, by=lat.step)
+  lon = seq(from=lon.min, to=lon.max, by=lon.step)
+
+  # compute the full grid
+  return(expand.grid(lon=lon, lat=lat))
+}
+
+
 regrid  <- function(data, lat.step=NULL, lon.step=NULL, ...) {
    #
    # Subsample data onto a grid with new lat and lon step
@@ -529,8 +509,95 @@ regrid  <- function(data, lat.step=NULL, lon.step=NULL, ...) {
    return(data)
 }
 
+rasterize <- function(x, vars, n=10, precisions=NULL, fun=sum, ...) {
+  #
+  # Reduce the precision of certain columns of a data.frame to bins and summarize the rest of the information per bin
+  # This is a bit like reducing the precise information on locations in a 2D plane to pixels of a given grey level, hence the name
+  #
+  # x           original data.frame
+  # vars        columns to bin
+  # n           scalar, number of bins
+  # precisions  the precisions used to cut each column in vars
+  #             (overrides n)
+  # fun         function used to perform the summary
+  # ...         further arguments to `fun`
+  #
+
+  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+
+  # checks
+  OKvars <- vars %in% names(x)
+  if (! all(OKvars) ) {
+    stop("Variable(s) ", vars[!OKvars], " not in ", deparse(substitute(x)))
+  }
+
+  # if the precisions are not specified, use n
+  if (is.null(precisions)) {
+    precisions <- sapply(lapply(x[vars], range, na.rm=T), diff) / n
+  }
+  # otherwise, check that it is correctly specified
+  else {
+    if (length(precisions) != length(vars)) {
+      stop("The vector of precisions does not have as many elements as variables in vars")
+    }
+  }
+
+  message("-> Bin data with precisions : ", paste(vars, round(precisions, 3), sep="=", collapse=" x "))
+
+  # round columns to the given precision
+  suppressPackageStartupMessages(require("plyr"))
+  for (j in seq(along=vars)) {
+    x[,vars[j]] <- plyr::round_any(x[,vars[j]], accuracy=precisions[j])
+  }
+
+  # when there are variables in addition to the binned ones, summarize their information per bin
+  if (ncol(x) > length(vars)) {
+    x <- ddply(x, .variables=vars, function(X, .vars, ...) {
+      actualData <- X[! names(X) %in% .vars]
+      summarizedData <- data.frame(t(sapply(actualData, fun, ...)))
+      summarizedData$freq <- nrow(X)
+      return(summarizedData)
+    }, .vars=vars, ...)
+  }
+  # otherwise, make sure that the combinations of bins are specified only once and count the number of observations per bin
+  else {
+    x <- plyr::count(x)
+  }
+
+  return(x)
+}
+
+rasterise <- rasterize
 
 
+closest.index <- function(x, y) {
+  #
+  #	Find the indexes of x such as the corresponding elements are closest to the values in y
+  #
+	round(approx(x,1:length(x),y)$y)
+}
+
+interp.nn <- function(x, coord) {
+  #
+  # Nearest neigbour interpolation
+  #
+  # x     list with components, x, y and z
+  # coord x,y coordinates to interpolate to
+  #
+
+  # find the closest grid points in x and y
+  xIdx <- closest.index(x$x, coord[,1])
+  yIdx <- closest.index(x$y, coord[,2])
+
+  # fetch the value at those grid points
+  idx <- cbind(xIdx, yIdx)
+  apply(idx, 1, function(id, z) { z[id[1],id[2]] }, z=x$z)
+}
+
+# }
+
+
+##{ Data modification (weighting, filtering, etc.) ------------------------
 
 weight.data <- function(x, weights, warn=TRUE) {
   #
@@ -578,6 +645,28 @@ weight.data <- function(x, weights, warn=TRUE) {
   attr(x, "weights") <- weights
 
   return(x)
+}
+
+
+weight.per.bin <- function(lat, lon, bin.size) {
+
+   suppressPackageStartupMessages(library("plyr", quietly=TRUE))
+
+   # round lat and lon on the binnin grid
+   lon <- round_any(lon, bin.size)
+   lat <- round_any(lat, bin.size)
+
+   # compute number of data points per bin
+   x <- data.frame(lon, lat)
+   nb <- count(x)
+
+   # assign that number to each original point
+   nb <- join(x, nb, by=c("lon", "lat"))
+
+   # compute weights
+   w <- 1 / nb$freq
+
+   return(w)
 }
 
 function.maker <- function(str) {
@@ -687,99 +776,6 @@ transform.data <- function(x, transformations, warn=TRUE) {
 }
 
 
-rasterize <- function(x, vars, n=10, precisions=NULL, fun=sum, ...) {
-  #
-  # Reduce the precision of certain columns of a data.frame to bins and summarize the rest of the information per bin
-  # This is a bit like reducing the precise information on locations in a 2D plane to pixels of a given grey level, hence the name
-  #
-  # x           original data.frame
-  # vars        columns to bin
-  # n           scalar, number of bins
-  # precisions  the precisions used to cut each column in vars
-  #             (overrides n)
-  # fun         function used to perform the summary
-  # ...         further arguments to `fun`
-  #
-
-  suppressPackageStartupMessages(require("plyr", quietly=TRUE))
-
-  # checks
-  OKvars <- vars %in% names(x)
-  if (! all(OKvars) ) {
-    stop("Variable(s) ", vars[!OKvars], " not in ", deparse(substitute(x)))
-  }
-
-  # if the precisions are not specified, use n
-  if (is.null(precisions)) {
-    precisions <- sapply(lapply(x[vars], range, na.rm=T), diff) / n
-  }
-  # otherwise, check that it is correctly specified
-  else {
-    if (length(precisions) != length(vars)) {
-      stop("The vector of precisions does not have as many elements as variables in vars")
-    }
-  }
-
-  message("-> Bin data with precisions : ", paste(vars, round(precisions, 3), sep="=", collapse=" x "))
-
-  # round columns to the given precision
-  suppressPackageStartupMessages(require("plyr"))
-  for (j in seq(along=vars)) {
-    x[,vars[j]] <- plyr::round_any(x[,vars[j]], accuracy=precisions[j])
-  }
-
-  # when there are variables in addition to the binned ones, summarize their information per bin
-  if (ncol(x) > length(vars)) {
-    x <- ddply(x, .variables=vars, function(X, .vars, ...) {
-      actualData <- X[! names(X) %in% .vars]
-      summarizedData <- data.frame(t(sapply(actualData, fun, ...)))
-      summarizedData$freq <- nrow(X)
-      return(summarizedData)
-    }, .vars=vars, ...)
-  }
-  # otherwise, make sure that the combinations of bins are specified only once and count the number of observations per bin
-  else {
-    x <- plyr::count(x)
-  }
-
-  return(x)
-}
-
-rasterise <- rasterize
-
-weight.per.bin <- function(lat, lon, bin.size) {
-
-   suppressPackageStartupMessages(library("plyr", quietly=TRUE))
-
-   # round lat and lon on the binnin grid
-   lon <- round_any(lon, bin.size)
-   lat <- round_any(lat, bin.size)
-
-   # compute number of data points per bin
-   x <- data.frame(lon, lat)
-   nb <- count(x)
-
-   # assign that number to each original point
-   nb <- join(x, nb, by=c("lon", "lat"))
-
-   # compute weights
-   w <- 1 / nb$freq
-
-   return(w)
-}
-
-
-clean.path <- function(file, ...) {
-  #
-  # Clean file paths
-  #
-  # file    file path to convert
-
-  file <- normalizePath(file, winslash="/", mustWork=FALSE)
-
-  return(file)
-}
-
 too.many.na <- function(x, p, weights=NULL) {
    # Identify lines with a missing value proportion above p
    #
@@ -804,6 +800,10 @@ too.many.na <- function(x, p, weights=NULL) {
    return(props >= p)
 }
 
+# }
+
+
+##{ Data export -----------------------------------------------------------
 
 write.shapefile <- function(x, name, variables=NULL) {
   #
@@ -869,5 +869,18 @@ write.raster <- function(x, name, variables=NULL) {
 
 }
 
+write.netcdf <- function(d, dimensions, variables=NULL) {
+   #
+   # Write a data.frame as a netCDF file
+   #
+
+   if ( ! all(dimensions) %in% names(d) ) {
+
+   }
+
+
+
 
 }
+
+# }
