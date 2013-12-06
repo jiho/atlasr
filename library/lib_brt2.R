@@ -334,3 +334,37 @@ effects.brt <- function(m, continuous.resolution=100, ...) {
 
    return(effects)
 }
+
+predict.brt <- function(m, type="response", ...) {
+   #
+   # Predict response of a BRT model
+   #
+   # m      model fit with brt.fit
+   # ...    passed to predict.gbm
+   #
+   if ( is.null(m$boot) ) {
+      # no bootstraps, just get the prediction from the model
+      pred <- predict.gbm(m, n.trees=m$best.iter, type=type, ...)
+      pred <- data.frame(proba=pred, sd=NA, CV=NA)
+
+   } else {
+      # bootstraps, get the effects for each bootstrap
+      pred <- laply(m$boot, function(mb, n.trees, type, ...) {
+         predict.gbm(mb, n.trees=n.trees, type=type, ...)
+      }, n.trees=m$best.iter, type=type, ...)
+
+      # compute average, quantiles etc. of predictions
+      pred <- adply(pred, 2, function(x) {
+         out <- data.frame(
+            proba = mean(x),
+            sd = sd(x)
+         )
+         out$cv <- out$sd / out$proba
+         return(out)
+      })
+      pred <- pred[,-1]
+   }
+
+   return(pred)
+}
+
