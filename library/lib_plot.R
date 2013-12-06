@@ -13,15 +13,63 @@
 ## Toolbox functions
 #-----------------------------------------------------------------------------
 
-polar_proj <- function(projection="stereographic", orientation=c(-90,0,0)) {
-  #
-  # Easy access to a suitable polar projection
-  # NB: view from south pole (-90)
-  #
-  suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
-  suppressPackageStartupMessages(require("mapproj", quietly=TRUE))
-  c <- coord_map(projection=projection, orientation=orientation)
-  return(c)
+south_pole_proj <- function(projection="stereographic", orientation=c(-90,0,0)) {
+   #
+   # Easy access to a suitable polar projection
+   # NB: view from south pole (-90)
+   #
+   suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+   suppressPackageStartupMessages(require("mapproj", quietly=TRUE))
+
+   out <- list(
+      # polar projection
+      coord_map(projection=projection, orientation=orientation),
+      # simpler scales (because polar projection screws up longitude scales)
+      theme(axis.text.x=element_blank(),axis.title.x=element_blank()),
+      scale_y_continuous(name="Latitude")
+   )
+
+   return(out)
+}
+
+regrid  <- function(data, lat.step=NULL, lon.step=NULL, ...) {
+   #
+   # Subsample data onto a grid with new lat and lon step
+   #
+   # data         data.frame with columns lon and lat
+   # lat/lon.step new steps in lat and lon
+
+   if (! all(c("lat","lon") %in% names(data)) ) {
+     stop("regrid() needs coordinates columns to be named lat and lon.\nYou have: ", paste(names(data), collapse=", "))
+   }
+
+   if ( !is.null(lat.step) ) {
+     # compute the vector of latitudes
+     lats <- sort(unique(data$lat))
+     # recompute the precision to be the closest multiple of the current step
+     step <- unique(round(diff(lats),5))
+     # NB: use round to solve floating point precision issues
+     if (lat.step > step) {
+       # proceed only if the given precision is actually larger than the current step (otherwise there is nothing to resample)
+       lat.step <- round(lat.step/step)*step
+       # reduce to the given precision
+       lats <- seq(from=min(lats), to=max(lats), by=lat.step)
+       # select points at those latitudes only
+       data <- data[round(data$lat,5) %in% round(lats,5),]
+       # NB: use round to solve floating point precision issues
+     }
+   }
+   if (!is.null(lon.step)) {
+     lons <- sort(unique(data$lon))
+     step <- unique(round(diff(lons),5))
+     if (lon.step > step) {
+       lon.step <- round(lon.step/step)*step
+       lons <- seq(from=min(lons), to=max(lons), by=lon.step)
+       data <- data[round(data$lon,5) %in% round(lons,5),]
+     }
+   }
+
+   return(data)
 }
 
 discrete.colourmap <- function(n=10) {
@@ -231,7 +279,8 @@ layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
 }
 
 
-polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", "tile"), lat.precision=NULL, lon.precision=NULL, path=getOption("atlasr.env.data"), land=NULL, scale=1, ...) {
+
+polar_ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", "tile"), path=getOption("atlasr.env.data"), land=NULL, scale=1, ...) {
   #
   # data          data frame with columns lat, lon, and variables to plot
   # mapping       a call to `aes()` which maps a variable to a plotting
@@ -263,33 +312,6 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
   # check that we have something that looks like lat and lon
   if (! all(c("lat","lon") %in% names(data)) ) {
     stop("Need two columns named lat and lon to be able to plot\nYou have ", paste(names(data), collapse=", "))
-  }
-
-  # if new precisions are specified for lat or lon, subsample the data
-  if (!is.null(lat.precision)) {
-    # compute the vector of latitudes
-    lats <- sort(unique(data$lat))
-    # recompute the precision to be the closest multiple of the current step
-    step <- unique(round(diff(lats),5))
-    # NB: use round to solve floating point precision issues
-    if (lat.precision > step) {
-      # proceed only if the given precision is actually larger than the current step (otherwise there is nothing to resample)
-      lat.precision <- round(lat.precision/step)*step
-      # reduce to the given precision
-      lats <- seq(from=min(lats), to=max(lats), by=lat.precision)
-      # select points at those latitudes only
-      data <- data[round(data$lat,5) %in% round(lats,5),]
-      # NB: use round to solve floating point precision issues
-    }
-  }
-  if (!is.null(lon.precision)) {
-    lons <- sort(unique(data$lon))
-    step <- unique(round(diff(lons),5))
-    if (lon.precision > step) {
-      lon.precision <- round(lon.precision/step)*step
-      lons <- seq(from=min(lons), to=max(lons), by=lon.precision)
-      data <- data[round(data$lon,5) %in% round(lons,5),]
-    }
   }
 
   # define the geom depending on the size of the data when geom="auto"
@@ -325,25 +347,22 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
     # plot
     # NB: shape: 21 = filled point, 22 = filled square, 23 = filled losange
     p <- p + geom_point(mapping=mapping, shape=21, colour=NA, ...) + scale_size(range=c(baseSize, baseSize*2.2), guide=FALSE)
-  } else if (geom == "tile") {
-    p <- p + geom_tile(mapping=mapping, ...)
+    } else if (geom == "tile") {
+      p <- p + geom_tile(mapping=mapping, ...)
 
-  } else if (geom == "raster") {
-    p <- p + geom_raster(mapping=mapping, ...)
-  }
+    } else if (geom == "raster") {
+      p <- p + geom_raster(mapping=mapping, ...)
+    }
 
-  # add the land masses
-  if (is.null(land)) {
-    land <- layer_land(data, alpha=0.9, path=path)
-  }
-  p <- p + land
-
-  # use nice colours
-  if ("fill" %in% names(mapping)) {
+  # use nice fill colours
+  if ( "fill" %in% names(mapping) ) {
+     # get the datat that is mapped to fill
     fill.data <- data[,as.character(mapping$fill)]
+
     if (is.numeric(fill.data)) {
       # if the data is numeric, use a continuous, jet-like colour scale
       p <- p + scale_fill_gradientn(colours=continuous.colourmap(), guide="colourbar")
+
     } else if (is.factor(fill.data)) {
       # if the data is a factor, use a discrete colour scape
       p <- p + scale_fill_manual(values=discrete.colourmap(n=nlevels(fill.data)))
@@ -353,20 +372,8 @@ polar.ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
   # no background
   p <- p + theme_bw()
 
-  # determine wether to use polar projection and change scales accordingly
-  if (geom %in% c("tile", "point")) {
-    # stereographic projection
-    p <- p + polar_proj()
-
-    # nicer, simpler scales
-    p <- p +
-      # scale_x_continuous(name="", breaks=c(0)) +
-      # NB: fails due to a bug in ggplot now, instead use
-      theme(axis.text.x=element_blank(), axis.title.x=element_blank()) +
-      scale_y_continuous(name="Latitude")
-  } else if (geom == "raster") {
-    p <- p + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0))
-  }
+  # remove boundaries
+  p <- p + scale_x_continuous(expand=c(0,0)) + scale_y_continuous(expand=c(0,0))
 
   return(p)
 }
