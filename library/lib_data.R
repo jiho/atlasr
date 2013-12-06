@@ -354,6 +354,8 @@ read.data <- function(file, verbose=FALSE, ...) {
   # ...   passed to the method used for reading the file: gdata::read.xls, read.csv, read.txt
   #
 
+  suppressPackageStartupMessages(library("tools", quietly=TRUE))
+
   # checks
   if ( length(file) > 1 ) {
     warning("Can only read only one file at a time. Using the first element")
