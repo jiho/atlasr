@@ -715,6 +715,30 @@ clean.path <- function(file, ...) {
   return(file)
 }
 
+too.many.na <- function(x, p, weights=NULL) {
+   # Identify lines with a missing value proportion above p
+   #
+   # x         a matrix or data.frame
+   # p         the proportion of missing values
+   # weights   weights for the columns of x, which weight the missing values in them
+
+   # compute relative weights
+   if (is.null(weights)) {
+      weights <- rep(1, ncol(x))
+   }
+   weights <- weights / sum(weights)
+
+   # find NAs
+   na <- is.na(x)
+
+   # count NAs per line, weighted
+   props <- apply(na, 1, function(y, w) {
+      sum(y * w)
+   }, w=weights)
+
+   return(props >= p)
+}
+
 
 write.shapefile <- function(x, name, variables=NULL) {
   #
