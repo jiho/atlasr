@@ -13,6 +13,7 @@
 #-----------------------------------------------------------------------------
 
 
+# Model fitting
 brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.05, min.n.trees=1000, n.boot=0, verbose=FALSE, ...) {
    #
    # Fit a Boosted Regression Tree model with optimization of number of trees and bootstraps
@@ -165,6 +166,7 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.05, min.n.trees=1000, n.boot
 }
 
 
+# Model evaluation
 AUC <- function(y, p) {
    #
    # Code derived from the .roc function by Elith
@@ -241,6 +243,8 @@ summary.brt <- function(m, n.trees=m$best.iter, ...) {
    return(invisible(rel.inf))
 }
 
+
+# Model effets
 effects.brt <- function(m, continuous.resolution=100, ...) {
    #
    # Compute marginal effects of each variable in a BRT model
@@ -335,43 +339,6 @@ effects.brt <- function(m, continuous.resolution=100, ...) {
    return(effects)
 }
 
-predict.brt <- function(m, newdata=NULL, type="response", ...) {
-   #
-   # Predict response of a BRT model
-   #
-   # m      model fit with brt.fit
-   # ...    passed to predict.gbm
-   #
-   if ( is.null(m$boot) ) {
-      # no bootstraps, just get the prediction from the model
-      pred <- predict.gbm(m, n.trees=m$best.iter, type=type, newdata=newdata, ...)
-      pred <- data.frame(proba=pred, sd=NA, CV=NA)
-
-   } else {
-      # bootstraps, get the effects for each bootstrap
-      pred <- laply(m$boot, function(mb, n.trees, type, newdata, ...) {
-         predict.gbm(mb, n.trees=n.trees, type=type, newdata=newdata, ...)
-      }, n.trees=m$best.iter, type=type, newdata=newdata, ...)
-
-      # compute average, quantiles etc. of predictions
-      pred <- adply(pred, 2, function(x) {
-         out <- data.frame(
-            proba = mean(x),
-            sd = sd(x)
-         )
-         out$cv <- out$sd / out$proba
-         return(out)
-      })
-      pred <- pred[,-1]
-   }
-
-   if ( ! is.null(newdata) ) {
-      pred <- cbind(newdata, pred)
-   }
-
-   return(pred)
-}
-
 plot.effects.brt <- function(m, ...) {
 
    suppressPackageStartupMessages(library("ggplot2", quietly=TRUE))
@@ -450,6 +417,45 @@ plot.effects.brt <- function(m, ...) {
    return(invisible(p))
 }
 
+
+# Model visualisation
+predict.brt <- function(m, newdata=NULL, type="response", ...) {
+   #
+   # Predict response of a BRT model
+   #
+   # m      model fit with brt.fit
+   # ...    passed to predict.gbm
+   #
+   if ( is.null(m$boot) ) {
+      # no bootstraps, just get the prediction from the model
+      pred <- predict.gbm(m, n.trees=m$best.iter, type=type, newdata=newdata, ...)
+      pred <- data.frame(proba=pred, sd=NA, CV=NA)
+
+   } else {
+      # bootstraps, get the effects for each bootstrap
+      pred <- laply(m$boot, function(mb, n.trees, type, newdata, ...) {
+         predict.gbm(mb, n.trees=n.trees, type=type, newdata=newdata, ...)
+      }, n.trees=m$best.iter, type=type, newdata=newdata, ...)
+
+      # compute average, quantiles etc. of predictions
+      pred <- adply(pred, 2, function(x) {
+         out <- data.frame(
+            proba = mean(x),
+            sd = sd(x)
+         )
+         out$cv <- out$sd / out$proba
+         return(out)
+      })
+      pred <- pred[,-1]
+   }
+
+   if ( ! is.null(newdata) ) {
+      pred <- cbind(newdata, pred)
+   }
+
+   return(pred)
+}
+
 plot.pred.brt <- function(m, quick=TRUE, ...) {
    #
    # Plot predictions
@@ -502,7 +508,4 @@ plot.pred.brt <- function(m, quick=TRUE, ...) {
   return(p)
 
 }
-
-
-
 
