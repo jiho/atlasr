@@ -335,7 +335,7 @@ effects.brt <- function(m, continuous.resolution=100, ...) {
    return(effects)
 }
 
-predict.brt <- function(m, type="response", ...) {
+predict.brt <- function(m, newdata=NULL, type="response", ...) {
    #
    # Predict response of a BRT model
    #
@@ -344,14 +344,14 @@ predict.brt <- function(m, type="response", ...) {
    #
    if ( is.null(m$boot) ) {
       # no bootstraps, just get the prediction from the model
-      pred <- predict.gbm(m, n.trees=m$best.iter, type=type, ...)
+      pred <- predict.gbm(m, n.trees=m$best.iter, type=type, newdata=newdata, ...)
       pred <- data.frame(proba=pred, sd=NA, CV=NA)
 
    } else {
       # bootstraps, get the effects for each bootstrap
-      pred <- laply(m$boot, function(mb, n.trees, type, ...) {
-         predict.gbm(mb, n.trees=n.trees, type=type, ...)
-      }, n.trees=m$best.iter, type=type, ...)
+      pred <- laply(m$boot, function(mb, n.trees, type, newdata, ...) {
+         predict.gbm(mb, n.trees=n.trees, type=type, newdata=newdata, ...)
+      }, n.trees=m$best.iter, type=type, newdata=newdata, ...)
 
       # compute average, quantiles etc. of predictions
       pred <- adply(pred, 2, function(x) {
@@ -363,6 +363,10 @@ predict.brt <- function(m, type="response", ...) {
          return(out)
       })
       pred <- pred[,-1]
+   }
+
+   if ( ! is.null(newdata) ) {
+      pred <- cbind(newdata, pred)
    }
 
    return(pred)
