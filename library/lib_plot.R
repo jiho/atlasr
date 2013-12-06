@@ -32,45 +32,7 @@ south_pole_proj <- function(projection="stereographic", orientation=c(-90,0,0)) 
    return(out)
 }
 
-regrid  <- function(data, lat.step=NULL, lon.step=NULL, ...) {
-   #
-   # Subsample data onto a grid with new lat and lon step
-   #
-   # data         data.frame with columns lon and lat
-   # lat/lon.step new steps in lat and lon
 
-   if (! all(c("lat","lon") %in% names(data)) ) {
-     stop("regrid() needs coordinates columns to be named lat and lon.\nYou have: ", paste(names(data), collapse=", "))
-   }
-
-   if ( !is.null(lat.step) ) {
-     # compute the vector of latitudes
-     lats <- sort(unique(data$lat))
-     # recompute the precision to be the closest multiple of the current step
-     step <- unique(round(diff(lats),5))
-     # NB: use round to solve floating point precision issues
-     if (lat.step > step) {
-       # proceed only if the given precision is actually larger than the current step (otherwise there is nothing to resample)
-       lat.step <- round(lat.step/step)*step
-       # reduce to the given precision
-       lats <- seq(from=min(lats), to=max(lats), by=lat.step)
-       # select points at those latitudes only
-       data <- data[round(data$lat,5) %in% round(lats,5),]
-       # NB: use round to solve floating point precision issues
-     }
-   }
-   if (!is.null(lon.step)) {
-     lons <- sort(unique(data$lon))
-     step <- unique(round(diff(lons),5))
-     if (lon.step > step) {
-       lon.step <- round(lon.step/step)*step
-       lons <- seq(from=min(lons), to=max(lons), by=lon.step)
-       data <- data[round(data$lon,5) %in% round(lons,5),]
-     }
-   }
-
-   return(data)
-}
 
 discrete.colourmap <- function(n=10) {
   #
