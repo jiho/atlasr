@@ -704,6 +704,28 @@ rasterize <- function(x, vars, n=10, precisions=NULL, fun=sum, ...) {
 
 rasterise <- rasterize
 
+weight.per.bin <- function(lat, lon, bin.size) {
+
+   suppressPackageStartupMessages(library("plyr", quietly=TRUE))
+
+   # round lat and lon on the binnin grid
+   lon <- round_any(lon, bin.size)
+   lat <- round_any(lat, bin.size)
+
+   # compute number of data points per bin
+   x <- data.frame(lon, lat)
+   nb <- count(x)
+
+   # assign that number to each original point
+   nb <- join(x, nb, by=c("lon", "lat"))
+
+   # compute weights
+   w <- 1 / nb$freq
+
+   return(w)
+}
+
+
 clean.path <- function(file, ...) {
   #
   # Clean file paths
