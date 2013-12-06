@@ -226,7 +226,7 @@ summary.brt <- function(m, n.trees=m$best.iter, ...) {
 
    # relative influence of variables
    rel.inf <- relative.influence(m, m$best.iter)
-   rel.inf <- 100 * rel.inf/sum(rel.inf)
+   rel.inf <- round(100 * rel.inf/sum(rel.inf), 2)
    rel.inf <- sort(rel.inf, decreasing=TRUE)
 
    cat("A gradient boosted model with bernoulli loss function.\n")
