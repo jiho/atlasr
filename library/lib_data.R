@@ -789,6 +789,42 @@ write.shapefile <- function(x, name, variables=NULL) {
   writeSpatialShape(xSp, name)
 
   # add the .prj file
-  cat("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]\n", file=str_c(name, ".prj"))
+  cat("GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS_1984\",SPHEROID[\"WGS_1984\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]]\n", file=paste(name, ".prj", sep=""))
+
+}
+
+write.raster <- function(x, name, variables=NULL) {
+   library("sp")
+
+   # make sure x is a data.frame
+   x <- as.data.frame(x)
+   # NB: SpatialPointsDataFrame only accepts pure data.frame objects
+
+   # determine which variables to keep
+   if (is.null(variables)) {
+     variables <- setdiff(names(x), c("lon", "lat"))
+   }
+
+   # create a spatial object
+   x <- x[x$lon > -180,]
+   # xSp <- SpatialPixelsDataFrame(points=x[,c("lon", "lat")], data=x[,variables])
+   xSp <- SpatialPixelsDataFrame(points=x[,c("lon", "lat")], data=x[variables], proj4string=CRS("+proj=longlat +datum=WGS84"))
+
+   # convert into raster
+   library("raster")
+   xR <- stack(xSp)
+
+   # write it in a raster file
+   writeRaster(xR, filename=name, format="raster")
+   library("ncdf")
+   writeRaster(xR, filename=name, format="CDF", overwrite=T)
+   writeAsciiGrid(xSp, fname=paste(name, ".ag", sep=""))
+   # writeRaster(xR1, filename=name, format="ascii")
+   # writeRaster(xR, filename=name, format="EHdr")
+   # writeRaster(xR, filename=name, format="GTiff")
+   # writeRaster(xR, filename=name, format="netCDF")
+
+}
+
 
 }
