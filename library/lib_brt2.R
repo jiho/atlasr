@@ -55,7 +55,7 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.01, min.n.trees=3000, n.boot
    if (cv.fold < 2) {
       stop("Not enough data to correctly fit a model. Need at least ", n.per.fold * 2, " data points")
    }
-   cv.fold <- min(cv.fold, 10)
+   cv.fold <- min(cv.fold, 6)
 
    # add response variable to the data.frame
    d <- x
