@@ -13,7 +13,7 @@
 #-----------------------------------------------------------------------------
 
 
-brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.01, min.n.trees=3000, n.boot=0, verbose=FALSE, ...) {
+brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.05, min.n.trees=1000, n.boot=0, verbose=FALSE, ...) {
    #
    # Fit a Boosted Regression Tree model with optimization of number of trees and bootstraps
    #
