@@ -10,30 +10,7 @@
 #-----------------------------------------------------------------------------
 
 
-## Toolbox functions
-#-----------------------------------------------------------------------------
-
-south_pole_proj <- function(projection="stereographic", orientation=c(-90,0,0)) {
-   #
-   # Easy access to a suitable polar projection
-   # NB: view from south pole (-90)
-   #
-   suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
-   suppressPackageStartupMessages(require("mapproj", quietly=TRUE))
-
-   out <- list(
-      # polar projection
-      coord_map(projection=projection, orientation=orientation),
-      # simpler scales (because polar projection screws up longitude scales)
-      theme(axis.text.x=element_blank(),axis.title.x=element_blank()),
-      scale_y_continuous(name="Latitude")
-   )
-
-   return(out)
-}
-
-
-
+# Colour scales for ggplot
 discrete.colourmap <- function(n=10) {
   #
   # Define some qualitatively different colours
@@ -96,6 +73,8 @@ continuous.colourmap <- function(n=10) {
 
 }
 
+
+# Generics
 plot.pred <- function(x, ...) {
   #
   # Generic for the plot of predictions from a model
@@ -110,6 +89,8 @@ plot.effects <- function(x, ...) {
   UseMethod("plot.effects")
 }
 
+
+# Polygon clipping
 clip.polygon <- function(x, lon.min=-180, lon.max=180, lat.min=-90, lat.max=90) {
   #
   # Clip a polygon within given limits
@@ -201,8 +182,25 @@ clip.to.data <- function(x, data, expand=1) {
 }
 
 
-## Plotting functions
-#-----------------------------------------------------------------------------
+# South pole plots in ggplot
+south_pole_proj <- function(projection="stereographic", orientation=c(-90,0,0)) {
+   #
+   # Easy access to a suitable polar projection
+   # NB: view from south pole (-90)
+   #
+   suppressPackageStartupMessages(require("ggplot2", quietly=TRUE))
+   suppressPackageStartupMessages(require("mapproj", quietly=TRUE))
+
+   out <- list(
+      # polar projection
+      coord_map(projection=projection, orientation=orientation),
+      # simpler scales (because polar projection screws up longitude scales)
+      theme(axis.text.x=element_blank(),axis.title.x=element_blank()),
+      scale_y_continuous(name="Latitude")
+   )
+
+   return(out)
+}
 
 layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
   #
@@ -239,8 +237,6 @@ layer_land <- function(x, expand=1, path=getOption("atlasr.env.data"), ...) {
 
   return(landLayer)
 }
-
-
 
 polar_ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", "tile"), path=getOption("atlasr.env.data"), land=NULL, scale=1, ...) {
   #
@@ -339,4 +335,3 @@ polar_ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
 
   return(p)
 }
-
