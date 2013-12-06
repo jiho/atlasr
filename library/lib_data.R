@@ -869,18 +869,68 @@ write.raster <- function(x, name, variables=NULL) {
 
 }
 
-write.netcdf <- function(d, dimensions, variables=NULL) {
-   #
+write.netcdf <- function(d, file, dimensions, variables=NULL, missval=-99999) {
    # Write a data.frame as a netCDF file
    #
+   # d            data.frame
+   # file         output file path, possibly omitting the extension
+   # dimensions   names or indexes of columns in d representing the data dimensions
+   # variables    names or indexes of columns in d represented the measured variables
+   #              if NULL, all non-dimension columns are considered
+   # missval      missing value code in the netCDF data
 
-   if ( ! all(dimensions) %in% names(d) ) {
-
+   if ( is.character(dimensions) & ! all(dimensions %in% names(d)) ) {
+      stop("All dimensions must be columns of d")
+   }
+   if (is.numeric(dimensions)) {
+      dimensions <- names(d)[dimensions]
    }
 
+   if ( is.null(variables) ) {
+      variables <- setdiff(names(d), dimensions)
+   } else {
+      if ( is.character(variables) & ! all(variables %in% names(d)) ) {
+         stop("All variables must be columns of d")
+      }
+      if (is.numeric(variables)) {
+         variables <- names(d)[variables]
+      }
+   }
 
+   suppressPackageStartupMessages(library("tools", quietly=TRUE))
+   if ( file_ext(file) == "" ) {
+      file <- paste(file, ".nc", sep="")
+   }
 
+   suppressPackageStartupMessages(library("ncdf4", quietly=TRUE))
+   suppressPackageStartupMessages(library("plyr", quietly=TRUE))
 
+   dims <- llply(dimensions, function(dim) {
+      x <- d[,dim]
+      vals <- sort(unique(x))
+      ncdim_def(name=dim, units="unspecified", vals=vals)
+   })
+
+   vars <- llply(variables, function(var, missval) {
+      type <- class(d[,var])
+      precision <- switch(type,
+         numeric = "double",
+         factor = "char",
+         integer = "integer",
+         "double"
+      )
+      ncvar_def(name=var, units="unspecified", dim=dims, missval=missval, prec=precision)
+   }, missval=missval)
+
+   nc <- nc_create(filename=file, vars=vars)
+
+   library("reshape2")
+   l_ply(variables, function(var, missval) {
+      x <- acast(d, formula=as.list(dimensions), value.var=var, fill=missval)
+      ncvar_put(nc, varid=var, vals=x)
+   }, missval=missval)
+
+   nc_close(nc)
 }
 
 # }
