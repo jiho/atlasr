@@ -129,7 +129,7 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.01, min.n.trees=3000, n.boot
 
          # fit model on this resampled dataset
          library("gbm")
-         mb <- gbm(response ~ . , data=d, shrinkage=shrinkage, n.trees=n.trees, keep.data=FALSE, ...)
+         mb <- gbm(response ~ . , data=dd, shrinkage=shrinkage, n.trees=n.trees, keep.data=FALSE, ...)
 
          return(mb)
       }
