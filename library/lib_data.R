@@ -457,11 +457,11 @@ match.vars <- function(vars, choices, quiet=TRUE) {
       if (length(idx) == 0) {
         nChoices <- length(choices)
         if ( nChoices > 6 ) {
-          possibilities <- paste(paste(choices[1:6], collapse=", "), "... and", nChoices - 6, "more")
+          possibilities <- paste(paste(choices[1:6], collapse="\n    "), "\n    and", nChoices - 6, "more...")
         } else {
-          possibilities <- paste(choices, collapse=", ")
+          possibilities <- paste(choices, collapse="\n    ")
         }
-        stop("No variable matching \"", vars[i], "\" could be found.\n  The possibilities were : ", possibilities)
+        stop("No variable matching \"", vars[i], "\" could be found.\n  The possibilities were:\n    ", possibilities)
       }
     }
     # store all matches for all variables
