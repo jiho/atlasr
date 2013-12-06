@@ -66,6 +66,7 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.01, min.n.trees=3000, n.boot
    #--------------------------------------------------------------------------
 
    # optimise shrinkage and number of trees if the number of trees is not forced
+   # TODO does not seem to work with real data
    if ( is.null(n.trees) ) {
       if ( verbose ) message("Optimising shrinkage and number of trees")
 
@@ -81,24 +82,23 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.01, min.n.trees=3000, n.boot
 
          # prime the model
          m <- gbm(response ~ . , data=d, shrinkage=shrinkage, n.trees=step.n.trees, train.fraction=0.9, ...)
-         best.iter <- suppressWarnings(gbm.perf(m, method="OOB", plot.it=FALSE))
-         # NB: at this point best.iter is probably the maximum number of trees in the model
+         best.iter <- step.n.trees
 
          # increase number of trees until the best number of trees (best.iter) is well below the total number of trees computed. This means enough trees will have been computed.
          # The cross-validation estimation of the optimal number of trees is the best but is quite long. The estimations using OOB or test methods are not as good as the one using cross validation, especially for small shrinkage.
          # => we take an additional buffer in the number of trees, inversely proportional to shrinkage
-         while ( m$n.trees - best.iter < 2 / shrinkage ) {
+         while ( m$n.trees - best.iter < 0.5 / shrinkage ) {
             # add some trees
             m <- gbm.more(m, n.new.trees=step.n.trees)
 
             # OOB underestimates
-            # test over estimates
+            # test overestimates
             # => we take the average
             best.iter.OOB <- suppressWarnings(gbm.perf(m, method="OOB", plot.it=FALSE))
             best.iter.test <- suppressWarnings(gbm.perf(m, method="test", plot.it=FALSE))
             best.iter <- round((best.iter.OOB + best.iter.test) / 2)
 
-            if (verbose) message("  shrinkage : ", round(shrinkage, 4), " | trees : ", best.iter, " / ", m$n.trees)
+            if (verbose) message("  shrinkage: ", round(shrinkage, 4), " | trees: ", best.iter, "*, ", m$n.trees, " total")
          }
       }
       n.trees <- m$n.trees
@@ -107,8 +107,8 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.01, min.n.trees=3000, n.boot
    # fit the final model with cross validation and get a better, final, estimate of the actual optimal number of trees
    if ( verbose ) message("Cross-validating model (", cv.fold, " folds)")
    m <- gbm(response ~ . , data=d, shrinkage=shrinkage, n.trees=n.trees, cv.fold=cv.fold, ...)
-   m$best.iter <- gbm.perf(m, method="cv", plot.it=verbose)
-   if (verbose) message("  shrinkage : ", round(shrinkage, 4), " | trees : ", m$best.iter, " / ", m$n.trees)
+   m$best.iter <- gbm.perf(m, method="cv", plot.it=FALSE)
+   if (verbose) message("  shrinkage: ", round(shrinkage, 4), " | trees: ", m$best.iter, "*, ", m$n.trees, " total")
 
 
    # bootstraps
