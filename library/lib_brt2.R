@@ -291,7 +291,7 @@ effects.brt <- function(m, continuous.resolution=100, ...) {
    } else {
       # bootstraps, get the effects for each bootstrap
       effects <- llply(m$boot, function(mb, data.ranges, n.trees) {
-         effects <- alply(mb$var.names, 1, get.response, model=mb, data.ranges=data.ranges, n.trees=n.trees)
+         effects <- llply(mb$var.names, get.response, model=mb, data.ranges=data.ranges, n.trees=n.trees)
          names(effects) <- m$var.names
          return(effects)
       }, data.ranges=data.ranges, n.trees=m$best.iter, .progress="text")
