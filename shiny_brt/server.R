@@ -213,6 +213,21 @@ shinyServer(function(input, output) {
       predData
    })
 
+   # predict distribution
+   predict_distrib <- reactive({
+      dmess("run predict_distrib") 
+
+      m <- fit_model()
+      predData <- generate_pred_grid()
+      
+      vmess("Predict distribution")
+      pred <- predict(m, predData)
+      # pred <- pred[,-which(names(pred) %in% m$var.names)]
+
+      pred
+   })
+
+
    # Output functions
    #--------------------------------------------------------------------------
    # Return text or plots to the user, destined to be displayed in the main panel
@@ -252,13 +267,10 @@ shinyServer(function(input, output) {
             if ( ! input$predict ) {
                stop("No predictions")
             } else {
-               m <- fit_model()
-               predData <- generate_pred_grid()
+               pred <- predict_distrib()
                
-               pred <- predict(m, newdata=predData)
-
-               print(plot.pred(m, newdata=predData, quick=input$quick, scale=0.7))
                vmess("Plot habitat suitability")
+               print(plot.pred.brt(x=pred, quick=input$quick, scale=0.7))
             }
          })
       }
