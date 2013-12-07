@@ -130,9 +130,15 @@ shinyUI(pageWithSidebar(
 
       h5("Model effects"),
       plotOutput("modelPlot"),
+      # TODO dynamic height based on number of variables
+      downloadButton("downloadEffectsPlot", "Download plot as PDF"),
+
 
       h5("Model prediction"),
-      plotOutput("predPlot", height="700px")
+      plotOutput("predPlot", height="400px"),
+      # TODO dynamic height depending on wether we do a quick or not quick plot
+      downloadButton('downloadNetCDF', 'Download predictions as netCDF'),
+      downloadButton('downloadCSV', 'Download predictions as CSV')
    )
 
 ))

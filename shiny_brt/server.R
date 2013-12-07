@@ -275,5 +275,42 @@ shinyServer(function(input, output) {
          })
       }
    })
+ 
+   dlFile <- function(extension, suffix="") {
+      dmess("generate filename for ", extension, " file")
+      paste("brt-", format(Sys.time(), format="%Y%m%d_%H%M%S"), ".", extension, sep="")
+   }
+ 
+   output$downloadCSV <- downloadHandler(
+      filename = dlFile(ext="csv"),
+      content = function(file) {
+         dmess("generate CSV file")         
+         pred <- predict_distrib()
+         write.csv(pred, file=file)
+      },
+      contentType = "text/csv"
+   )
+    
+   output$downloadNetCDF <- downloadHandler(
+      filename = dlFile(ext="nc"),
+      content = function(file) {
+         dmess("generate netCDF file")         
+         pred <- predict_distrib()
+         write.netcdf(pred, file=file, dimensions=c("lon","lat"))
+      },
+      contentType = "application/octet-stream"
+   )
+
+   output$downloadEffectsPlot <- downloadHandler(
+      filename = dlFile(ext="pdf", suffix="effects"),
+      content = function(file) {
+         dmess("plot effects to PDF")
+         m <- fit_model()
+         pdf(file, width=8, height=6)
+         plot.effects(m)
+         dev.off()
+      }
+   )
+   
 
 })
