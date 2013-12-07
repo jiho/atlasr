@@ -79,7 +79,7 @@ shinyUI(pageWithSidebar(
 
       div( id="prediction",
          h5("Prediction"),
-         checkboxInput("predict", "Predict distribution", value=TRUE),
+         checkboxInput("predict", "Predict distribution", value=FALSE),
 
          # Domain for prediction
          conditionalPanel(
@@ -87,16 +87,16 @@ shinyUI(pageWithSidebar(
             wellPanel(
                checkboxInput("quick", "Quick, unprojected, prediction plot", TRUE),
 
-               checkboxInput("extrapolate", "Predict beyond observed environmental range"),
+               checkboxInput("extrapolate", "Predict beyond observed environmental range", FALSE),
                sliderInput("min.var.prop", "Minimum variance for prediction", min=0, max=100, step=10, value=50),
                helpText("When some environmental data is missing, prediction will only be made if the available environmental data allows to capture the specified percentage of the variance"),
 
                # checkboxInput("overlay", "Overlay stations on prediction map"),
 
                sliderInput("lat", "Latitudinal limits and step", min=-80, max=-30, step=1, value=c(-80,-30)),
-               sliderInput("latStep", "", min=0.1, max=4, step=0.1, value=4),
+               sliderInput("latStep", "", min=0.1, max=4, step=0.1, value=2),
                sliderInput("lon", "Longitudinal limits and step", min=-180, max=180, step=5, value=c(-180,180)),
-               sliderInput("lonStep", "", min=0.1, max=4, step=0.1, value=4)
+               sliderInput("lonStep", "", min=0.1, max=4, step=0.1, value=2)
             )
          )
       ),
@@ -135,7 +135,7 @@ shinyUI(pageWithSidebar(
 
 
       h5("Model prediction"),
-      plotOutput("predPlot", height="400px"),
+      plotOutput("predPlot"),
       # TODO dynamic height depending on wether we do a quick or not quick plot
       downloadButton('downloadNetCDF', 'Download predictions as netCDF'),
       downloadButton('downloadCSV', 'Download predictions as CSV')

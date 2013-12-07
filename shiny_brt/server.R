@@ -68,7 +68,7 @@ shinyServer(function(input, output) {
          vars <- vars[ !hasSeason | hasSelectedSeason ]
       }
 
-      checkboxGroupInput("vars", "Select variables:", vars, vars[1:2])
+      checkboxGroupInput("vars", "Select variables:", vars)
    })
 
 
