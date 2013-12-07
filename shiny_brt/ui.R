@@ -28,10 +28,10 @@ shinyUI(pageWithSidebar(
          fileInput("dataFile", label="", multiple=FALSE, accept="text/csv"),
    
          # list species in the loaded data file
-         conditionalPanel(
-            condition="typeof(input.dataFile) != 'undefined'",
-            uiOutput("speciesList")
-         ),
+         # conditionalPanel(
+         #    condition="typeof(input.dataFile) != 'undefined'",
+            uiOutput("speciesList"),
+         # ),
    
          checkboxInput("bin", "Bin input data on 0.1º grid", TRUE),
          helpText("All data points will be kept but points in the same grid cell will be weighted down")
