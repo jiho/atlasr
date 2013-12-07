@@ -923,6 +923,8 @@ write.netcdf <- function(d, file, dimensions, variables=NULL, missval=-99999) {
    }, missval=missval)
 
    nc_close(nc)
+   
+   return(NULL)
 }
 
 # }
