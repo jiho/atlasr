@@ -453,12 +453,18 @@ predict.brt <- function(m, newdata=NULL, type="response", ...) {
    return(pred)
 }
 
-plot.pred.brt <- function(m, quick=TRUE, ...) {
+plot.pred.brt <- function(x, quick=TRUE, ...) {
    #
    # Plot predictions
    #
 
-   d <- predict(m, ...)
+   if ( "brt" %in% class(x) ) {
+      d <- predict.brt(x, ...)      
+   } else if ( "data.frame" %in% class(x) ) {
+      d <- x
+   } else {
+      stop("Don't know how to deal with object of class ", class(x))
+   }
 
    suppressPackageStartupMessages(require("ggplot2"))
 
