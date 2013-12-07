@@ -12,7 +12,7 @@ library("plyr")
 
 shinyServer(function(input, output) {
 
-   dmess("execute shinyServer")
+   dmess("run shinyServer")
 
    # UI functions
    #--------------------------------------------------------------------------
@@ -89,7 +89,7 @@ shinyServer(function(input, output) {
       } else {
 
          # otherwise read the data and return the data.frame
-         dmess("read data file ", input$dataFile$name)
+         vmess("Read input data file ", input$dataFile$name)
          dataFile <- input$dataFile$datapath
          d <- read.data(dataFile, filetype="csv")
       }
@@ -98,6 +98,9 @@ shinyServer(function(input, output) {
 
    # read env data
    read_env_data <- reactive({
+      dmess("run read_env_data")
+      vmess("Read environmental database")
+
       # read selected variables from the database
       database <- read.env.data(input$vars, path="../../env_data", verbose=TRUE)
       # remove information on land
@@ -108,42 +111,41 @@ shinyServer(function(input, output) {
 
    # fit the model and compute predictions
    fit_model <- reactive({
-      dmess("fit model")
-
-      # read data
-      d <- read_input_data()
-      database <- read_env_data()
+      dmess("run fit_model")
       
+      d <- read_input_data()
       # if there is no data, stop and give an error
       if ( is.null(d) ) {
          stop("Upload a CSV file to start")
       }
+      database <- read_env_data()
 
       # if no explanatory variables are selected, stop and give an error
-      dmess("test if options are correctly set")
       if ( is.null(input$vars) ) {
          stop("Select at least one explanatory variable")
       }
 
       # weight observations within each cell of the environmental grid
       if ( input$bin ) {
+         vmess("Weight data per bin")
          weights <- weight.per.bin(lon=d$lon, lat=d$lat, bin=0.1)         
       } else {
          weights <- rep(1, nrow(d))
       }
 
       # get environment data for the observations
-      dmess("associate env data with input data")
+      vmess("Associate env data with input data")
       x <- get.env.data(lon=d$lon, lat=d$lat, database)
 
       # remove points with only missing data
       onlyNA <- which(too.many.na(x, p=1))
-      if ( verbose ) message("Removing ", length(onlyNA), " observations (over ", nrow(x), ") because of missing environmental data")
+      vmess("Removing ", length(onlyNA), " observations (over ", nrow(x), ") because of missing environmental data")
       x <- x[-onlyNA,]
       d <- d[-onlyNA,]
       weights <- weights[-onlyNA]
 
       # set up the model call
+      vmess("Fitting BRT model for ", input$species)
       call <- str_c("brt.fit(x=x, y=d[,\"", input$species, "\"]",
                     # ", distribution=\"", input$distribution, "\"",
                     ", distribution=\"bernoulli\"",
@@ -154,7 +156,9 @@ shinyServer(function(input, output) {
                     ", max.cv.fold=", input$max.cv.fold,
                     # ", min.n.trees=", input$min.n.trees,
                     ", n.boot=", input$n.boot,
-                    ", weights=weights)"
+                    ", weights=weights",
+                    ", verbose=", verbose,
+                    ")"
       )
       dmess(call)
       m <- eval(parse(text=call))
@@ -165,12 +169,13 @@ shinyServer(function(input, output) {
 
    # generate prediction grid
    generate_pred_grid <- reactive({
+      dmess("run generate_pred_grid")
+
       database <- read_env_data()
       m <- fit_model()
       variables <- m$var.names
-      
-      # browser()
-      
+
+      vmess("Generate prediction grid")
       predGrid <- build.grid(
          lat.min=input$lat[1], lat.max=input$lat[2], lat.step=input$latStep,
          lon.min=input$lon[1], lon.max=input$lon[2], lon.step=input$lonStep
@@ -179,6 +184,7 @@ shinyServer(function(input, output) {
 
       # remove data outside original data range
       if ( ! input$extrapolate ) {
+         vmess("Remove data outside input environmental range")
          x <- data.frame(matrix(m$data$x, nrow=nrow(m$data$x.order)))
          names(x) <- variables
          ranges <- llply(x, range, na.rm=T)
@@ -191,7 +197,7 @@ shinyServer(function(input, output) {
       predData <- cbind(predGrid, xPred)
       onlyNA <- which(too.many.na(predData[,variables], p=1))
       if ( length(onlyNA) > 0 ) {
-         if ( verbose ) message("Removing ", length(onlyNA), " points of the ", nrow(predData), " points prediction grid\n(on land or outside the range of the training data)")
+         vmess("Removing ", length(onlyNA), " points of the ", nrow(predData), " points prediction grid\n(on land or outside the range of the training data)")
          predData <- predData[-onlyNA,]
       }
 
@@ -200,7 +206,7 @@ shinyServer(function(input, output) {
       w <- infl / sum(infl)
       notEnoughData <- which(too.many.na(predData[,variables], p=input$min.var.prop/100, weights=w))
       if ( length(notEnoughData) > 0 ) {
-         if ( verbose ) message("Further removing ", length(notEnoughData), " points of the ", nrow(predData), " points prediction grid\n(available environmental data does not allow to explain ", input$min.var.prop,"% of variance)")
+         vmess("Further removing ", length(notEnoughData), " points of the ", nrow(predData), " points prediction grid\n(available environmental data does not allow to explain ", input$min.var.prop,"% of variance)")
          predData <- predData[-notEnoughData,]
       }
       
@@ -213,9 +219,13 @@ shinyServer(function(input, output) {
 
    # give a summary of the model
    output$modelSummary <- renderPrint({
+      dmess("run modelSummary")
+
       if (input$run > 0) {
          isolate({
             m <- fit_model()
+            
+            vmess("Compute summary of model effects")
             summary.brt(m, plotit=FALSE)
          })
       }
@@ -223,9 +233,12 @@ shinyServer(function(input, output) {
 
    # plot the effects
    output$modelPlot <- renderPlot({
+      dmess("run modelPlot")
       if (input$run > 0) {
          isolate({
             m <- fit_model()
+            
+            vmess("Compute and plot model effects")
             plot.effects(m)
          })
       }
@@ -233,6 +246,7 @@ shinyServer(function(input, output) {
 
    # plot the predictions
    output$predPlot <- renderPlot({
+      dmess("run predPlot")
       if (input$run > 0) {
          isolate({
             if ( ! input$predict ) {
@@ -244,6 +258,7 @@ shinyServer(function(input, output) {
                pred <- predict(m, newdata=predData)
 
                print(plot.pred(m, newdata=predData, quick=input$quick, scale=0.7))
+               vmess("Plot habitat suitability")
             }
          })
       }

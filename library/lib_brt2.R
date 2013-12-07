@@ -66,7 +66,7 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.05, min.n.trees=2000, n.boot
    # optimise shrinkage and number of trees if the number of trees is not forced
    # TODO does not seem to work with real data
    if ( is.null(n.trees) ) {
-      if ( verbose ) message("Optimising shrinkage and number of trees")
+      if ( verbose ) message("  optimising shrinkage and number of trees")
 
       # start with some defaults
       shrinkage <- shrinkage * 1/0.75   # NB: will be reduced before the first model
@@ -103,7 +103,7 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.05, min.n.trees=2000, n.boot
    }
 
    # fit the final model with cross validation and get a better, final, estimate of the actual optimal number of trees
-   if ( verbose ) message("Cross-validating model (", cv.fold, " folds)")
+   if ( verbose ) message("  cross-validating model (", cv.fold, " folds)")
    m <- gbm(response ~ . , data=d, shrinkage=shrinkage, n.trees=n.trees, cv.fold=cv.fold, ...)
    m$best.iter <- gbm.perf(m, method="cv", plot.it=FALSE)
    if (verbose) message("  shrinkage: ", round(shrinkage, 4), " | trees: ", m$best.iter, "*, ", m$n.trees, " total")
@@ -114,7 +114,7 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.05, min.n.trees=2000, n.boot
 
    if (n.boot > 0) {
 
-      if ( verbose ) message("Bootstrapping model (", n.boot, " bootstraps)")
+      if ( verbose ) message("  bootstrapping model (", n.boot, " bootstraps)")
 
       boot.brt <- function(i, d, n.trees, shrinkage, ...) {
          # i            bootstrap number

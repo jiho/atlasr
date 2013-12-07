@@ -62,13 +62,13 @@ update.env.data <- function(url="http://share.biodiversity.aq/GIS/antarctic", pa
   if ( ! file.exists(path) ) {
     # when the database does not exist yet, get everything
     warning("No environment database", call.=FALSE, immediate.=TRUE)
-    message("-> Download entire environment database")
-    message("   This will be long...")
+    message("  Download entire environment database")
+    message("  This will be long...")
 
     # split by directory
     d_ply(remoteMD5, ~dir, function(x) {
       # print directory identifier
-      message(str_c("   ", x$dir[1]))
+      message(str_c("  ", x$dir[1]))
 
       # download all files, with a global progress bar
       a_ply(x, 1, function(x) {
@@ -184,7 +184,7 @@ list.env.data <- function(variables="", path=getOption("atlasr.env.data"), full=
   }
 }
 
-read.env.data <- function(variables="", path=getOption("atlasr.env.data"), verbose=FALSE) {
+read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) {
   # Read data from the netCDF files
   #
   # variables   only output variables matching this (matches all when "")
@@ -199,10 +199,8 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), verbo
     stop("Environment database not found in ", path)
   }
 
-  if ( verbose ) message("Read environment data")
-
   # select which netCDF files to read
-  ncFiles = list.env.data(variables, path, full=T, verbose=verbose)
+  ncFiles = list.env.data(variables, path, full=T, ...)
   ncVariables = list.env.data(variables, path, verbose=FALSE)
   # NB: possibly inform about variable names expansion only for the first pass
 
@@ -242,7 +240,7 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), verbo
     # image(dat, main=varName)
 
     return(dat)
-  }, .progress=ifelse(length(ncFiles) > 5,"text","none"))  # get a nice progress bar when there are several files to read
+  }, .progress=ifelse(length(ncFiles) > 5 & verbose, "text", "none"))  # get a nice progress bar when there are several files to read
 
   # # remove plyr attributes (useless here)
   # attributes(database) <- list()
@@ -283,15 +281,13 @@ mask.env.data <- function(database, ...) {
   return(database)
 }
 
-get.env.data <- function(lon, lat, database, verbose=FALSE) {
+get.env.data <- function(lon, lat, database) {
   # Associate the environmental data from `database` to the points specified in `dataset`
   #
   # dataset     data.frame with at least lon and lat columns
   # database    list resulting from read.env.data
   # lon/lat.name  names (or numbers) of the lon and lat columns in the dataset
   #
-
-  if ( verbose ) message("Fetch environment data for observed points")
 
   # bilinear interpolation
   # NB: if we extract points that are exactly on the grid, we do not interpolate anything and this method is quite fast
@@ -325,7 +321,7 @@ clean.path <- function(file, ...) {
   return(file)
 }
 
-read.data <- function(file, verbose=FALSE, filetype="guess", ...) {
+read.data <- function(file, filetype="guess", ...) {
   #
   # Detect the format of a data file and read it
   #
@@ -348,11 +344,6 @@ read.data <- function(file, verbose=FALSE, filetype="guess", ...) {
   # check file existence
   if ( ! file.exists(file) ) {
     stop("Cannot find file: ", file)
-  }
-
-  if ( verbose ) {
-    fileName <- basename(file)
-    message("Read data in ", fileName)
   }
 
   if (filetype == "guess") {
@@ -402,7 +393,7 @@ partial.match <- function(pattern, choices, verbose=FALSE) {
   #
   # pattern pattern to match in choices
   # choices list of matching possibilities
-  # quiet   wether to provide a message about matches
+  # verbose wether to provide a message about matches
   #
 
   # prepare storage
@@ -544,8 +535,6 @@ rasterize <- function(x, vars, n=10, precisions=NULL, fun=sum, ...) {
       stop("The vector of precisions does not have as many elements as variables in vars")
     }
   }
-
-  message("-> Bin data with precisions : ", paste(vars, round(precisions, 3), sep="=", collapse=" x "))
 
   # round columns to the given precision
   suppressPackageStartupMessages(require("plyr"))
@@ -900,10 +889,10 @@ write.netcdf <- function(d, file, dimensions, variables=NULL, missval=-99999) {
       }
    }
 
-   suppressPackageStartupMessages(library("tools", quietly=TRUE))
-   if ( file_ext(file) == "" ) {
-      file <- paste(file, ".nc", sep="")
-   }
+   # suppressPackageStartupMessages(library("tools", quietly=TRUE))
+   # if ( file_ext(file) == "" ) {
+   #    file <- paste(file, ".nc", sep="")
+   # }
 
    suppressPackageStartupMessages(library("ncdf4", quietly=TRUE))
    suppressPackageStartupMessages(library("plyr", quietly=TRUE))

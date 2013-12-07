@@ -7,13 +7,20 @@
 #--------------------------------------------------------------------------
 
 
-DEBUG <- TRUE
-# DEBUG <- FALSE
+debug <- T
+verbose <- F
 
 # debug message
 dmess <- function(...) {
-  if (DEBUG) {
+  if (debug) {
     message("DEBUG: ", ...)
+  }
+  return(invisible(1))
+}
+
+vmess <- function(...) {
+  if (verbose) {
+    message("-> ", ...)
   }
   return(invisible(1))
 }
