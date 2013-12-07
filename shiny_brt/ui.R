@@ -1,8 +1,8 @@
 #
-#      Shiny server GUI, which presents controls and results
+#         Shiny server GUI, which presents controls and results
 #
-#  (c) Copyright 2013 Jean-Olivier Irisson
-#      GNU General Public License v3
+#   (c) Copyright 2013 Jean-Olivier Irisson
+#         GNU General Public License v3
 #
 #--------------------------------------------------------------------------
 
@@ -10,124 +10,129 @@
 dmess("run ui.R")
 
 library("shiny")
-library("shinyIncubator")   # for action button
-
 
 shinyUI(pageWithSidebar(
 
-  # Title
-  headerPanel("Model data with Boosted Regression Trees"),
+   # Title
+   headerPanel("Model data with Boosted Regression Trees"),
 
 
-  # User input
-  sidebarPanel(
-    h5("Input data"),
+   # User input
+   sidebarPanel(
 
-    # input data file
-    helpText("Upload a csv file with columns for latitude and longitude and each species of interest"),
-    fileInput("dataFile", label="", multiple=FALSE, accept="text/csv"),
+      div( id="input",
+         h5("Input data"),
+                  
+         # upload data file
+         helpText("Upload a csv file with columns for latitude and longitude and each species of interest"),
+         fileInput("dataFile", label="", multiple=FALSE, accept="text/csv"),
+   
+         # list species in the loaded data file
+         conditionalPanel(
+            condition="typeof(input.dataFile) != 'undefined'",
+            uiOutput("speciesList")
+         ),
+   
+         checkboxInput("bin", "Bin input data on 0.1º grid", TRUE),
+         helpText("All data points will be kept but points in the same grid cell will be weighted down")
+      ),
 
-    # List of species in the loaded data file
-    conditionalPanel(
-      condition="typeof(input.dataFile) != 'undefined'",
-      uiOutput("speciesList")
-    ),
-    # TODO try to hide this with conditional panel based on input.dataFile
-    #      this would allow to avoid the conditions which check wether the data in NULL in the corresponding server code
+      div( id="options",
+         h5("Options - see ?gbm in R"),
+      
+         # selectInput("distribution", "Distribution", list(
+         #    "bernoulli",
+         #    "gaussian",
+         #    "poisson"
+         # )),
+         # helpText("When bernoulli is selected, the data will be converted to presence and absence only, even if it contains abundances"),
 
-    h5("Options"),
+         # checkboxInput("optim", "Choose shrinkage and number of trees automatically", FALSE),
+         # conditionalPanel(
+         #    condition="input.optim == false",
+         #    wellPanel(
+         #       helpText("Ideally, you want a large number of trees with a very small learning rate"),
+               sliderInput("n.trees", "Maximum number of trees (the actual number will be estimated through cross validation)", min=500, max=10000, step=500, value=2000),
+               sliderInput("shrinkage", "Shrinkage per tree", min=0.001, max=0.05, step=0.001, value=0.01),
+         #    )
+         # ),
+         # conditionalPanel(
+         #    condition="input.optim == true",
+         #    wellPanel(
+         #       sliderInput("min.n.trees", "Minimum number of trees", min=500, max=10000, step=500, value=2000),
+         #       sliderInput("shrinkage", "Starting value for the shrinkage per tree", min=0.001, max=0.1, step=0.001, value=0.05)
+         #    )
+         # ),
+      
+         checkboxInput("advanced", "Advanced gbm settings", value=FALSE),
+         conditionalPanel(
+            condition="input.advanced == true",
+            wellPanel(
+               sliderInput("interaction.depth", "interaction.depth", min=1, max=10, step=1, value=3),
+               sliderInput("bag.fraction", "bag.fraction", min=0, max=1, step=0.1, value=0.5),
+               sliderInput("max.cv.fold", "cv.fold", min=0, max=20, step=2, value=6)
+            )
+         ),
 
-    # Settings for the run
-    # selectInput("distrib", "Distribution", list(
-    #   "bernouilli",
-    #   "gaussian",
-    #   "poisson"
-    # )),
-    # helpText("When bernouilli is selected, the data will be converted to presence and absence only, even if it contains abundances"),
+         sliderInput("n.boot", "Number of bootstraps", min=0, max=500, step=50, value=0)
+      ),
 
-    # checkboxInput("bin", "Bin input data on 0.1º grid", FALSE),
-    # helpText("All data points will be kept but points in the same grid cell will be weighted down"),
+      div( id="prediction",
+         h5("Prediction"),
+         checkboxInput("predict", "Predict distribution", value=TRUE),
 
-    # checkboxInput("boot", "Bootstrap model", value=FALSE),
+         # Domain for prediction
+         conditionalPanel(
+            condition="input.predict == true",
+            wellPanel(
+               checkboxInput("quick", "Quick, unprojected, prediction plot", TRUE),
 
-    checkboxInput("optim", "Choose shrinkage (i.e. learning rate) and number of trees automatically", FALSE),
-    conditionalPanel(
-      condition="input.optim == false",
-      wellPanel(
-        helpText("Ideally, you want a large number of trees with a very small learning rate"),
-        sliderInput("n.trees", "Maximum number of trees", min=500, max=10000, step=500, value=5000),
-        sliderInput("shrinkage", "Shrinkage (i.e. learning rate) per tree", min=0.001, max=0.01, step=0.001, value=0.005)
+               checkboxInput("extrapolate", "Predict beyond observed environmental range"),
+               sliderInput("min.var.prop", "Minimum variance for prediction", min=0, max=100, step=10, value=50),
+               helpText("When some environmental data is missing, prediction will only be made if the available environmental data allows to capture the specified percentage of the variance"),
+
+               # checkboxInput("overlay", "Overlay stations on prediction map"),
+
+               sliderInput("lat", "Latitudinal limits and step", min=-80, max=-30, step=1, value=c(-80,-30)),
+               sliderInput("latStep", "", min=0.1, max=4, step=0.1, value=4),
+               sliderInput("lon", "Longitudinal limits and step", min=-180, max=180, step=5, value=c(-180,180)),
+               sliderInput("lonStep", "", min=0.1, max=4, step=0.1, value=4)
+            )
+         )
+      ),
+
+      div( id="predictors",
+         h5("Explanatory variables"),
+
+         checkboxInput("interpolated", "Prefer interpolated variables", TRUE),
+         checkboxInput("distance", "Allow 'distance from ...' variables", FALSE),
+         checkboxGroupInput("depths", "Restrict to depths:", c(0,50,200,250,500)),
+         checkboxGroupInput("season", "Restrict to season:", c("summer", "winter"), "summer"),
+
+         uiOutput("variablesList")
+      ),
+
+      # Run button
+      div(
+         style="text-align: right",
+         actionButton("run", "Run !")
+         # NB: actionButton tracks the number of time it is pressed
+         #     this allows to not try plotting the model on the first run
       )
-    ),
-
-    checkboxInput("advanced", "Advanced gbm settings", value=FALSE),
-    conditionalPanel(
-      condition="input.advanced == true",
-      wellPanel(
-        helpText("See ?gbm in R"),
-        sliderInput("interaction.depth", "interaction.depth", min=1, max=10, step=1, value=2),
-        sliderInput("bag.fraction", "bag.fraction", min=0, max=1, step=0.1, value=0.5),
-        sliderInput("cv.fold", "cv.fold", min=0, max=20, step=1, value=5)
-      )
-    ),
+   ),
 
 
-    checkboxInput("predict", "Predict distribution", value=FALSE),
+   # Render the result
+   mainPanel(
 
-    # Domain for prediction
-    conditionalPanel(
-      condition="input.predict == true",
-      wellPanel(
-        checkboxInput("quick", "Quick, unprojected, prediction plot", TRUE),
+      h5("Model summary"),
+      verbatimTextOutput("modelSummary"),
 
-        checkboxInput("extrapolate", "Predict beyond observed environmental range"),
-        # helpText("not recommended"),
+      h5("Model effects"),
+      plotOutput("modelPlot"),
 
-        # checkboxInput("overlay", "Overlay stations on prediction map"),
-
-        # checkboxInput("bootpred", "Bootstrap predictions"),
-
-        sliderInput("lat", "Latitudinal limits and step", min=-80, max=-30, step=1, value=c(-80,-30)),
-        sliderInput("latStep", "", min=0.1, max=4, step=0.1, value=1),
-        sliderInput("lon", "Longitudinal limits and step", min=-180, max=180, step=5, value=c(-180,180)),
-        sliderInput("lonStep", "", min=0.1, max=4, step=0.1, value=1)
-      )
-    ),
-
-    # Environmental variables
-    h5("Explanatory variables"),
-    checkboxInput("interpolated", "Prefer interpolated variables", TRUE),
-    checkboxInput("distance", "Allow 'distance from ...' variables", FALSE),
-    checkboxGroupInput("depths", "Restrict to depths:", c(0,50,200,250,500)),
-    checkboxGroupInput("season", "Restrict to season:", c("summer", "winter"), "summer"),
-    uiOutput("variablesList"),
-    # checkboxGroupInput("vars", "", allVariables),
-
-    # Run button
-    # submitButton("Run model")
-    div(
-      style="text-align: right",
-      actionButton("run", "Run !")
-    )
-
-  ),
-
-
-  # Render the result
-  mainPanel(
-    # tabsetPanel(
-    #   tabPanel("Summary", verbatimTextOutput("modelSummary")),
-    #   tabPanel("Effects", plotOutput("modelPlot")),
-    #   tabPanel("Prediction", plotOutput("predPlot"))
-    # )
-    h5("Model summary"),
-    verbatimTextOutput("modelSummary"),
-
-    h5("Model effects"),
-    plotOutput("modelPlot"),
-
-    h5("Model prediction"),
-    plotOutput("predPlot", height="700px")
-  )
+      h5("Model prediction"),
+      plotOutput("predPlot", height="700px")
+   )
 
 ))

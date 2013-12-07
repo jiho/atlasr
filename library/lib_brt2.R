@@ -8,7 +8,7 @@
 
 
 # Model fitting
-brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.05, min.n.trees=1000, n.boot=0, verbose=FALSE, ...) {
+brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.05, min.n.trees=2000, n.boot=0, verbose=FALSE, max.cv.fold=6, ...) {
    #
    # Fit a Boosted Regression Tree model with optimization of number of trees and bootstraps
    #
@@ -47,10 +47,13 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.05, min.n.trees=1000, n.boot
    # compute good CV fold (at least n.per.fold observations per fold)
    n.per.fold <- 30
    cv.fold <- length(y) %/% n.per.fold
-   if (cv.fold < 2) {
+   if ( cv.fold < 2 ) {
       stop("Not enough data to correctly fit a model. Need at least ", n.per.fold * 2, " data points")
    }
-   cv.fold <- min(cv.fold, 6)
+   if ( cv.fold < max.cv.fold ) {
+      warning("Not enough data for ", max.cv.fold, "cross-validation folds. Reducing to", cv.fold)
+   }
+   cv.fold <- min(cv.fold, max.cv.fold)
 
    # add response variable to the data.frame
    d <- x
@@ -507,3 +510,8 @@ plot.pred.brt <- function(m, quick=TRUE, ...) {
 
 }
 
+
+do.brt <- function() {
+   library("shiny")
+   runApp("shiny_brt")
+}

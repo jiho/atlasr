@@ -1,230 +1,252 @@
 #
-#      Shiny app server, which does most of the work
+#         Shiny app server, which does most of the work
 #
-#  (c) Copyright 2013 Jean-Olivier Irisson
-#      GNU General Public License v3
+#   (c) Copyright 2013 Jean-Olivier Irisson
+#         GNU General Public License v3
 #
 #--------------------------------------------------------------------------
 
 dmess("run server.R")
 
-library("gbm")
 library("plyr")
-library("stringr")
-library("ggplot2")
-library("Cairo")
-
-source("../library/lib_data.R")
-source("../library/lib_plot.R")
 
 shinyServer(function(input, output) {
 
-  dmess("execute shinyServer")
+   dmess("execute shinyServer")
 
-  # Reactive functions
-  # Their output is used by several other functions and depends on the input values
+   # UI functions
+   #--------------------------------------------------------------------------
+   # Create UI which depends on input values
+   
+   # list of species in input file
+   output$speciesList <- renderUI({
+      dmess("render species list")
+      d <- read_input_data()
+      sp <- setdiff(names(d), c("lat", "lon"))
+      if ( ! is.null(sp) ) selectInput("species", "Species to model", sp)
+   })
 
-  # read user supplied data
-  get.data <- reactive({
-    dmess("run get.data")
+   # list of variables depending on options chosen above in the UI
+   output$variablesList <- renderUI({
+      dmess("render variables list")
+      vars <- list.env.data(path="../../env_data")
 
-    if (is.null(input$dataFile)) {
+      # selected interpolated or non-interpolated variables
+      interpolatedVersion <- vars[str_detect(vars, "interpolated")]
+      nonInterpolatedVersion <- str_replace(interpolatedVersion, "_interpolated", "")
+      neverInterpolated <- vars[! vars %in% c(interpolatedVersion, nonInterpolatedVersion)]
+      if ( input$interpolated ) {
+         vars <- vars[vars %in% c(neverInterpolated, interpolatedVersion)]
+      } else {
+         vars <- vars[vars %in% c(neverInterpolated, nonInterpolatedVersion)]
+      }
 
-      # if no data file is uploaded, return NULL
-      dmess("no data file selected")
-      d <- NULL
+      # use distance based variables
+      if ( ! input$distance ) {
+         vars <- vars[!str_detect(vars, "distance_")]
+      }
 
-    } else {
+      # select depths of interest
+      depths <- str_replace(str_extract(vars, "_[0-9]+"), "_", "")
+      hasDepth <- !is.na(depths)
+      if (length(input$depths) > 0) {
+         # detect the presence of any of the selected depths
+         hasSelectedDepth <- depths %in% input$depths
 
-      # otherwise read the data and return the data.frame
-      dmess("read data file ", input$dataFile$name)
-      dataFile <- input$dataFile$datapath
-      d <- read.data(dataFile, filetype="csv")
-    }
-    d
-  })
+         # keep depth-independent variables and depth-dependant variables at selected depths
+         vars <- vars[ !hasDepth | hasSelectedDepth ]
+      }
 
-  # fit the model and compute predictions
-  fit.model <- reactive({
-    dmess("fit model")
+      # select season of interest
+      if (length(input$season) == 1) {
+         hasSeason <- str_detect(vars, "summer|winter")
 
-    # read data
-    d <- get.data()
+         # detect the presence of the selected season
+         hasSelectedSeason <- str_detect(vars, input$season)
 
-    # if there is no data, stop and give an error
-    if (is.null(d)) {
-      stop("Upload a CSV file to start")
-    }
+         # keep season-independent variables and season-dependant variables for the selected season
+         vars <- vars[ !hasSeason | hasSelectedSeason ]
+      }
 
-    # if no explanatory variables are selected, stop and give an error
-    dmess("test if options are correctly set")
-    if (is.null(input$vars)) {
-      stop("Select at least one explanatory variable")
-    }
-
-    # interpolate environmental data at data points
-    dmess("read and mask env data")
-    env <- read.env.data(input$vars, path="../../env_data", verbose=FALSE)
-    env <- mask.env.data(env, path="../../env_data")
-
-    dmess("associate env data with input data")
-    d <- associate.env.data(d, env)
-
-    # set up the model call
-    dmess("set up model")
-    formula <- str_c(input$species, " ~ ", str_c(input$vars, collapse=" + "))
-    dmess(formula)
-
-    call <- str_c("gbm(", formula, ", data=d, distribution='bernoulli', n.trees=", input$n.trees, ", interaction.depth=", input$interaction.depth, ", shrinkage=", input$shrinkage, ", bag.fraction=", input$bag.fraction, ", cv.fold=", input$cv.fold, ", verbose=FALSE)")
-    dmess(call)
-    # TODO optimize number of trees
-
-    m <- eval(parse(text=call))
-
-    # find best number of trees
-    m$best.iter <- gbm.perf(m, method="cv", plot.it=FALSE)
-
-    # predict
-    if (input$predict) {
-      # prepare prediction grid
-      lon <- seq(input$lon[1], input$lon[2], by=input$lonStep)
-      lat <- seq(input$lat[1], input$lat[2], by=input$latStep)
-      pred.d <- expand.grid(lon=lon, lat=lat)
-      pred.d <- associate.env.data(pred.d, env)
-
-      # predict probability of presence using the optimal number of trees
-      pred.d$proba <- predict(m, newdata=pred.d, ntrees=m$best.iter, type="response")
-
-      # store this in the object
-      m$prediction <- pred.d
-    }
-
-    # return the object
-    m
-  })
+      checkboxGroupInput("vars", "Select variables:", vars, vars[1:2])
+   })
 
 
-  # UI functions
-  # Create UI which depends on input values
+   # Reactive functions
+   #--------------------------------------------------------------------------
+   # Their output is used by several other functions and depends on the input values
 
-  # list of species in input file
-  output$speciesList <- renderUI({
-    dmess("render species list")
-    d <- get.data()
-    sp <- names(d)[-c(1,2)]
-    if (!is.null(sp)) selectInput("species", "Species to model", sp)
-  })
+   # read user supplied data
+   read_input_data <- reactive({
+      dmess("run read_input_data")
 
-  # list of variables depending on options chosen above in the UI
-  output$variablesList <- renderUI({
-    dmess("render variables list")
-    vars <- list.env.data(path="../../env_data")
+      if (is.null(input$dataFile)) {
 
-    # selected interpolated or non-interpolated variables
-    interpolatedVersion <- vars[str_detect(vars, "interpolated")]
-    nonInterpolatedVersion <- str_replace(interpolatedVersion, "_interpolated", "")
-    neverInterpolated <- vars[! vars %in% c(interpolatedVersion, nonInterpolatedVersion)]
-    if ( input$interpolated ) {
-      vars <- vars[vars %in% c(neverInterpolated, interpolatedVersion)]
-    } else {
-      vars <- vars[vars %in% c(neverInterpolated, nonInterpolatedVersion)]
-    }
+         # if no data file is uploaded, return NULL
+         dmess("no data file selected")
+         d <- NULL
 
-    # use distance based variables
-    if ( ! input$distance ) {
-      vars <- vars[!str_detect(vars, "distance_")]
-    }
+      } else {
 
-    # select depths of interest
-    depths <- str_replace(str_extract(vars, "_[0-9]+"), "_", "")
-    hasDepth <- !is.na(depths)
-    if (length(input$depths) > 0) {
-      # detect the presence of any of the selected depths
-      hasSelectedDepth <- depths %in% input$depths
+         # otherwise read the data and return the data.frame
+         dmess("read data file ", input$dataFile$name)
+         dataFile <- input$dataFile$datapath
+         d <- read.data(dataFile, filetype="csv")
+      }
+      d
+   })
 
-      # keep depth-independent variables and depth-dependant variables at selected depths
-      vars <- vars[ !hasDepth | hasSelectedDepth ]
-    }
+   # read env data
+   read_env_data <- reactive({
+      # read selected variables from the database
+      database <- read.env.data(input$vars, path="../../env_data", verbose=TRUE)
+      # remove information on land
+      database <- mask.env.data(database, path="../../env_data")
+      
+      database
+   })
 
-    # select season of interest
-    if (length(input$season) == 1) {
-      hasSeason <- str_detect(vars, "summer|winter")
+   # fit the model and compute predictions
+   fit_model <- reactive({
+      dmess("fit model")
 
-      # detect the presence of the selected season
-      hasSelectedSeason <- str_detect(vars, input$season)
+      # read data
+      d <- read_input_data()
+      database <- read_env_data()
+      
+      # if there is no data, stop and give an error
+      if ( is.null(d) ) {
+         stop("Upload a CSV file to start")
+      }
 
-      # keep season-independent variables and season-dependant variables for the selected season
-      vars <- vars[ !hasSeason | hasSelectedSeason ]
-    }
+      # if no explanatory variables are selected, stop and give an error
+      dmess("test if options are correctly set")
+      if ( is.null(input$vars) ) {
+         stop("Select at least one explanatory variable")
+      }
 
-    checkboxGroupInput("vars", "Select variables:", vars)
-  })
+      # weight observations within each cell of the environmental grid
+      if ( input$bin ) {
+         weights <- weight.per.bin(lon=d$lon, lat=d$lat, bin=0.1)         
+      } else {
+         weights <- rep(1, nrow(d))
+      }
 
+      # get environment data for the observations
+      dmess("associate env data with input data")
+      x <- get.env.data(lon=d$lon, lat=d$lat, database)
 
-  # Output functions
-  # Return text or plots to the user, destined to be displayed in the main panel
+      # remove points with only missing data
+      onlyNA <- which(too.many.na(x, p=1))
+      if ( verbose ) message("Removing ", length(onlyNA), " observations (over ", nrow(x), ") because of missing environmental data")
+      x <- x[-onlyNA,]
+      d <- d[-onlyNA,]
+      weights <- weights[-onlyNA]
 
-  # give a summary of the model
-  output$modelSummary <- renderPrint({
-    if (input$run > 0) {
-      isolate({
-        m <- fit.model()
-        print(m)
-        sum <- summary(m, plotit=FALSE)
-        row.names(sum) <- NULL
-        print(sum)
-      })
-    }
-  })
+      # set up the model call
+      call <- str_c("brt.fit(x=x, y=d[,\"", input$species, "\"]",
+                    # ", distribution=\"", input$distribution, "\"",
+                    ", distribution=\"bernoulli\"",
+                    ", n.trees=", input$n.trees,
+                    ", interaction.depth=", input$interaction.depth,
+                    ", shrinkage=", input$shrinkage,
+                    ", bag.fraction=", input$bag.fraction,
+                    ", max.cv.fold=", input$max.cv.fold,
+                    # ", min.n.trees=", input$min.n.trees,
+                    ", n.boot=", input$n.boot,
+                    ", weights=weights)"
+      )
+      dmess(call)
+      m <- eval(parse(text=call))
 
-  # plot the effects
-  output$modelPlot <- renderPlot({
-    if (input$run > 0) {
-      isolate({
-        m <- fit.model()
+      # return the object
+      m
+   })
 
-        n <- length(m$var.names)
-        nrows <- ceiling(sqrt(n))
-        ncols <- ceiling(n/nrows)
-        par(mfrow=c(nrows, ncols))
-        for (i in 1:n) {
-          plot(m, i.var=i, n.trees=m$best.iter)
-        }
+   # generate prediction grid
+   generate_pred_grid <- reactive({
+      database <- read_env_data()
+      m <- fit_model()
+      variables <- m$var.names
+      
+      # browser()
+      
+      predGrid <- build.grid(
+         lat.min=input$lat[1], lat.max=input$lat[2], lat.step=input$latStep,
+         lon.min=input$lon[1], lon.max=input$lon[2], lon.step=input$lonStep
+      )
+      xPred <- get.env.data(lon=predGrid$lon, lat=predGrid$lat, database)
 
-        # # extract marginal effects for partial dependance plots
-        # pdp <- adply(m$var.names, 1, function(name) {
-        #   d <- plot(m, i.var=name, return.grid=TRUE)
-        #   names(d) <- c("value", "marginal effect")
-        #   return(d)
-        # })
-        #
-        # # get quantiles of the data
-        #
-        #
-        # # cleanup variable names
-        # names(pdp)[1] <- "variable"
-        # pdp$variable <- m$var.names[pdp$variable]
-        # pdp$variable <- str_replace_all(pdp$variable, "_", " ")
-        #
-        # # plot effects
-        # library("ggplot2")
-        # ggplot(pdp) + geom_path(aes(x=value, y=`marginal effect`)) + facet_wrap(~variable, scales="free_x")
-      })
-    }
-  })
+      # remove data outside original data range
+      if ( ! input$extrapolate ) {
+         x <- data.frame(matrix(m$data$x, nrow=nrow(m$data$x.order)))
+         names(x) <- variables
+         ranges <- llply(x, range, na.rm=T)
+         for (var in variables) {
+            xPred[,var][which(xPred[,var] < ranges[[var]][1] | xPred[,var] > ranges[[var]][2]) ] <- NA
+         }
+      }
 
-  # plot the predictions
-  output$predPlot <- renderPlot({
-    if (input$run > 0) {
-      isolate({
-        m <- fit.model()
-        if (is.null(m$prediction)) {
-          stop("No prediction in this model")
-        } else {
-          print(polar.ggplot(m$prediction, aes(fill=proba), path="../../env_data/", scale=0.7) + scale_fill_gradientn(colours=continuous.colourmap(), limits=c(0,1)))
-        }
-      })
-    }
-  })
+      # remove locations with only NA
+      predData <- cbind(predGrid, xPred)
+      onlyNA <- which(too.many.na(predData[,variables], p=1))
+      if ( length(onlyNA) > 0 ) {
+         if ( verbose ) message("Removing ", length(onlyNA), " points of the ", nrow(predData), " points prediction grid\n(on land or outside the range of the training data)")
+         predData <- predData[-onlyNA,]
+      }
+
+      # remove locations with less that min.var.prop% of variance explained
+      infl <- relative.influence(m, n.trees=m$best.iter)
+      w <- infl / sum(infl)
+      notEnoughData <- which(too.many.na(predData[,variables], p=input$min.var.prop/100, weights=w))
+      if ( length(notEnoughData) > 0 ) {
+         if ( verbose ) message("Further removing ", length(notEnoughData), " points of the ", nrow(predData), " points prediction grid\n(available environmental data does not allow to explain ", input$min.var.prop,"% of variance)")
+         predData <- predData[-notEnoughData,]
+      }
+      
+      predData
+   })
+
+   # Output functions
+   #--------------------------------------------------------------------------
+   # Return text or plots to the user, destined to be displayed in the main panel
+
+   # give a summary of the model
+   output$modelSummary <- renderPrint({
+      if (input$run > 0) {
+         isolate({
+            m <- fit_model()
+            summary.brt(m, plotit=FALSE)
+         })
+      }
+   })
+
+   # plot the effects
+   output$modelPlot <- renderPlot({
+      if (input$run > 0) {
+         isolate({
+            m <- fit_model()
+            plot.effects(m)
+         })
+      }
+   })
+
+   # plot the predictions
+   output$predPlot <- renderPlot({
+      if (input$run > 0) {
+         isolate({
+            if ( ! input$predict ) {
+               stop("No predictions")
+            } else {
+               m <- fit_model()
+               predData <- generate_pred_grid()
+               
+               pred <- predict(m, newdata=predData)
+
+               print(plot.pred(m, newdata=predData, quick=input$quick, scale=0.7))
+            }
+         })
+      }
+   })
 
 })
