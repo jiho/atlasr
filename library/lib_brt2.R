@@ -340,6 +340,7 @@ plot.effects.brt <- function(m, ...) {
 
    suppressPackageStartupMessages(library("ggplot2", quietly=TRUE))
    suppressPackageStartupMessages(library("gridExtra", quietly=TRUE))
+   suppressPackageStartupMessages(library("stringr", quietly=TRUE))
 
    d <- effects.brt(m, ...)
 
@@ -356,6 +357,9 @@ plot.effects.brt <- function(m, ...) {
 
       # add percentage of influence to variable name
       d$variable <- paste(d$variable, " (", round(infl[d$variable]), "%)", sep="")
+      d$variable <- str_replace(d$variable, "_climatology", "")
+      d$variable <- str_replace(d$variable, "_interpolated", "")
+      d$variable <- str_replace_all(d$variable, "_", " ")
 
       # force variable order
       d$variable <- factor(d$variable, levels=unique(d$variable))
