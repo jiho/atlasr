@@ -789,6 +789,10 @@ too.many.na <- function(x, p, weights=NULL) {
       sum(y * w)
    }, w=weights)
 
+   if (p == 0) {
+      p <- p + 2 * .Machine$double.eps
+   }
+
    return(props >= p)
 }
 
