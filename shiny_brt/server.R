@@ -247,6 +247,9 @@ shinyServer(function(input, output) {
    })
 
    # plot the effects
+   # effectsPlotHeight <- function(){
+   #   (length(input$vars) %/% 3) * 200
+   # }
    output$modelPlot <- renderPlot({
       dmess("run modelPlot")
       if (input$run > 0) {
@@ -257,9 +260,17 @@ shinyServer(function(input, output) {
             plot.effects(m)
          })
       }
-   })
+   }) #, height=effectsPlotHeight)
 
    # plot the predictions
+   # predPlotHeight <- function(){
+   #    if ( input$quick ) {
+   #       out <- 400
+   #    } else {
+   #       out <- 700
+   #    }
+   #    return(out)
+   # }
    output$predPlot <- renderPlot({
       dmess("run predPlot")
       if (input$run > 0) {
@@ -274,7 +285,7 @@ shinyServer(function(input, output) {
             }
          })
       }
-   })
+   }) #, height=predPlotHeight)
  
    dlFile <- function(extension, suffix="") {
       dmess("generate filename for ", extension, " file")
