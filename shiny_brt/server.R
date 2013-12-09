@@ -204,7 +204,7 @@ shinyServer(function(input, output) {
       # remove locations with less that min.var.prop% of variance explained
       infl <- relative.influence(m, n.trees=m$best.iter)
       w <- infl / sum(infl)
-      notEnoughData <- which(too.many.na(predData[,variables], p=input$min.var.prop/100, weights=w))
+      notEnoughData <- which(too.many.na(predData[,variables], p=1-input$min.var.prop/100, weights=w))
       if ( length(notEnoughData) > 0 ) {
          vmess("Further removing ", length(notEnoughData), " points of the ", nrow(predData), " points prediction grid\n(available environmental data does not allow to explain ", input$min.var.prop,"% of variance)")
          predData <- predData[-notEnoughData,]
