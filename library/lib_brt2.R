@@ -491,6 +491,8 @@ plot.pred.brt <- function(x, quick=TRUE, ...) {
   }
 
   p <- polar_ggplot(d, mapping=aes(fill=proba), geom=geom, ...) + layer_land(d)
+  p <- suppressWarnings(p + scale_fill_gradientn(colours=continuous.colourmap(), limits=c(0,1)))
+  # NB: there is a warning here because there is already a fill scale and we want to replace it.
   if ( ! quick ) {
     p <- p + south_pole_proj()
   }
