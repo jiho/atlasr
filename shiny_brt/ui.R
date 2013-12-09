@@ -85,7 +85,7 @@ shinyUI(pageWithSidebar(
          conditionalPanel(
             condition="input.predict == true",
             wellPanel(
-               checkboxInput("quick", "Quick, unprojected, prediction plot", TRUE),
+               checkboxInput("quick", "Quick, unprojected, prediction plot", FALSE),
 
                checkboxInput("extrapolate", "Predict beyond observed environmental range", FALSE),
                sliderInput("min.var.prop", "Minimum variance for prediction", min=0, max=100, step=10, value=50),
