@@ -8,7 +8,7 @@
 
 
 debug <- T
-verbose <- F
+verbose <- T
 
 # debug message
 dmess <- function(...) {
