@@ -316,8 +316,9 @@ shinyServer(function(input, output) {
       filename = dlFile(ext="pdf", suffix="effects"),
       content = function(file) {
          dmess("plot effects to PDF")
+         h <- (length(input$vars) %/% 3) * 3
          m <- fit_model()
-         pdf(file, width=8, height=6)
+         pdf(file, width=8, height=h)
          plot.effects(m)
          dev.off()
       }
