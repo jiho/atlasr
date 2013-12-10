@@ -38,7 +38,8 @@ shinyUI(pageWithSidebar(
       ),
 
       div( id="options",
-         h5("Options - see ?gbm in R"),
+         h5("Options"),
+         helpText("See ?gbm in R"),
       
          # selectInput("distribution", "Distribution", list(
          #    "bernoulli",
