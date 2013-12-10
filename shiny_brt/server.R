@@ -138,7 +138,7 @@ shinyServer(function(input, output) {
       x <- get.env.data(lon=d$lon, lat=d$lat, database)
 
       # remove points with only missing data
-      onlyNA <- which(too.many.na(x, p=1))
+      onlyNA <- which(too.many.na(x, p=0.8))
       vmess("Removing ", length(onlyNA), " observations (over ", nrow(x), ") because of missing environmental data")
       x <- x[-onlyNA,]
       d <- d[-onlyNA,]
