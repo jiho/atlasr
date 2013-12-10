@@ -33,8 +33,8 @@ requiredPackages = c()
 for (file in sourceFiles) {
     # read content
     content = scan(file, what="character", quiet=T, sep="\n")
-    # extract require calls
-    m = regexpr("require\\(.*?\\)", content)
+    # extract require or library calls
+    m = regexpr("(require|library)\\(.*?\\)", content)
     matched = regmatches(content, m)
     # extract the name of the package inside the require call
     m = regexpr("\\\".*?\\\"", matched)
