@@ -39,7 +39,7 @@ shinyUI(pageWithSidebar(
 
       div( id="options",
          h5("Options"),
-         helpText("See ?gbm in R"),
+         helpText("See ?gbm in R. For better predictions, you want a large number of trees and small shrinkage."),
       
          # selectInput("distribution", "Distribution", list(
          #    "bernoulli",
@@ -53,8 +53,8 @@ shinyUI(pageWithSidebar(
          #    condition="input.optim == false",
          #    wellPanel(
          #       helpText("Ideally, you want a large number of trees with a very small learning rate"),
-               sliderInput("n.trees", "Maximum number of trees (the actual number will be estimated through cross validation)", min=500, max=10000, step=500, value=2000),
-               sliderInput("shrinkage", "Shrinkage per tree", min=0.001, max=0.05, step=0.001, value=0.01),
+               sliderInput("n.trees", "Maximum number of trees (the actual number will be estimated through cross validation)", min=500, max=10000, step=500, value=1000),
+               sliderInput("shrinkage", "Shrinkage per tree", min=0.001, max=0.05, step=0.001, value=0.03),
          #    )
          # ),
          # conditionalPanel(
@@ -80,7 +80,7 @@ shinyUI(pageWithSidebar(
 
       div( id="prediction",
          h5("Prediction"),
-         checkboxInput("predict", "Predict distribution", value=FALSE),
+         checkboxInput("predict", "Predict habitat suitability", value=FALSE),
 
          # Domain for prediction
          conditionalPanel(
@@ -89,8 +89,8 @@ shinyUI(pageWithSidebar(
                checkboxInput("quick", "Quick, unprojected, prediction plot", FALSE),
 
                checkboxInput("extrapolate", "Predict beyond observed environmental range", FALSE),
-               sliderInput("min.var.prop", "Minimum variance for prediction", min=0, max=100, step=10, value=50),
-               helpText("When some environmental data is missing, prediction will only be made if the available environmental data allows to capture the specified percentage of the variance"),
+               sliderInput("min.var.prop", "Minimum variance for prediction", min=0, max=100, step=10, value=70),
+               helpText("When some environmental data is missing, predict only at locations where the available environmental data allows to capture the specified percentage of the variance"),
 
                # checkboxInput("overlay", "Overlay stations on prediction map"),
 
@@ -114,12 +114,15 @@ shinyUI(pageWithSidebar(
       ),
 
       # Run button
-      div(
-         style="text-align: right",
-         actionButton("run", "Run !")
-         # NB: actionButton tracks the number of time it is pressed
-         #     this allows to not try plotting the model on the first run
-      )
+      
+      tag("button", list(id="run", class="btn btn-primary action-button shiny-bound-input", style="width: 100%; margin-top: 20px", "Run!"))
+      
+      # div(
+      #    style="text-align: center; width: 100%",
+      #    actionButton("run", "Run !")
+      #    # NB: actionButton tracks the number of time it is pressed
+      #    #     this allows to not try plotting the model on the first run
+      # )
    ),
 
 
