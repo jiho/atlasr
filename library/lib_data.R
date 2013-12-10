@@ -240,10 +240,8 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) 
     # image(dat, main=varName)
 
     return(dat)
-  }, .progress=ifelse(length(ncFiles) > 5 & verbose, "text", "none"))  # get a nice progress bar when there are several files to read
-
-  # # remove plyr attributes (useless here)
-  # attributes(database) <- list()
+  # }, .progress=ifelse(length(ncFiles) > 5 & verbose, "text", "none"))  # get a nice progress bar when there are several files to read
+  })
 
   # name elements of the list
   # NB: sometimes the data names in the netCDF files are the same across several files, we will instead use a name derived from the file
