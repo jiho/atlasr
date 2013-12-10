@@ -276,7 +276,7 @@ shinyServer(function(input, output) {
       if (input$run > 0) {
          isolate({
             if ( ! input$predict ) {
-               stop("No predictions")
+               stop("No predictions were computed")
             } else {
                pred <- predict_distrib()
                
