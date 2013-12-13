@@ -995,4 +995,71 @@ write.netcdf <- function(d, file, dimensions, variables=NULL, missval=-99999) {
    return(NULL)
 }
 
+write.netcdf.map <- function(d, file, variables=NULL, missval=-99999) {
+   # Write a data.frame as a netCDF file
+   #
+   # d            data.frame with columns lat and lon
+   # file         output file path, possibly omitting the extension
+   # variables    names or indexes of columns in d represented the measured variables
+   #              if NULL, all non-dimension columns are considered
+   # missval      missing value code in the netCDF data
+
+   dimensions <- c("lat", "lon")
+
+   if ( is.character(dimensions) & ! all(dimensions %in% names(d)) ) {
+      stop("All dimensions must be columns of d")
+   }
+   if (is.numeric(dimensions)) {
+      dimensions <- names(d)[dimensions]
+   }
+
+   if ( is.null(variables) ) {
+      variables <- setdiff(names(d), dimensions)
+   } else {
+      if ( is.character(variables) & ! all(variables %in% names(d)) ) {
+         stop("All variables must be columns of d")
+      }
+      if (is.numeric(variables)) {
+         variables <- names(d)[variables]
+      }
+   }
+
+   suppressPackageStartupMessages(library("ncdf", quietly=TRUE))
+   suppressPackageStartupMessages(library("plyr", quietly=TRUE))
+
+   lonDim <- dim.def.ncdf(name="lon", units="degrees_east", vals=sort(unique(d$lon)))
+   latDim <- dim.def.ncdf(name="lat", units="degrees_north", vals=sort(unique(d$lat)))
+   dims <- list(lonDim, latDim)
+
+   vars <- llply(variables, function(var, missval) {
+      type <- class(d[,var])
+      precision <- switch(type,
+         numeric = "double",
+         factor = "char",
+         integer = "integer",
+         "double"
+      )
+      var.def.ncdf(name=var, units="unspecified", dim=dims, missval=missval, prec=precision)
+   }, missval=missval)
+
+   nc <- create.ncdf(filename=file, vars=vars)
+
+   library("reshape2")
+   l_ply(variables, function(var, missval) {
+      x <- acast(d, formula=as.list(dimensions), value.var=var, fill=missval)
+      put.var.ncdf(nc, varid=var, vals=x)
+   }, missval=missval)
+
+   # add attributes to make ArcGIS happy
+   att.put.ncdf(nc, "lon", attname="long_name", attval="longitude coordinate")
+   att.put.ncdf(nc, "lon", attname="standard_name", attval="longitude")
+   att.put.ncdf(nc, "lat", attname="long_name", attval="latitude coordinate")
+   att.put.ncdf(nc, "lat", attname="standard_name", attval="latitude")
+
+   close.ncdf(nc)
+
+   return(NULL)
+}
+
+
 # }

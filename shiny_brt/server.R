@@ -307,7 +307,7 @@ shinyServer(function(input, output) {
       content = function(file) {
          dmess("generate netCDF file")         
          pred <- predict_distrib()
-         write.netcdf(pred, file=file, dimensions=c("lon","lat"))
+         write.netcdf.map(pred, file=file)
       },
       contentType = "application/octet-stream"
    )
