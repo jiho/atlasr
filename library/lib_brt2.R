@@ -487,7 +487,7 @@ plot.pred.brt <- function(x, quick=TRUE, ...) {
     d <- regrid(d, lat.step=1, lon.step=2)
     geom <- "raster"
   } else {
-     geom <- "auto"
+     geom <- "point"
   }
 
   p <- polar_ggplot(d, mapping=aes(fill=proba), geom=geom, ...) + layer_land(d, ...)
