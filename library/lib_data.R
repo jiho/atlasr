@@ -1004,7 +1004,7 @@ write.netcdf.map <- function(d, file, variables=NULL, missval=-99999) {
    #              if NULL, all non-dimension columns are considered
    # missval      missing value code in the netCDF data
 
-   dimensions <- c("lat", "lon")
+   dimensions <- c("lon", "lat")
 
    if ( is.character(dimensions) & ! all(dimensions %in% names(d)) ) {
       stop("All dimensions must be columns of d")
