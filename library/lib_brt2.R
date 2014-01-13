@@ -228,6 +228,10 @@ summary.brt <- function(m, n.trees=m$best.iter, ...) {
    rel.inf <- round(100 * rel.inf/sum(rel.inf), 2)
    rel.inf <- sort(rel.inf, decreasing=TRUE)
 
+
+   if (m$best.iter >= (0.9 * m$n.trees)) {
+      cat("WARNING !!! Not enough trees computed (using", m$best.iter ,"of", m$n.trees, "computed). You should increase the maximum number of trees (and possibly the shrinkage) and refit the model before proceeding to the analysis. WARNING !!!")
+   }
    cat("A gradient boosted model with bernoulli loss function.\n")
    cat(m$n.trees,"iterations were performed\n")
    cat("The best cross-validated iteration was",m$best.iter,"\n")
