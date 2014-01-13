@@ -494,33 +494,26 @@ plot.pred.brt <- function(x, quick=TRUE, ...) {
      geom <- "point"
   }
 
-  p <- polar_ggplot(d, mapping=aes(fill=proba), geom=geom, ...) + layer_land(d, ...)
+  p <- polar_ggplot(d, mapping=aes(fill=proba), geom=geom, ...) #+ layer_land(d, ...)
   p <- suppressWarnings(p + scale_fill_gradientn(colours=continuous.colourmap(), limits=c(0,1)))
   # NB: there is a warning here because there is already a fill scale and we want to replace it.
   if ( ! quick ) {
     p <- p + south_pole_proj()
   }
 
-  # # overlay stations
-  # if (overlay.stations) {
-  #   if (!all(c("lat", "lon") %in% names(x$data))) {
-  #     warning("Cannot overlay data points because the coordinates were not in the original dataset", immediate.=TRUE)
-  #   } else {
-  #     # make the plot
-  #     if (is.numeric(x$data[,x$resp.var])) {
-  #       # numerical values (abundances)
-  #       # = use coloured points with white outline
-  #       p <- p + geom_point(aes_string(x="lon", y="lat", size=x$resp.var), data=x$data, alpha=0.5) + scale_size_continuous(range=0.5, 4)
-  #     } else {
-  #       # presence-absence values
-  #       # = use points (presence) and crosses (absence)
-  #       p <- p + geom_point(aes_string(x="lon", y="lat", colour=x$resp.var, alpha=x$resp.var), data=x$data, size=1.5) + scale_colour_manual(values=c("grey20", "red")) + scale_alpha_manual(values=c(0.1, 0.9))
-  #     }
-  #   }
-  # }
-  # 
-  # # add a title
-  # p = p + ggtitle(paste(x$obj$gbm.call$response.name, "- BRT"))
+   # # overlay stations
+   # if (overlay.stations) {
+   #    if ( is.null(data) ) {
+   #       warning("Data not provided, cannot overlay stations")
+   #    } else {
+   #       if ( ! all(c("lat", "lon") %in% names(data)) ) {
+   #          warning("Coordinates not in the data provided, cannot overlay stations")
+   #       } else {
+   #          p <- p + geom_point(aes_string(x="lon", y="lat", colour=x$resp.var, alpha=x$resp.var), data=x$data, size=1.5) + scale_colour_manual(values=c("grey20", "red")) + scale_alpha_manual(values=c(0.1, 0.9))
+   #          }
+   #       }
+   #    }
+   # }
 
   return(p)
 
