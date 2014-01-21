@@ -76,7 +76,7 @@ if (is.null(getOption("atlasr.env.data"))) {
 # NB: it can be set by the user in a script or in the .Rprofile config file
 
 # check and update if necessary
-# update.env.data()
+update.env.data()
 
 
 # Cleanup the environment
