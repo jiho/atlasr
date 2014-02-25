@@ -55,6 +55,10 @@ brt.fit <- function(x, y, n.trees=NULL, shrinkage=0.05, min.n.trees=2000, n.boot
    }
    cv.fold <- min(cv.fold, max.cv.fold)
 
+   # convert response variable to pres-absence if it is not
+   # we only work with a bernoulli distribution so far
+   y <- as.numeric(y > 0)
+
    # add response variable to the data.frame
    d <- x
    d$response <- y
