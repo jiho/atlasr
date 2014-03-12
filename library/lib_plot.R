@@ -97,33 +97,20 @@ clip.polygon <- function(x, lon.min=-180, lon.max=180, lat.min=-90, lat.max=90) 
   # lat.*   limits within which the polygon is cut
   #
 
-  suppressPackageStartupMessages(require("gpclib", quietly=TRUE))
+  suppressPackageStartupMessages(require("rgeos", quietly=TRUE))
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
 
-  # reformat the data.frame x to be converted into polygons
-  x <- x[,c("lon", "lat")]
-  names(x) <- c("x", "y")
+  # convert data.frame x into SpatialPolygons object(s)
 
-  # cut all polygons
-  x$id <- cumsum(is.na(x$x))
+  # identify each polygon in the original data
+  x$id <- cumsum(is.na(x$lon))
   x <- na.omit(x)
-  xL <- split(x[,1:2], f=x$id)
+  xPolygon <- dlply(x, ~id, function(x) { Polygon(x[,c("lon","lat")]) } )
 
-  # remove completely out of range polygons
-  # this accelerates the next steps
-  inRange <- laply(xL, function(x) {
-    any(x$x >= lon.min & x$x <= lon.max & x$y >= lat.min & x$y <= lat.max)
-  })
-  xL <- xL[inRange]
-
-  # convert each piece into a polygon object for gpclib
-  xP <- as(xL[[1]], "gpc.poly")
-  if (length(xL) > 1) {
-    for (i in 2:length(xL)) {
-      tempP <- as(na.omit(xL[[i]]), "gpc.poly")
-      xP <- append.poly(xP, tempP)
-    }
-  }
+  # convert it into one big SpatialPolygons object
+  # TODO we could actually keep several separate polygons as in the original data
+  xPolygons <- Polygons(xPolygon, ID="foo")
+  xSpatialPolygons <- SpatialPolygons(list(xPolygons), proj4string=CRS("+proj=longlat +datum=WGS84"))
 
   # do not cut the pole when the longitude spans its full range
   if (lon.min <= -180 & lon.max >= 180) {
@@ -136,24 +123,23 @@ clip.polygon <- function(x, lon.min=-180, lon.max=180, lat.min=-90, lat.max=90) 
   }
   # NB: this allows to get the full antarctic continent in polar view
 
-  # prepare the mask
-  mask <- data.frame(x=c(lon.min, lon.min, lon.max, lon.max), y=c(lat.min, lat.max, lat.max, lat.min))
-  maskP <- as(mask, "gpc.poly")
+  # create the clipping polygon
+  clip.extent <- as(extent(lon.min, lon.max, lat.min, lat.max), "SpatialPolygons")
+  proj4string(clip.extent) <- CRS(proj4string(xSpatialPolygons))
 
-  # compute clipping
-  clippedP <- intersect(xP, maskP)
+  # clip the map
+  clipped <- gIntersection(xSpatialPolygons, clip.extent)
 
-  # convert into a data.frame
-  clipped <- clippedP@pts
-  clipped <- ldply(clipped, function(x) {
-    # extract elements
-    X <- data.frame(lon=x$x, lat=x$y, hole=x$hole)
-    # close polygon
-    X <- rbind(X, X[1,])
+  # convert it back into a data.frame
+  clipped <- ldply(clipped@polygons[[1]]@Polygons, function(x) {
+    # extract coordinates
+    X <- as.data.frame(x@coords)
     # separate from next polygon
     X <- rbind(X, NA)
     return(X)
   })
+  names(clipped) <- c("lon", "lat")  
+  # ggplot(clipped) + geom_polygon(aes(x=lon, y=lat))
 
   return(clipped)
 }
