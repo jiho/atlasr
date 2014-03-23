@@ -93,8 +93,8 @@ update.env.data <- function(url="http://share.biodiversity.aq/GIS/antarctic", pa
     )
 
     # get missing files
-    missing <- remoteMD5[ ! remoteMD5$md5 %in% localMD5$md5,]
-    additional <- localMD5[ ! localMD5$md5 %in% remoteMD5$md5,]
+    missing <- remoteMD5[ ( ! remoteMD5$path %in% localMD5$path ) | ( ! remoteMD5$md5 %in% localMD5$md5 ),]
+    additional <- localMD5[ ( ! localMD5$path %in% remoteMD5$path ) | ( ! localMD5$md5 %in% remoteMD5$md5 ),]
 
     if (nrow(missing) > 0 | nrow(additional) > 0) {
       message("-> Updating environment database")
