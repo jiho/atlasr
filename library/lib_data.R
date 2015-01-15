@@ -863,16 +863,101 @@ write.raster <- function(x, name, variables=NULL) {
 
 }
 
-write.netcdf <- function(d, file, dimensions, variables=NULL, missval=-99999) {
-   # Write a data.frame as a netCDF file
-   #
-   # d            data.frame
-   # file         output file path, possibly omitting the extension
-   # dimensions   names or indexes of columns in d representing the data dimensions
-   # variables    names or indexes of columns in d represented the measured variables
-   #              if NULL, all non-dimension columns are considered
-   # missval      missing value code in the netCDF data
+# write.netcdf <- function(d, file, dimensions, variables=NULL, missval=-99999) {
+#    # Write a data.frame as a netCDF file
+#    #
+#    # d            data.frame
+#    # file         output file path, possibly omitting the extension
+#    # dimensions   names or indexes of columns in d representing the data dimensions
+#    # variables    names or indexes of columns in d represented the measured variables
+#    #              if NULL, all non-dimension columns are considered
+#    # missval      missing value code in the netCDF data
+# 
+#    if ( is.character(dimensions) & ! all(dimensions %in% names(d)) ) {
+#       stop("All dimensions must be columns of d")
+#    }
+#    if (is.numeric(dimensions)) {
+#       dimensions <- names(d)[dimensions]
+#    }
+# 
+#    if ( is.null(variables) ) {
+#       variables <- setdiff(names(d), dimensions)
+#    } else {
+#       if ( is.character(variables) & ! all(variables %in% names(d)) ) {
+#          stop("All variables must be columns of d")
+#       }
+#       if (is.numeric(variables)) {
+#          variables <- names(d)[variables]
+#       }
+#    }
+# 
+#    # suppressPackageStartupMessages(library("tools", quietly=TRUE))
+#    # if ( file_ext(file) == "" ) {
+#    #    file <- paste(file, ".nc", sep="")
+#    # }
+# 
+#    suppressPackageStartupMessages(library("ncdf", quietly=TRUE))
+#    suppressPackageStartupMessages(library("plyr", quietly=TRUE))
+# 
+#    dims <- llply(dimensions, function(dim) {
+#       x <- d[,dim]
+#       vals <- sort(unique(x))
+#       dim.def.ncdf(name=dim, units="unspecified", vals=vals)
+#    })
+# 
+#    vars <- llply(variables, function(var, missval) {
+#       type <- class(d[,var])
+#       precision <- switch(type,
+#          numeric = "double",
+#          factor = "char",
+#          integer = "integer",
+#          "double"
+#       )
+#       var.def.ncdf(name=var, units="unspecified", dim=dims, missval=missval, prec=precision)
+#    }, missval=missval)
+# 
+#    nc <- create.ncdf(filename=file, vars=vars)
+# 
+#    library("reshape2")
+#    l_ply(variables, function(var, missval) {
+#       x <- acast(d, formula=as.list(dimensions), value.var=var, fill=missval)
+#       put.var.ncdf(nc, varid=var, vals=x)
+#    }, missval=missval)
+# 
+#    close.ncdf(nc)
+#    
+#    return(NULL)
+# }
 
+write.netcdf <- function(d, file, dimensions, variables=NULL, units=NULL, attributes=NULL, global.attributes=NULL, missval=-99999) {
+#' Write a data.frame containing points on a grid as a netCDF file
+#'
+#' @param d data.frame containing coordinates and variables
+#'
+#' @param file output file path
+#'
+#' @param dimensions names or indexes of columns in d representing the data dimensions
+#'
+#' @param variables names or indexes of columns in d represented the measured variables. If NULL, all columns which are not dimensions are considered as variables
+#' 
+#' @param units named vector or list containing character strings which specify the units of dimensions and variables. The names must be those of columns in d. Defaults to no unit
+#'
+#' @param attributes named list (with names in d) of attributes for each dimension and/or variable. Each named element of that top level list contains another list which stores attributes as key/value pairs, where the key is the name of the element of the list and the value is the content of that element
+#'
+#' @param global.attributes list of key/value pairs similar to the variables/dimensions attributes above but stored as global attributes of the file
+#'
+#' @param missval numeric value used to code missing values in the netCDF file
+#'
+#' @examples
+#' \dontrun{
+#' d <- data.frame(foo=..., bar=...)
+#' attributes = list(
+#'    foo = list(long_name="Foo variable", standard_name="Foo"),
+#'    bar = list(long_name="Bar variable", standard_name="Bar")
+#' )
+#' }
+
+   # check that dimensions are in the data
    if ( is.character(dimensions) & ! all(dimensions %in% names(d)) ) {
       stop("All dimensions must be columns of d")
    }
@@ -880,6 +965,7 @@ write.netcdf <- function(d, file, dimensions, variables=NULL, missval=-99999) {
       dimensions <- names(d)[dimensions]
    }
 
+   # check that all variables are in the data
    if ( is.null(variables) ) {
       variables <- setdiff(names(d), dimensions)
    } else {
@@ -891,81 +977,43 @@ write.netcdf <- function(d, file, dimensions, variables=NULL, missval=-99999) {
       }
    }
 
-   # suppressPackageStartupMessages(library("tools", quietly=TRUE))
-   # if ( file_ext(file) == "" ) {
-   #    file <- paste(file, ".nc", sep="")
-   # }
-
-   suppressPackageStartupMessages(library("ncdf", quietly=TRUE))
-   suppressPackageStartupMessages(library("plyr", quietly=TRUE))
-
-   dims <- llply(dimensions, function(dim) {
-      x <- d[,dim]
-      vals <- sort(unique(x))
-      dim.def.ncdf(name=dim, units="unspecified", vals=vals)
-   })
-
-   vars <- llply(variables, function(var, missval) {
-      type <- class(d[,var])
-      precision <- switch(type,
-         numeric = "double",
-         factor = "char",
-         integer = "integer",
-         "double"
-      )
-      var.def.ncdf(name=var, units="unspecified", dim=dims, missval=missval, prec=precision)
-   }, missval=missval)
-
-   nc <- create.ncdf(filename=file, vars=vars)
-
-   library("reshape2")
-   l_ply(variables, function(var, missval) {
-      x <- acast(d, formula=as.list(dimensions), value.var=var, fill=missval)
-      put.var.ncdf(nc, varid=var, vals=x)
-   }, missval=missval)
-
-   close.ncdf(nc)
+   # prepare the units list
+   # defaults
+   allVars <- c(dimensions, variables)
+   u <- as.list(rep("", times=length(allVars)))
+   names(u) <- allVars
+   # include those specified as arguments
+   units <- as.list(units)
+   if ( ! all(names(units) %in% names(d)) ) {
+      stop("All units must relate to columns of d")
+   }
+   u[names(units)] <- units
+   # NB: work even when units is NULL
+   units <- u
    
-   return(NULL)
-}
-
-write.netcdf.map <- function(d, file, variables=NULL, missval=-99999) {
-   # Write a data.frame as a netCDF file
-   #
-   # d            data.frame with columns lat and lon
-   # file         output file path, possibly omitting the extension
-   # variables    names or indexes of columns in d represented the measured variables
-   #              if NULL, all non-dimension columns are considered
-   # missval      missing value code in the netCDF data
-
-   dimensions <- c("lon", "lat")
-
-   if ( is.character(dimensions) & ! all(dimensions %in% names(d)) ) {
-      stop("All dimensions must be columns of d")
+   # prepare attributes list
+   a <- as.list(rep(NA, times=length(allVars)))
+   names(a) <- allVars
+   # include those specified as arguments
+   if ( ! all(names(attributes) %in% names(d)) ) {
+      stop("All attributes must relate to columns of d")
    }
-   if (is.numeric(dimensions)) {
-      dimensions <- names(d)[dimensions]
-   }
+   a[names(attributes)] <- attributes
+   attributes <- a
 
-   if ( is.null(variables) ) {
-      variables <- setdiff(names(d), dimensions)
-   } else {
-      if ( is.character(variables) & ! all(variables %in% names(d)) ) {
-         stop("All variables must be columns of d")
-      }
-      if (is.numeric(variables)) {
-         variables <- names(d)[variables]
-      }
-   }
-
-   suppressPackageStartupMessages(library("ncdf", quietly=TRUE))
+   suppressPackageStartupMessages(library("ncdf4", quietly=TRUE))
+   # See http://cirrus.ucsd.edu/~pierce/ncdf/ for ncdf4 on windows
    suppressPackageStartupMessages(library("plyr", quietly=TRUE))
 
-   lonDim <- dim.def.ncdf(name="lon", units="degrees_east", vals=sort(unique(d$lon)))
-   latDim <- dim.def.ncdf(name="lat", units="degrees_north", vals=sort(unique(d$lat)))
-   dims <- list(lonDim, latDim)
+   # define dimensions
+   dims <- llply(dimensions, function(dim, units) {
+       x <- d[,dim]
+       vals <- sort(unique(x))
+       ncdim_def(name=dim, units=units[[dim]], vals=vals)
+   }, units=units)
 
-   vars <- llply(variables, function(var, missval) {
+   # define variables
+   vars <- llply(variables, function(var, units, missval) {
       type <- class(d[,var])
       precision <- switch(type,
          numeric = "double",
@@ -973,27 +1021,159 @@ write.netcdf.map <- function(d, file, variables=NULL, missval=-99999) {
          integer = "integer",
          "double"
       )
-      var.def.ncdf(name=var, units="unspecified", dim=dims, missval=missval, prec=precision)
-   }, missval=missval)
+      # TODO change the type of the fill value also. otherwise adding the missing value fails with Error return from C call R_nc4_put_att_double for attribute _FillValue
+      ncvar_def(name=var, units=units[[var]], dim=dims, missval=missval, prec=precision)
+   }, units=units, missval=missval)
 
-   nc <- create.ncdf(filename=file, vars=vars)
+   # create the file based on the variable definition
+   # NB: automatically creates the dimensions and the dimensions variables
+   nc <- nc_create(filename=file, vars=vars)
 
-   library("reshape2")
+   # reformat variables as matrices and store them in the file
+   suppressPackageStartupMessages(library("reshape2", quietly=TRUE))
    l_ply(variables, function(var, missval) {
       x <- acast(d, formula=as.list(dimensions), value.var=var, fill=missval)
-      put.var.ncdf(nc, varid=var, vals=x)
+      ncvar_put(nc, varid=var, vals=x)
    }, missval=missval)
 
-   # add attributes to make ArcGIS happy
-   att.put.ncdf(nc, "lon", attname="long_name", attval="longitude coordinate")
-   att.put.ncdf(nc, "lon", attname="standard_name", attval="longitude")
-   att.put.ncdf(nc, "lat", attname="long_name", attval="latitude coordinate")
-   att.put.ncdf(nc, "lat", attname="standard_name", attval="latitude")
+   # add attributes
+   for (varName in names(attributes)) {
+      if ( is.list(attributes[[varName]]) ) {
+         for (attName in names(attributes[[varName]])) {
+            ncatt_put(nc, varName, attname=attName, attval=attributes[[varName]][[attName]])
+         }
+      }
+   }
 
-   close.ncdf(nc)
+   # add global attributes
+   if ( ! is.null(global.attributes)) {
+      for (attName in names(global.attributes)) {
+         ncatt_put(nc, 0, attname=attName, attval=global.attributes[[attName]])
+      }
+   }
 
-   return(NULL)
+   # close the file
+   nc_close(nc)
+
+   return(invisible(file))
 }
 
+write.netcdf.map <- function(d, file, dimensions=c("lon", "lat"), units=NULL, attributes=NULL, crs="WGS84", ...) {
+   
+   # check arguments
+   crs <- match.arg(tolower(crs), choices="wgs84")
+   
+   # add lon and lat characteristics to the units and attributes arguments
+   units <- c(units, list(lon="degrees_east", lat="degrees_north"))
+   
+   attributes <- c(attributes, list(
+      lon=list(long_name="Longitude coordinate", standard_name="longitude", axis="X"),
+      lat=list(long_name="Latitude coordinate", standard_name="latitude", axis="Y")
+   ))
+   
+   # create the file
+   file <- write.netcdf(d=d, file=file, dimensions=dimensions, units=units, attributes=attributes, ...)
+   
+   # add the definition of a CRS
+   library("ncdf")
+   nc <- nc_open(file, write=TRUE)
+   
+   # specify the mapping for all variables
+   vars <- names(nc$var)   
+   for (var in vars) {
+      ncatt_put(nc, var, attname="grid_mapping", attval="crs")
+   }
+   
+   # define the Coordinate Reference System variable (empty with only attributes)
+   crsVar <- ncvar_def(name="crs", units="", dim=list(), prec="integer")
+   ncvar_add(nc, crsVar)
+   nc_close(nc)   # actually add the variable to the file
+                  # NB: nc_sync is not enough apparently
+
+   # actually define the CRS through its attributes
+   nc <- nc_open(file, write=TRUE)
+   if (crs == "wgs84") {
+      ncatt_put(nc, crsVar, attname="grid_mapping_name", attval = "latitude_longitude")
+      ncatt_put(nc, crsVar, attname="longitude_of_prime_meridian", attval=0.0)
+      ncatt_put(nc, crsVar, attname="semi_major_axis", attval=6378137.0)
+      ncatt_put(nc, crsVar, attname="inverse_flattening", attval=298.257223563)
+   } else {
+      stop("CRS unknown")
+   }
+   
+   # specify the convention as a global attribute 
+   ncatt_put(nc, 0, attname="Conventions", attval="CF-1.5")
+
+   nc_close(nc)
+   
+   return(invisible(file))
+}
+
+# write.netcdf.map <- function(d, file, variables=NULL, missval=-99999) {
+#    # Write a data.frame as a netCDF file
+#    #
+#    # d            data.frame with columns lat and lon
+#    # file         output file path, possibly omitting the extension
+#    # variables    names or indexes of columns in d represented the measured variables
+#    #              if NULL, all non-dimension columns are considered
+#    # missval      missing value code in the netCDF data
+# 
+#    dimensions <- c("lon", "lat")
+# 
+#    if ( is.character(dimensions) & ! all(dimensions %in% names(d)) ) {
+#       stop("All dimensions must be columns of d")
+#    }
+#    if (is.numeric(dimensions)) {
+#       dimensions <- names(d)[dimensions]
+#    }
+# 
+#    if ( is.null(variables) ) {
+#       variables <- setdiff(names(d), dimensions)
+#    } else {
+#       if ( is.character(variables) & ! all(variables %in% names(d)) ) {
+#          stop("All variables must be columns of d")
+#       }
+#       if (is.numeric(variables)) {
+#          variables <- names(d)[variables]
+#       }
+#    }
+# 
+#    suppressPackageStartupMessages(library("ncdf", quietly=TRUE))
+#    suppressPackageStartupMessages(library("plyr", quietly=TRUE))
+# 
+#    lonDim <- dim.def.ncdf(name="lon", units="degrees_east", vals=sort(unique(d$lon)))
+#    latDim <- dim.def.ncdf(name="lat", units="degrees_north", vals=sort(unique(d$lat)))
+#    dims <- list(lonDim, latDim)
+# 
+#    vars <- llply(variables, function(var, missval) {
+#       type <- class(d[,var])
+#       precision <- switch(type,
+#          numeric = "double",
+#          factor = "char",
+#          integer = "integer",
+#          "double"
+#       )
+#       var.def.ncdf(name=var, units="unspecified", dim=dims, missval=missval, prec=precision)
+#    }, missval=missval)
+# 
+#    nc <- create.ncdf(filename=file, vars=vars)
+# 
+#    library("reshape2")
+#    l_ply(variables, function(var, missval) {
+#       x <- acast(d, formula=as.list(dimensions), value.var=var, fill=missval)
+#       put.var.ncdf(nc, varid=var, vals=x)
+#    }, missval=missval)
+# 
+#    # add attributes to make ArcGIS happy
+#    att.put.ncdf(nc, "lon", attname="long_name", attval="longitude coordinate")
+#    att.put.ncdf(nc, "lon", attname="standard_name", attval="longitude")
+#    att.put.ncdf(nc, "lat", attname="long_name", attval="latitude coordinate")
+#    att.put.ncdf(nc, "lat", attname="standard_name", attval="latitude")
+# 
+#    close.ncdf(nc)
+# 
+#    return(NULL)
+# }
+# 
 
 # }
