@@ -211,8 +211,12 @@ bioreg <- function(
       rdataFile <- str_c(baseName, ".Rdata")
       save(bioregObj, file=rdataFile)
 
-      # Shapefiles of clusters
-      write.shapefile(bioregObj$data, name=baseName, variables="cluster")
+      # # Shapefiles of clusters
+      # write.shapefile(bioregObj$data, name=baseName, variables="cluster")
+
+      # netcdf file
+      ncFile <- str_c(baseName, ".nc")
+      write.netcdf.map(bioregObj$data, file=ncFile)
 
       # CSV file of clusters
       csvFile <- str_c(baseName, ".csv")

@@ -1017,7 +1017,7 @@ write.netcdf <- function(d, file, dimensions, variables=NULL, units=NULL, attrib
       type <- class(d[,var])
       precision <- switch(type,
          numeric = "double",
-         factor = "char",
+         factor = "integer",
          integer = "integer",
          "double"
       )
