@@ -54,6 +54,7 @@ compute.bioreg <- function(
   if (n.groups.intermediate > nrow(data.used)) {
     # unless there is not enough data!
     data.used$clara.num <- 1:nrow(data.used)
+    cl <- NA
   } else {
     cl <- clara(data.used, k=n.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
     # associate non-hierachical cluster number with data
