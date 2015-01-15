@@ -99,6 +99,8 @@ clip.polygon <- function(x, lon.min=-180, lon.max=180, lat.min=-90, lat.max=90) 
 
   suppressPackageStartupMessages(require("rgeos", quietly=TRUE))
   suppressPackageStartupMessages(require("plyr", quietly=TRUE))
+  suppressPackageStartupMessages(require("sp", quietly=TRUE))
+  suppressPackageStartupMessages(require("raster", quietly=TRUE))
 
   # convert data.frame x into SpatialPolygons object(s)
 
@@ -113,15 +115,19 @@ clip.polygon <- function(x, lon.min=-180, lon.max=180, lat.min=-90, lat.max=90) 
   xSpatialPolygons <- SpatialPolygons(list(xPolygons), proj4string=CRS("+proj=longlat +datum=WGS84"))
 
   # do not cut the pole when the longitude spans its full range
-  if (lon.min <= -180 & lon.max >= 180) {
-    if (lat.min < -50) {
-      lat.min <- -91
-    }
-    if (lat.max > 50) {
-      lat.max <- 91
-    }
-  }
+  # if (lon.min <= -180 & lon.max >= 180) {
+  #   if (lat.min < -50) {
+  #     lat.min <- -91
+  #   }
+  #   if (lat.max > 50) {
+  #     lat.max <- 91
+  #   }
+  # }
   # NB: this allows to get the full antarctic continent in polar view
+  if ( lon.min < -180 ) { lon.min <- -180}
+  if ( lon.max >  180 ) { lon.max <-  180}
+  if ( lat.min < -90 ) { lat.min <- -90}
+  if ( lat.max >  90 ) { lat.max <-  90}
 
   # create the clipping polygon
   clip.extent <- as(extent(lon.min, lon.max, lat.min, lat.max), "SpatialPolygons")
