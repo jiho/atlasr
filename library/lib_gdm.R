@@ -369,7 +369,7 @@ plot.pred.gdm <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", .
   # x                     object of class gdm
   # quick                 subsample to 1 x 2 degree in lat x lon to plot more quickly
   # overlay.observations  add points at the location of observation in to original data
-  # ...                   passed on to polar.ggplot
+  # ...                   passed on to polar_ggplot
   #
 
   suppressPackageStartupMessages(require("ggplot2"))
@@ -386,7 +386,7 @@ plot.pred.gdm <- function(x, quick=FALSE, overlay.stations=FALSE, geom="auto", .
   }
 
   # main plot
-  p <- polar.ggplot(x$prediction, mapping=aes(fill=cluster), geom=geom, lat.precision=lat.precision, lon.precision=lon.precision, ...)
+  p <- polar_ggplot(x$prediction, mapping=aes(fill=cluster), geom=geom, lat.precision=lat.precision, lon.precision=lon.precision, ...)
 
   # overlay stations
   if (overlay.stations) {

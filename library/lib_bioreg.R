@@ -157,7 +157,8 @@ bioreg <- function(
                           lon.min=lon.min, lon.max=lon.max, lon.step=lon.step
     )
     # get environment data at the points of interest
-    data.raw <- associate.env.data(prediction_grid, database)
+    data.raw <- get.env.data(prediction_grid$lon, prediction_grid$lat, database)
+    data.raw <- cbind(prediction_grid, data.raw)
 
     # transform data
     if (!is.null(transformations)) {
@@ -372,7 +373,7 @@ plot.pred.bioreg <- function(x, quick=FALSE, geom="auto", ...) {
     lon.precision <- NULL
   }
 
-  clusterMap <- polar.ggplot(x, aes(fill=cluster), geom=geom, lat.precision=lat.precision, lon.precision=lon.precision, ...) +
+  clusterMap <- polar_ggplot(x, aes(fill=cluster), geom=geom, lat.precision=lat.precision, lon.precision=lon.precision, ...) +
     # nice colours
     scale_colour_manual(values=cmap)
 
