@@ -340,9 +340,9 @@ plot.effects.bioreg <- function(x, geom=c("violin", "boxplot"), ...) {
         scale_colour_manual(values=cmap, drop=FALSE) +
         scale_x_discrete(drop=FALSE) +
         # split in facets
-        facet_wrap(~variable, scales="free") +
+        facet_wrap(~variable, scales="free") #+
         # orient horizontally
-        coord_flip()
+        # coord_flip()
 
   return(p)
 }
