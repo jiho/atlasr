@@ -391,7 +391,7 @@ plot.bioreg <- function(x, ...) {
 
   plot.dendro(x, ...)
 
-  print(plot.effects.bioreg(x, geom="boxplot", ...))
+  # print(plot.effects.bioreg(x, geom="boxplot", ...))
   print(plot.effects.bioreg(x, geom="violin", ...))
 
   print(plot.pred.bioreg(x, ...))
