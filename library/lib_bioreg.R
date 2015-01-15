@@ -119,7 +119,7 @@ bioreg <- function(
   lon.min=-180, lon.max=180,
   lon.step=0.5,
   transformations=NULL,       # named vector of transformations applied to each variable (has to match variables)
-  weights=NULL,               # named vector of weigths associated with each variable (has to match variables; will be scaled to a max of 1)
+  weights=NULL,               # named vector of weights associated with each variable (has to match variables; will be scaled to a max of 1)
   quick=TRUE,                 # TRUE produces less precise clustering and faster plots;  FALSE is for high quality final analyses
   output.dir=NULL,            # destination for output files; if NULL, no output files will be saved and plots will be printed to the screen
   path=getOption("atlasr.env.data"),  # path to the environment database
