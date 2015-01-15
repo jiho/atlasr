@@ -602,7 +602,7 @@ weight.data <- function(x, weights, warn=TRUE) {
 
   # expand each element of weights by name
   # this allows to specify something like weights=c(nox=2) and have *all* nox variables double weighted
-  expandedNames <- partial.match(names(weights), names(x), quiet=TRUE)
+  expandedNames <- partial.match(names(weights), names(x))
   # NB: we expand based in what is in x. If the name of an element in weights does not match, partial.match will throw an error
 
   # if name expansion resulted in more weights, replicate the weight values appropriately
@@ -707,7 +707,7 @@ transform.data <- function(x, transformations, warn=TRUE) {
   # NB: see weight.data, which is very similar, for more detailed comments
 
   # expand each element of transformations by name
-  expandedNames <- partial.match(names(transformations), names(x), quiet=TRUE)
+  expandedNames <- partial.match(names(transformations), names(x))
 
   # replicate transformations appropriately
   if (length(expandedNames) > length(transformations)) {
