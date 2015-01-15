@@ -51,11 +51,14 @@ compute.bioreg <- function(
   }
 
   # perform clustering
-  cl <- clara(data.used, k=n.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
-
-  # associate non-hierachical cluster number with data
-  data.used$clara.num <- cl$clustering
-
+  if (n.groups.intermediate > nrow(data.used)) {
+    # unless there is not enough data!
+    data.used$clara.num <- 1:nrow(data.used)
+  } else {
+    cl <- clara(data.used, k=n.groups.intermediate, metric="manhattan", stand=FALSE, samples=samples)
+    # associate non-hierachical cluster number with data
+    data.used$clara.num <- cl$clustering
+  }
 
   if ( ! quiet ) cat("   Perform hierarchical clustering on the result\n")
   # Do a hierarchical clustering using the output of the nonhierarchical step. This defines the bioregions
@@ -88,7 +91,7 @@ compute.bioreg <- function(
 
   # Store result
   # associate non-hierarchical cluster number to each data point
-  data.orig$clara.num[!missing.mask] <- cl$clustering
+  data.orig$clara.num[!missing.mask] <- data.used$clara.num
 
   # associate hierarchical cluster number to each data point
   data.orig <- join(data.orig, data.mean[,c("clara.num", "hclust.num")], by="clara.num", type="full")
