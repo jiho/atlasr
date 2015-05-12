@@ -1,33 +1,26 @@
 
 # HOWTO create a BRT model
 
-Boosted Regression Trees use the [gbm](http://cran.r-project.org/web/packages/gbm/) and [dismo](http://cran.r-project.org/web/packages/dismo/index.html) R packages.
-
-
 ## Formatting your data
 
-The input data should be formatted in a table with stations as lines and one column per taxon, plus two additional columns with latitude and longitude of stations. Further columns will not fail but will show up as additional taxa.
+The input data should be formatted in a table with stations as lines and one column per taxon, plus two additional columns with latitude and longitude of stations. Additional columns will not fail but will show up as taxa.
 
 The first line should contain column headers. The order of columns does not mater, only their header does. The header of the latitude column should be "lat" or "latitude". The header of the longitude column should be "lon", "long", or "longitude"
 
-The file can be formatted as :
-
-*	`.csv`: Comma Separated Values (French users should make sure an actual comma "," is used, and not a semicolon ";" as is customary in France) ;
-
-*	`.txt`: Text file, with columns separated by tabulations (copy-paste from a spreadsheet into a text file should give this format) ;
-
-*	`.xls`: Excel file (readable on OS X / Linux only) with data in the first sheet.
-
+The file should be formatted as `.csv`, Comma Separated Values (French users should make sure an actual comma "," is used, and not a semicolon ";" as is customary in France).
 
 ## Using the GUI
 
-A custom graphical interface should ease the use of the underlying functions, which are documented in the next paragraph. To display this GUI, follow the instructions in the README document to get started and then type
+A web based graphical user interface (GUI) should ease the use of the underlying functions. To display this GUI, follow the instructions in the README document to get started and then type
 
-	do.brt()
+    source("initialize.R")
+    do.brt()
 
 in the console.
 
-This presents a window with just one button labelled `Choose file`. Clicking on the button opens the standard file chooser on your system and should allow you to navigate to your data file.
+This opens a browser window with options on the left and results on the right.
+
+Start by choosing a CSV file
 
 Once the data file is chosen, the interface will present two lists (taxa on the left, environmental variables on the right), several options, a geographic grid picker, and, at the bottom, a row of buttons.
 
@@ -76,6 +69,9 @@ The R console should then print information along the computation of the model(s
 
 
 ## Using the command line
+
+Boosted Regression Trees use the [gbm](http://cran.r-project.org/web/packages/gbm/) R package.
+
 
 The function `brt()` is the direct equivalent of the GUI. It formats the data, sends it to the function `compute.brt()`, collect the result and produces all plots and output. It accepts the following arguments and default values:
 
