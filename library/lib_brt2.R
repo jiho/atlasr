@@ -234,7 +234,7 @@ summary.brt <- function(m, n.trees=m$best.iter, ...) {
 
 
    if (m$best.iter >= (0.9 * m$n.trees)) {
-      cat("WARNING !!! Not enough trees computed (using", m$best.iter ,"of", m$n.trees, "computed). You should increase the maximum number of trees (and possibly the shrinkage) and refit the model before proceeding to the analysis. WARNING !!!")
+      cat("\nWARNING !!! Not enough trees computed (using", m$best.iter ,"of", m$n.trees, "computed). You should increase the maximum number of trees (and possibly the shrinkage) and refit the model before proceeding to the analysis. WARNING !!!\n\n")
    }
    cat("A gradient boosted model with bernoulli loss function.\n")
    cat(m$n.trees,"iterations were performed\n")
@@ -242,8 +242,8 @@ summary.brt <- function(m, n.trees=m$best.iter, ...) {
    cat("Predictors contributions in % of total influence :\n")
    print(rel.inf)
    cat("Explained deviance (on training set) =", round(explainedDevianceTrain * 100, 1), "%\n")
-   cat("Cross-validated explained deviance =", round(explainedDevianceCV * 100, 1), "%, AUC =", round(AUC, 2), "\n")
-   cat("Predictive performance of the model is", performance, "\n")
+   cat("Cross-validated explained deviance =", round(explainedDevianceCV * 100, 1), "%\n")
+   cat("AUC =", round(AUC, 2), " Predictive performance of the model is", performance, "\n")
 
    return(invisible(rel.inf))
 }
