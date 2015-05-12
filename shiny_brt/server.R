@@ -281,7 +281,8 @@ shinyServer(function(input, output) {
                pred <- predict_distrib()
                
                vmess("Plot habitat suitability")
-               suppressWarnings(print(plot.pred.brt(x=pred, quick=input$quick, scale=0.7, path="../../env_data/")))
+               # suppressWarnings(print(plot.pred.brt(x=pred, quick=input$quick, scale=0.7, path="../../env_data/")))
+               suppressWarnings(print(plot.pred.brt(x=pred, quick=FALSE, scale=0.7, path="../../env_data/")))
             }
          })
       }
