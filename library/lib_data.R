@@ -192,7 +192,7 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) 
   #
   # NB: previously we saved the database in a RData file, but it is actually quicker to read it directly from the netCDF files
 
-  suppressPackageStartupMessages(require("ncdf"))
+  suppressPackageStartupMessages(require("ncdf4"))
   suppressPackageStartupMessages(require("plyr"))
 
   if ( ! file.exists(path) ) {
@@ -208,11 +208,11 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) 
   database <- llply(ncFiles, function(ncFile) {
 
     # open netCDF file
-    ncid <- open.ncdf(ncFile)
+    ncid <- nc_open(ncFile)
 
     # get the values of the lon and lat
-    lon <- get.var.ncdf(ncid, varid="lon")
-    lat <- get.var.ncdf(ncid, varid="lat")
+    lon <- ncvar_get(ncid, varid="lon")
+    lat <- ncvar_get(ncid, varid="lat")
 
     # extract the variable name
     varName <- names(ncid$var)
@@ -222,16 +222,16 @@ read.env.data <- function(variables="", path=getOption("atlasr.env.data"), ...) 
     # }
 
     # now retrieve the actual data
-    dat = get.var.ncdf(ncid, varName)
+    dat = ncvar_get(ncid, varName)
     # NB: get the full data for now, we will subsample it afterwards rather than at reading time
 
     # get the missing value code
-    missingValue <- att.get.ncdf(ncid, varName, "_FillValue")
+    missingValue <- ncatt_get(ncid, varName, "_FillValue")
     # replace any such data with NA
     dat[which(dat==missingValue$value)] <- NA
 
     # close the file now that we're finished with it
-    close(ncid)
+    nc_close(ncid)
 
     # store as an xy-coords list (suitable for persp, image, contour, etc.)
     dat <- list(x=lon, y=lat, z=dat)
@@ -853,7 +853,7 @@ write.raster <- function(x, name, variables=NULL) {
 
    # write it in a raster file
    writeRaster(xR, filename=name, format="raster")
-   library("ncdf")
+   library("ncdf4")
    writeRaster(xR, filename=name, format="CDF", overwrite=T)
    writeAsciiGrid(xSp, fname=paste(name, ".ag", sep=""))
    # writeRaster(xR1, filename=name, format="ascii")
@@ -1002,7 +1002,6 @@ write.netcdf <- function(d, file, dimensions, variables=NULL, units=NULL, attrib
    attributes <- a
 
    suppressPackageStartupMessages(library("ncdf4", quietly=TRUE))
-   # See http://cirrus.ucsd.edu/~pierce/ncdf/ for ncdf4 on windows
    suppressPackageStartupMessages(library("plyr", quietly=TRUE))
 
    # define dimensions
@@ -1075,7 +1074,7 @@ write.netcdf.map <- function(d, file, dimensions=c("lon", "lat"), units=NULL, at
    file <- write.netcdf(d=d, file=file, dimensions=dimensions, units=units, attributes=attributes, ...)
    
    # add the definition of a CRS
-   library("ncdf")
+   library("ncdf4")
    nc <- nc_open(file, write=TRUE)
    
    # specify the mapping for all variables
