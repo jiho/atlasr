@@ -10,3 +10,4 @@ if (file.exists("~/.Rprofile")) {
   source("~/.Rprofile")
 }
 source("initialize.R")
+# TODO test if the pb with parallel computation is still there if we include a check for an interactive session
