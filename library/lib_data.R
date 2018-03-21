@@ -12,10 +12,8 @@
 #                         J-O Irisson
 #     http://creativecommons.org/licenses/by/3.0/
 #
-#-----------------------------------------------------------------------------
 
-
-##{ Access to data --------------------------------------------------------
+## Access to data ----
 
 # Ben
 # "http://webdav.data.aad.gov.au/data/environmental/derived/antarctic"
@@ -381,10 +379,8 @@ read.data <- function(file, filetype="guess", ...) {
   return(d)
 }
 
-# }
 
-
-##{ String manipulation ---------------------------------------------------
+## String manipulation ----
 
 partial.match <- function(pattern, choices, verbose=FALSE) {
   # Match abbreviated or partial variable names
@@ -440,10 +436,8 @@ partial.match <- function(pattern, choices, verbose=FALSE) {
   return(res)
 }
 
-# }
 
-
-##{ Grid utilities --------------------------------------------------------
+## Grid utilities ----
 
 build.grid <- function(lat.min=-80, lat.max=-30, lat.step=0.1, lon.min=-180, lon.max=180, lon.step=0.5, ...) {
   # Define the grid on which we extract the environmental data
@@ -584,10 +578,8 @@ interp.nn <- function(x, coord) {
   apply(idx, 1, function(id, z) { z[id[1],id[2]] }, z=x$z)
 }
 
-# }
 
-
-##{ Data modification (weighting, filtering, etc.) ------------------------
+## Data modification (weighting, filtering, etc.) -----
 
 weight.data <- function(x, weights, warn=TRUE) {
   #
@@ -794,10 +786,8 @@ too.many.na <- function(x, p, weights=NULL) {
    return(props >= p)
 }
 
-# }
 
-
-##{ Data export -----------------------------------------------------------
+## Data export ----
 
 write.shapefile <- function(x, name, variables=NULL) {
   #
