@@ -293,7 +293,7 @@ polar_ggplot <- function(data, mapping=aes(), geom=c("auto", "raster", "point", 
 
     # plot
     # NB: shape: 21 = filled point, 22 = filled square, 23 = filled losange
-    p <- p + geom_point(mapping=mapping, shape=21, colour=NA, ...) + scale_size(range=c(baseSize, baseSize*2.2), guide=FALSE)
+    p <- p + geom_point(mapping=mapping, shape=21, stroke=0, ...) + scale_size(range=c(baseSize, baseSize*2.2), guide=FALSE)
     } else if (geom == "tile") {
       p <- p + geom_tile(mapping=mapping, ...)
 
